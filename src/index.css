@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-slab: 'Poppins', Arial, sans-serif;
+  --font-sans: 'Poppins', Arial, sans-serif;
+  --font-mono: 'Poppins', Arial, sans-serif;
+}
+
+html { font-family: 'Poppins', Arial, sans-serif; }
+
+@media (max-width: 900px) {
+  html {
+    scroll-padding-top: calc(
+      max(4rem, env(safe-area-inset-top)) + 4.5rem
+    );
+  }
+}
+
+.font-slab { font-family: 'Poppins', Arial, sans-serif; font-weight: 600; }
+.font-mono { font-family: 'Poppins', Arial, sans-serif; }
+.font-mono.font-semibold { font-weight: 500; }
+
+button {
+  cursor: pointer;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-weight: 500 !important;
+}
+
+[role='dialog'][aria-modal='true'] {
+  overscroll-behavior: contain;
+}
+
+@media (max-height: 700px) {
+  [role='dialog'][aria-modal='true'] {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-block: 1.25rem;
+  }
+
+  [role='dialog'][aria-modal='true'] > .max-w-md,
+  [role='dialog'][aria-modal='true'] > .max-w-xl {
+    max-height: calc(100dvh - 2.5rem);
+    overflow-y: auto;
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Enables Universitas Terbuka students to report and track tutor-related issues with clear summaries and easy navigation for efficient problem resolution.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
