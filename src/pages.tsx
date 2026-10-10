@@ -6341,6 +6341,7 @@ export function AdminWorkflowProfileScreen() {
 }
 
 const NEW_GOOGLE_ACCOUNT_EMAIL = "new.student@gmail.com"
+const SECOND_NEW_GOOGLE_ACCOUNT_EMAIL = "second.student@gmail.com"
 const REGISTERED_GOOGLE_ACCOUNT_EMAIL = "registered.student@gmail.com"
 const GOOGLE_ACCOUNT_LINK_KEY = "taps-linked-google-account"
 const ACTIVE_GOOGLE_ACCOUNT_KEY = "taps-active-google-account"
@@ -6358,16 +6359,36 @@ type LinkedGoogleAccount = {
   nim: string
 }
 
-function getLinkedGoogleAccount(): LinkedGoogleAccount | null {
-  const storedAccount = window.localStorage.getItem(GOOGLE_ACCOUNT_LINK_KEY)
-  if (!storedAccount) return null
+function getLinkedGoogleAccounts(): LinkedGoogleAccount[] {
+  const storedAccounts = window.localStorage.getItem(GOOGLE_ACCOUNT_LINK_KEY)
+  if (!storedAccounts) return []
 
   try {
-    const account = JSON.parse(storedAccount) as LinkedGoogleAccount
-    return account.email && account.nim ? account : null
+    const parsed: unknown = JSON.parse(storedAccounts)
+    const entries: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
+
+    return entries.filter(
+      (entry): entry is LinkedGoogleAccount =>
+        typeof entry === "object" &&
+        entry !== null &&
+        "email" in entry &&
+        typeof entry.email === "string" &&
+        entry.email.trim() !== "" &&
+        "nim" in entry &&
+        typeof entry.nim === "string" &&
+        entry.nim.trim() !== "",
+    )
   } catch {
-    return null
+    return []
   }
+}
+
+function getLinkedGoogleAccountByEmail(
+  email: string,
+): LinkedGoogleAccount | undefined {
+  return getLinkedGoogleAccounts().find(
+    (account) => account.email.toLowerCase() === email.toLowerCase(),
+  )
 }
 
 function getActiveGoogleAccountEmail() {
@@ -6437,12 +6458,13 @@ export function LoginScreen() {
 
   const handleGoogleAccountSelect = (googleEmail: string) => {
     window.sessionStorage.setItem(ACTIVE_GOOGLE_ACCOUNT_KEY, googleEmail)
-    const linkedAccount = getLinkedGoogleAccount()
     setGoogleAccountDialogOpen(false)
+
+    const linkedAccount = getLinkedGoogleAccountByEmail(googleEmail)
 
     if (
       googleEmail === REGISTERED_GOOGLE_ACCOUNT_EMAIL ||
-      linkedAccount?.email === googleEmail
+      linkedAccount
     ) {
       navigate("/")
       return
@@ -6582,6 +6604,18 @@ export function LoginScreen() {
               <button
                 type="button"
                 onClick={() =>
+                  handleGoogleAccountSelect(SECOND_NEW_GOOGLE_ACCOUNT_EMAIL)
+                }
+                className="w-full border border-[#B9C8D7] px-4 py-3 text-left text-sm text-[#12355B] transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
+              >
+                <span className="block font-medium">second.student@gmail.com</span>
+                <span className="mt-1 block text-xs text-[#52657A]">
+                  Akun baru kedua — lengkapi identitas
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
                   handleGoogleAccountSelect(REGISTERED_GOOGLE_ACCOUNT_EMAIL)
                 }
                 className="w-full border border-[#B9C8D7] px-4 py-3 text-left text-sm text-[#12355B] transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
@@ -6615,22 +6649,45 @@ export function IdentitySetupScreen() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const normalizedNim = nim.trim()
 
-    if (REGISTERED_NIMS.has(normalizedNim)) {
+    const normalizedNim = nim.trim()
+    const activeEmail = getActiveGoogleAccountEmail()
+    const linkedAccounts = getLinkedGoogleAccounts()
+
+    const existingEmailAccount = linkedAccounts.find(
+      (account) => account.email.toLowerCase() === activeEmail.toLowerCase(),
+    )
+
+    if (existingEmailAccount) {
+      if (existingEmailAccount.nim !== normalizedNim) {
+        setError("Akun Google ini sudah terhubung dengan NIM lain.")
+        return
+      }
+
+      navigate("/")
+      return
+    }
+
+    if (
+      REGISTERED_NIMS.has(normalizedNim) ||
+      linkedAccounts.some((account) => account.nim === normalizedNim)
+    ) {
       setError(
         "NIM sudah terdaftar pada akun lain. Silakan gunakan akun Google yang telah terhubung dengan NIM tersebut.",
       )
       return
     }
 
+    const updatedAccounts = [
+      ...linkedAccounts,
+      { email: activeEmail, nim: normalizedNim },
+    ]
+
     window.localStorage.setItem(
       GOOGLE_ACCOUNT_LINK_KEY,
-      JSON.stringify({
-        email: getActiveGoogleAccountEmail(),
-        nim: normalizedNim,
-      }),
+      JSON.stringify(updatedAccounts),
     )
+
     navigate("/")
   }
 
