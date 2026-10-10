@@ -8,13 +8,13 @@ import {
   AppLayout,
   CreateReportScreen,
   DashboardScreen,
-  DesignSystemScreen,
   DetailReportScreen,
   IdentitySetupScreen,
   LoginScreen,
   ProfileScreen,
   ReportHistoryScreen,
 } from "./pages"
+import { DesignSystemScreen } from "./screens/DesignSystemScreen"
 
 export const router = createBrowserRouter([
   { path: "/login", Component: LoginScreen },
