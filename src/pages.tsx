@@ -10,6 +10,13 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router"
 import universitasTerbukaLogo from "./assets/universitas-terbuka-logo.png"
 import placeholderAvatar from "./assets/placeholder-avatar.svg"
 
+function handlePrototypeLogout() {
+  window.sessionStorage.removeItem("taps-active-google-account")
+  window.sessionStorage.removeItem("adminDetailContext")
+  window.sessionStorage.removeItem("adminDetailId")
+  window.location.assign("/login")
+}
+
 type StudentNotification = {
   id: string
   reportId: string
@@ -129,7 +136,7 @@ export function AppLayout() {
               ),
             )}
           </nav>
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]">
+          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -192,7 +199,7 @@ export function AppLayout() {
                   ),
                 )}
               </nav>
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]">
+              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -2001,7 +2008,7 @@ export function ProfileScreen() {
             <button
               type="button"
               className="mt-5 inline-flex items-center gap-3 border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
-            >
+             onClick={handlePrototypeLogout}>
               Keluar <span aria-hidden="true">↗</span>
             </button>
           </section>
@@ -2221,7 +2228,7 @@ export function AdminDashboardScreen() {
               ),
             )}
           </nav>
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]">
+          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -2289,7 +2296,7 @@ export function AdminDashboardScreen() {
                   ),
                 )}
               </nav>
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]">
+              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -2768,7 +2775,7 @@ export function AdminQueueScreen() {
             </span>
           </div>
           {adminNav(1)}
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]">
+          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -2813,7 +2820,7 @@ export function AdminQueueScreen() {
                 </button>
               </div>
               {adminNav(1, true)}
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]">
+              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -3129,7 +3136,7 @@ export function AdminDetailReportScreen() {
             </span>
           </div>
           {nav()}
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]">
+          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -3173,7 +3180,7 @@ export function AdminDetailReportScreen() {
                 </button>
               </div>
               {nav(true)}
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]">
+              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -3703,7 +3710,7 @@ export function AdminHistoryScreen() {
             </span>
           </div>
           {nav()}
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]">
+          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -3747,7 +3754,7 @@ export function AdminHistoryScreen() {
                 </button>
               </div>
               {nav(true)}
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]">
+              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -4078,7 +4085,7 @@ export function AdminDynamicDetailReportScreen() {
             </span>
           </div>
           {nav()}
-          <button className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]">
+          <button className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -4896,7 +4903,7 @@ function AdminWorkflowShell({
             </span>
           </div>
           {nav()}
-          <button className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]">
+          <button className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -6321,7 +6328,7 @@ export function AdminWorkflowProfileScreen() {
                 <button
                   type="button"
                   className="mb-6 mt-2 inline-flex items-center gap-3 border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
-                >
+                 onClick={handlePrototypeLogout}>
                   Keluar <span aria-hidden="true">↗</span>
                 </button>
               </div>
