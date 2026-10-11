@@ -14,6 +14,8 @@ import { historyReports } from "./features/student/data/history-reports"
 import type { HistoryReport } from "./shared/types/history-report"
 import { studentNotifications, type StudentNotification } from "./features/student/data/notifications"
 import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from "./shared/types/workflow"
+import { adminNavItems } from "./features/admin/data/navigation"
+import { navItems } from "./features/student/data/navigation"
 import { followUps, statusStages } from "./features/student/data/detail-report"
 
 function handlePrototypeLogout() {
@@ -22,13 +24,6 @@ function handlePrototypeLogout() {
   window.sessionStorage.removeItem("adminDetailId")
   window.location.assign("/login")
 }
-
-const navItems = [
-  { label: "Dashboard", to: "/" },
-  { label: "Buat Laporan", to: "/buat-laporan" },
-  { label: "Riwayat Laporan", to: "/riwayat-laporan" },
-  { label: "Profil", to: "/profil" },
-]
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -1894,13 +1889,6 @@ export function ProfileScreen() {
     </section>
   )
 }
-
-const adminNavItems = [
-  { label: "Dashboard", to: "/administrator" },
-  { label: "Antrean Laporan", to: "/administrator/antrean-laporan" },
-  { label: "Riwayat Laporan", to: "/administrator/riwayat-laporan" },
-  { label: "Profil/Akun", to: "/administrator/profil-akun" },
-]
 
 function rememberAdminDetail(
   event: MouseEvent<HTMLElement>,
