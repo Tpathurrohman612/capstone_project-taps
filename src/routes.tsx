@@ -7,11 +7,11 @@ import {
   AdminWorkflowQueueScreen,
   AppLayout,
   CreateReportScreen,
-  DashboardScreen,
   DetailReportScreen,
   IdentitySetupScreen,
   LoginScreen,
 } from "./pages"
+import { DashboardScreen } from "./features/student/screens/DashboardScreen"
 import { ReportHistoryScreen } from "./features/student/screens/ReportHistoryScreen"
 import { ProfileScreen } from "./features/student/screens/ProfileScreen"
 import { DesignSystemScreen } from "./screens/DesignSystemScreen"
