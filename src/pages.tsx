@@ -9,6 +9,7 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router"
 import universitasTerbukaLogo from "./assets/universitas-terbuka-logo.png"
 import placeholderAvatar from "./assets/placeholder-avatar.svg"
+import { studentProfile } from "./features/student/data/profile"
 import { historyReports } from "./features/student/data/history-reports"
 import type { HistoryReport } from "./shared/types/history-report"
 import { studentNotifications, type StudentNotification } from "./features/student/data/notifications"
@@ -1824,14 +1825,6 @@ export function ReportHistoryScreen() {
     </section>
   )
 }
-
-const studentProfile = [
-  ["Nama Lengkap", "Nama Mahasiswa"],
-  ["NIM", "XXXXXXXXXX"],
-  ["Fakultas", "Fakultas Sains dan Teknologi"],
-  ["Program Studi", "Sistem Informasi"],
-  ["UT Daerah", "Nama UT Daerah"],
-]
 
 function ProfileItem({ label, value }: { label: string; value: string }) {
   return (
