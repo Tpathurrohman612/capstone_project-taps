@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router"
 import {
-  AdminDashboardScreen,
   AdminWorkflowDetailScreen,
   AdminWorkflowHistoryScreen,
   AdminWorkflowProfileScreen,
@@ -9,6 +8,7 @@ import {
   IdentitySetupScreen,
   LoginScreen,
 } from "./pages"
+import { AdminDashboardScreen } from "./features/admin/screens/AdminDashboardScreen"
 import { DetailReportScreen } from "./features/student/screens/DetailReportScreen"
 import { CreateReportScreen } from "./features/student/screens/CreateReportScreen"
 import { DashboardScreen } from "./features/student/screens/DashboardScreen"
