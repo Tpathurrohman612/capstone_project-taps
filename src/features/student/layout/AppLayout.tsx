@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { Link, Outlet, useLocation } from "react-router"
-import universitasTerbukaLogo from "./assets/universitas-terbuka-logo.png"
-import { handlePrototypeLogout } from "./shared/lib/auth-session"
-import { navItems } from "./features/student/data/navigation"
+import universitasTerbukaLogo from "../../../assets/universitas-terbuka-logo.png"
+import { handlePrototypeLogout } from "../../../shared/lib/auth-session"
+import { navItems } from "../data/navigation"
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
