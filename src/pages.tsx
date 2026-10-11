@@ -16,6 +16,7 @@ import { studentNotifications, type StudentNotification } from "./features/stude
 import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from "./shared/types/workflow"
 import { workflowSeed } from "./shared/data/workflow-seed"
 import { getWorkflowReports, saveWorkflowReports } from "./shared/lib/workflow-storage"
+import { getStudentHistoryReports } from "./features/student/lib/history-reports"
 import { adminNavItems } from "./features/admin/data/navigation"
 import { navItems } from "./features/student/data/navigation"
 import { followUps, statusStages } from "./features/student/data/detail-report"
@@ -4245,35 +4246,6 @@ export function AdminDynamicDetailReportScreen() {
   )
 }
 
-const getStudentHistoryReports = (): HistoryReport[] => {
-  const workflowHistory = getWorkflowReports().map<HistoryReport>((report) => ({
-    id: report.id,
-    title: report.title,
-    status:
-      report.status === "Diproses" ? "Sedang Diproses" : report.status,
-    category: report.category,
-    courseType: report.courseType ?? "Teori/Umum",
-    course: report.course,
-    className: report.className,
-    tutor: report.tutor,
-    submitted: report.submitted,
-    duration: report.duration ?? "1 minggu atau lebih",
-    description: report.description,
-    attachments: report.attachments,
-  }))
-  const allReports = [
-    ...workflowHistory,
-    ...historyReports.filter(
-      (historyReport) =>
-        !workflowHistory.some(
-          (workflowReport) => workflowReport.id === historyReport.id,
-        ),
-    ),
-  ]
-  return allReports.sort((left, right) =>
-    right.id.localeCompare(left.id, undefined, { numeric: true }),
-  )
-}
 const workflowStatusClass = (status: WorkflowStatus) =>
   status === "Selesai"
     ? "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"
