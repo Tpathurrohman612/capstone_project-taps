@@ -1,11 +1,11 @@
 import { createBrowserRouter, Navigate } from "react-router"
 import {
-  AdminWorkflowDetailScreen,
   AdminWorkflowProfileScreen,
   AppLayout,
   IdentitySetupScreen,
   LoginScreen,
 } from "./pages"
+import { AdminWorkflowDetailScreen } from "./features/admin/screens/AdminWorkflowDetailScreen"
 import { AdminWorkflowHistoryScreen } from "./features/admin/screens/AdminWorkflowHistoryScreen"
 import { AdminWorkflowQueueScreen } from "./features/admin/screens/AdminWorkflowQueueScreen"
 import { AdminDashboardScreen } from "./features/admin/screens/AdminDashboardScreen"
