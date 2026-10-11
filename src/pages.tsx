@@ -9,6 +9,7 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router"
 import universitasTerbukaLogo from "./assets/universitas-terbuka-logo.png"
 import placeholderAvatar from "./assets/placeholder-avatar.svg"
+import { studentNotifications, type StudentNotification } from "./features/student/data/notifications"
 import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from "./shared/types/workflow"
 
 function handlePrototypeLogout() {
@@ -17,32 +18,6 @@ function handlePrototypeLogout() {
   window.sessionStorage.removeItem("adminDetailId")
   window.location.assign("/login")
 }
-
-type StudentNotification = {
-  id: string
-  reportId: string
-  message: string
-  time: string
-  unread: boolean
-}
-
-const studentNotifications: StudentNotification[] = [
-  {
-    id: "status-lt-0005",
-    reportId: "LT-2026-0005",
-    message:
-      "Status laporan LT-2026-0005 diperbarui menjadi Menunggu Validasi.",
-    time: "Hari ini · 15.20",
-    unread: true,
-  },
-  {
-    id: "follow-up-lt-0010",
-    reportId: "LT-2026-0010",
-    message: "Terdapat pembaruan tindak lanjut untuk laporan LT-2026-0010.",
-    time: "Kemarin · 10.15",
-    unread: true,
-  },
-]
 
 const navItems = [
   { label: "Dashboard", to: "/" },
