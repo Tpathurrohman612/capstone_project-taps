@@ -11,8 +11,8 @@ import {
   DetailReportScreen,
   IdentitySetupScreen,
   LoginScreen,
-  ReportHistoryScreen,
 } from "./pages"
+import { ReportHistoryScreen } from "./features/student/screens/ReportHistoryScreen"
 import { ProfileScreen } from "./features/student/screens/ProfileScreen"
 import { DesignSystemScreen } from "./screens/DesignSystemScreen"
 
