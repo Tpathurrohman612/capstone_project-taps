@@ -3,11 +3,11 @@ import {
   AdminWorkflowDetailScreen,
   AdminWorkflowHistoryScreen,
   AdminWorkflowProfileScreen,
-  AdminWorkflowQueueScreen,
   AppLayout,
   IdentitySetupScreen,
   LoginScreen,
 } from "./pages"
+import { AdminWorkflowQueueScreen } from "./features/admin/screens/AdminWorkflowQueueScreen"
 import { AdminDashboardScreen } from "./features/admin/screens/AdminDashboardScreen"
 import { DetailReportScreen } from "./features/student/screens/DetailReportScreen"
 import { CreateReportScreen } from "./features/student/screens/CreateReportScreen"
