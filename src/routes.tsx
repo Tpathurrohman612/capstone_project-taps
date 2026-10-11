@@ -11,9 +11,9 @@ import {
   DetailReportScreen,
   IdentitySetupScreen,
   LoginScreen,
-  ProfileScreen,
   ReportHistoryScreen,
 } from "./pages"
+import { ProfileScreen } from "./features/student/screens/ProfileScreen"
 import { DesignSystemScreen } from "./screens/DesignSystemScreen"
 
 export const router = createBrowserRouter([
