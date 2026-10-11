@@ -9,6 +9,7 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router"
 import universitasTerbukaLogo from "./assets/universitas-terbuka-logo.png"
 import placeholderAvatar from "./assets/placeholder-avatar.svg"
+import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from "./shared/types/workflow"
 
 function handlePrototypeLogout() {
   window.sessionStorage.removeItem("taps-active-google-account")
@@ -4443,24 +4444,6 @@ export function AdminDynamicDetailReportScreen() {
       )}
     </main>
   )
-}
-
-type WorkflowStatus = "Diterima" | "Diverifikasi" | "Menunggu Validasi" | "Diproses" | "Selesai"
-type WorkflowUpdate = { time: string; title: string; text: string }
-type WorkflowReport = {
-  id: string
-  title: string
-  category: string
-  course: string
-  className: string
-  tutor: string
-  submitted: string
-  status: WorkflowStatus
-  updates: WorkflowUpdate[]
-  courseType?: string
-  duration?: string
-  description?: string
-  attachments?: { name: string; type: string; size: string }[]
 }
 
 const workflowSeed: WorkflowReport[] = [
