@@ -1,9 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router"
-import {
-  AppLayout,
-  IdentitySetupScreen,
-  LoginScreen,
-} from "./pages"
+import { AppLayout } from "./pages"
+import { IdentitySetupScreen } from "./features/auth/screens/IdentitySetupScreen"
+import { LoginScreen } from "./features/auth/screens/LoginScreen"
 import { AdminWorkflowDetailScreen } from "./features/admin/screens/AdminWorkflowDetailScreen"
 import { AdminWorkflowProfileScreen } from "./features/admin/screens/AdminWorkflowProfileScreen"
 import { AdminWorkflowHistoryScreen } from "./features/admin/screens/AdminWorkflowHistoryScreen"
