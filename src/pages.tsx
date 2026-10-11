@@ -15,6 +15,7 @@ import type { HistoryReport } from "./shared/types/history-report"
 import { studentNotifications, type StudentNotification } from "./features/student/data/notifications"
 import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from "./shared/types/workflow"
 import { workflowSeed } from "./shared/data/workflow-seed"
+import { getWorkflowReports, saveWorkflowReports } from "./shared/lib/workflow-storage"
 import { adminNavItems } from "./features/admin/data/navigation"
 import { navItems } from "./features/student/data/navigation"
 import { followUps, statusStages } from "./features/student/data/detail-report"
@@ -4244,91 +4245,6 @@ export function AdminDynamicDetailReportScreen() {
   )
 }
 
-const workflowStorageKey = "lapor-tuton-admin-workflow"
-const workflowStorageVersionKey = "lapor-tuton-admin-workflow-version"
-const workflowStorageVersion = "6"
-const normalizeLt0007 = (reports: WorkflowReport[]): WorkflowReport[] =>
-  reports.map((report) => {
-    if (report.id !== "LT-2026-0007") return report
-    const requiredUpdates = workflowSeed[0].updates
-    const existingByTitle = new Map(
-      report.updates.map((update) => [update.title, update]),
-    )
-    const requiredTitles = new Set(
-      requiredUpdates.map((update) => update.title),
-    )
-    return {
-      ...report,
-      updates: [
-        ...requiredUpdates.map((update) => ({
-          ...update,
-          ...(existingByTitle.get(update.title) ?? {}),
-          time: update.time,
-        })),
-        ...report.updates.filter((update) => !requiredTitles.has(update.title)),
-      ],
-    }
-  })
-const reconcileCurrentWorkflowStatuses = (
-  reports: WorkflowReport[],
-): WorkflowReport[] =>
-  reports.map((report) => {
-    if (report.id === "LT-2026-0007") {
-      return { ...report, status: "Selesai" }
-    }
-    if (report.id === "LT-2026-0005") {
-      const sentUpdate = workflowSeed[1].updates.find(
-        (update) =>
-          update.title === "Data laporan dikirim ke Fakultas/Unit terkait",
-      )
-      return {
-        ...report,
-        status: "Menunggu Validasi",
-        updates:
-          sentUpdate &&
-          !report.updates.some((update) => update.title === sentUpdate.title)
-            ? [...report.updates, sentUpdate]
-            : report.updates,
-      }
-    }
-    return report
-  })
-const ensureSeedReports = (reports: WorkflowReport[]): WorkflowReport[] => [
-  ...reports,
-  ...workflowSeed.filter(
-    (seedReport) => !reports.some((report) => report.id === seedReport.id),
-  ),
-]
-const getWorkflowReports = (): WorkflowReport[] => {
-  try {
-    if (
-      window.sessionStorage.getItem(workflowStorageVersionKey) !==
-      workflowStorageVersion
-    ) {
-      const stored = window.sessionStorage.getItem(workflowStorageKey)
-      const migrated = reconcileCurrentWorkflowStatuses(
-        normalizeLt0007(
-          ensureSeedReports(stored ? JSON.parse(stored) : workflowSeed),
-        ),
-      )
-      window.sessionStorage.setItem(
-        workflowStorageVersionKey,
-        workflowStorageVersion,
-      )
-      window.sessionStorage.setItem(
-        workflowStorageKey,
-        JSON.stringify(migrated),
-      )
-      return migrated
-    }
-    const stored = window.sessionStorage.getItem(workflowStorageKey)
-    const reports = normalizeLt0007(stored ? JSON.parse(stored) : workflowSeed)
-    window.sessionStorage.setItem(workflowStorageKey, JSON.stringify(reports))
-    return reports
-  } catch {
-    return normalizeLt0007(workflowSeed)
-  }
-}
 const getStudentHistoryReports = (): HistoryReport[] => {
   const workflowHistory = getWorkflowReports().map<HistoryReport>((report) => ({
     id: report.id,
@@ -4358,8 +4274,6 @@ const getStudentHistoryReports = (): HistoryReport[] => {
     right.id.localeCompare(left.id, undefined, { numeric: true }),
   )
 }
-const saveWorkflowReports = (reports: WorkflowReport[]) =>
-  window.sessionStorage.setItem(workflowStorageKey, JSON.stringify(reports))
 const workflowStatusClass = (status: WorkflowStatus) =>
   status === "Selesai"
     ? "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"
