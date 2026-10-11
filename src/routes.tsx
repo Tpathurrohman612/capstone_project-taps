@@ -6,10 +6,10 @@ import {
   AdminWorkflowProfileScreen,
   AdminWorkflowQueueScreen,
   AppLayout,
-  DetailReportScreen,
   IdentitySetupScreen,
   LoginScreen,
 } from "./pages"
+import { DetailReportScreen } from "./features/student/screens/DetailReportScreen"
 import { CreateReportScreen } from "./features/student/screens/CreateReportScreen"
 import { DashboardScreen } from "./features/student/screens/DashboardScreen"
 import { ReportHistoryScreen } from "./features/student/screens/ReportHistoryScreen"
