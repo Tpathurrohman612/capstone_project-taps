@@ -1,40 +1,35 @@
-import { useState } from "react"
-import type { WorkflowStatus } from "../../../shared/types/workflow"
-import {
-  getWorkflowReports,
-  saveWorkflowReports,
-} from "../../../shared/lib/workflow-storage"
+import { useState } from 'react'
+import type { WorkflowStatus } from '../../../shared/types/workflow'
+import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 import {
   AdminWorkflowShell,
   WorkflowTable,
   exportFilePart,
   reportGroup,
-} from "../components/workflow-ui"
+} from '../components/workflow-ui'
 
 export function AdminWorkflowQueueScreen() {
-  const [status, setStatus] = useState("Semua")
-  const [query, setQuery] = useState("")
-  const [faculty, setFaculty] = useState("Semua")
+  const [status, setStatus] = useState('Semua')
+  const [query, setQuery] = useState('')
+  const [faculty, setFaculty] = useState('Semua')
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
   const allReports = getWorkflowReports()
-  const faculties = Array.from(
-    new Set(allReports.map((report) => reportGroup(report).faculty)),
-  )
+  const faculties = Array.from(new Set(allReports.map((report) => reportGroup(report).faculty)))
   const reports = allReports.filter((report) => {
     const group = reportGroup(report)
     return (
-      report.status !== "Selesai" &&
-      (status === "Semua" || report.status === status) &&
-      (faculty === "Semua" || group.faculty === faculty) &&
+      report.status !== 'Selesai' &&
+      (status === 'Semua' || report.status === status) &&
+      (faculty === 'Semua' || group.faculty === faculty) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase())
     )
   })
   const exportReports = allReports.filter(
     (report) =>
-      faculty !== "Semua" &&
-      report.status === "Diverifikasi" &&
+      faculty !== 'Semua' &&
+      report.status === 'Diverifikasi' &&
       reportGroup(report).faculty === faculty,
   )
   const includedPrograms = Array.from(
@@ -42,53 +37,49 @@ export function AdminWorkflowQueueScreen() {
   )
   const exportFaculty = faculty
   const exportProgram =
-    includedPrograms.length > 1
-      ? "Beberapa Program Studi"
-      : (includedPrograms[0] ?? "—")
+    includedPrograms.length > 1 ? 'Beberapa Program Studi' : (includedPrograms[0] ?? '—')
   const fileName = `Data_Laporan_Tutor_${exportFilePart(exportFaculty)}_2026.csv`
   const downloadExport = () => {
     const headers = [
-      "ID Laporan",
-      "Kategori",
-      "Program Studi",
-      "Fakultas",
-      "Jenis Mata Kuliah",
-      "Kode Mata Kuliah",
-      "Nama Mata Kuliah",
-      "Kelas Mata Kuliah",
-      "Nama Tutor",
-      "Perkiraan Durasi Tidak Ada Aktivitas/Respons",
-      "Judul Laporan",
-      "Tanggal Laporan",
-      "Status",
+      'ID Laporan',
+      'Kategori',
+      'Program Studi',
+      'Fakultas',
+      'Jenis Mata Kuliah',
+      'Kode Mata Kuliah',
+      'Nama Mata Kuliah',
+      'Kelas Mata Kuliah',
+      'Nama Tutor',
+      'Perkiraan Durasi Tidak Ada Aktivitas/Respons',
+      'Judul Laporan',
+      'Tanggal Laporan',
+      'Status',
     ]
     const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`
     const rows = exportReports.map((report) => {
-      const [courseCode, courseName] = report.course.split(" · ")
+      const [courseCode, courseName] = report.course.split(' · ')
       const group = reportGroup(report)
       return [
         report.id,
         report.category,
         group.programStudy,
         group.faculty,
-        report.courseType ?? "Teori/Umum",
+        report.courseType ?? 'Teori/Umum',
         courseCode,
         courseName,
         report.className,
         report.tutor,
-        report.duration ?? "1 minggu atau lebih",
+        report.duration ?? '1 minggu atau lebih',
         report.title,
         report.submitted,
         report.status,
       ]
     })
-    const csv = [headers, ...rows]
-      .map((row) => row.map(escapeCell).join(","))
-      .join("\r\n")
+    const csv = [headers, ...rows].map((row) => row.map(escapeCell).join(',')).join('\r\n')
     const downloadUrl = URL.createObjectURL(
-      new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }),
+      new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }),
     )
-    const link = document.createElement("a")
+    const link = document.createElement('a')
     link.href = downloadUrl
     link.download = fileName
     document.body.appendChild(link)
@@ -102,13 +93,13 @@ export function AdminWorkflowQueueScreen() {
       selected.has(report.id)
         ? {
             ...report,
-            status: "Menunggu Validasi" as WorkflowStatus,
+            status: 'Menunggu Validasi' as WorkflowStatus,
             updates: [
               ...report.updates,
               {
-                time: "17 September 2026, 17:10",
-                title: "Data laporan dikirim ke Fakultas/Unit terkait",
-                text: "Data laporan telah dikirim oleh Administrator melalui kanal eksternal untuk proses validasi.",
+                time: '17 September 2026, 17:10',
+                title: 'Data laporan dikirim ke Fakultas/Unit terkait',
+                text: 'Data laporan telah dikirim oleh Administrator melalui kanal eksternal untuk proses validasi.',
               },
             ],
           }
@@ -129,8 +120,7 @@ export function AdminWorkflowQueueScreen() {
             Antrean Laporan
           </h1>
           <p className="mt-2 text-sm leading-6 text-[#52657A]">
-            Kelola dan tindak lanjuti laporan permasalahan terkait aktivitas dan
-            layanan tutor.
+            Kelola dan tindak lanjuti laporan permasalahan terkait aktivitas dan layanan tutor.
           </p>
         </header>
         <div className="mt-8 grid grid-cols-3 gap-4 max-[900px]:grid-cols-2 max-[620px]:grid-cols-1">
@@ -183,17 +173,15 @@ export function AdminWorkflowQueueScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
                 DAFTAR LAPORAN MASUK
               </p>
-              <h2 className="mt-2 font-slab text-2xl text-[#12355B]">
-                Antrean Laporan
-              </h2>
+              <h2 className="mt-2 font-slab text-2xl text-[#12355B]">Antrean Laporan</h2>
             </div>
             <div className="flex items-center gap-4 max-[620px]:w-full max-[620px]:justify-between">
               <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                {String(reports.length).padStart(2, "0")} LAPORAN
+                {String(reports.length).padStart(2, '0')} LAPORAN
               </span>
               <button
                 onClick={() => setExportModalOpen(true)}
-                disabled={faculty === "Semua" || !exportReports.length}
+                disabled={faculty === 'Semua' || !exportReports.length}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
               >
                 Export Data Laporan
@@ -203,9 +191,7 @@ export function AdminWorkflowQueueScreen() {
           <WorkflowTable reports={reports} context="queue" showProgramStudy />
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
-              <p className="font-slab text-xl text-[#12355B]">
-                Belum ada laporan pada status ini.
-              </p>
+              <p className="font-slab text-xl text-[#12355B]">Belum ada laporan pada status ini.</p>
             </div>
           )}
         </section>
@@ -220,12 +206,9 @@ export function AdminWorkflowQueueScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               EXPORT BERHASIL
             </p>
-            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">
-              Data Siap Dikirim
-            </h2>
+            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">Data Siap Dikirim</h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              Data laporan berhasil diekspor dan siap dikirim melalui kanal
-              eksternal.
+              Data laporan berhasil diekspor dan siap dikirim melalui kanal eksternal.
             </p>
             <p className="mt-4 border border-[#D9E2EC] bg-[#F7F9FC] px-3 py-3 font-mono text-xs text-[#005BAC]">
               {fileName}
@@ -260,9 +243,7 @@ export function AdminWorkflowQueueScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               PERSIAPAN EXPORT
             </p>
-            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">
-              Export Data Laporan
-            </h2>
+            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">Export Data Laporan</h2>
             <dl className="mt-6 space-y-4 border-y border-[#D9E2EC] py-4 text-sm">
               <div>
                 <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
@@ -280,23 +261,18 @@ export function AdminWorkflowQueueScreen() {
                 <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
                   JUMLAH LAPORAN
                 </dt>
-                <dd className="mt-1 font-medium">
-                  {exportReports.length} laporan
-                </dd>
+                <dd className="mt-1 font-medium">{exportReports.length} laporan</dd>
               </div>
               <div>
                 <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
                   NAMA FILE
                 </dt>
-                <dd className="mt-1 break-all font-mono text-xs text-[#005BAC]">
-                  {fileName}
-                </dd>
+                <dd className="mt-1 break-all font-mono text-xs text-[#005BAC]">{fileName}</dd>
               </div>
             </dl>
             <p className="mt-4 text-sm leading-6 text-[#52657A]">
-              Data yang diekspor mencakup seluruh laporan berstatus Diverifikasi
-              dari Fakultas yang dipilih, termasuk laporan dari berbagai Program
-              Studi.
+              Data yang diekspor mencakup seluruh laporan berstatus Diverifikasi dari Fakultas yang
+              dipilih, termasuk laporan dari berbagai Program Studi.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
@@ -329,12 +305,10 @@ export function AdminWorkflowQueueScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               KONFIRMASI PENGIRIMAN
             </p>
-            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">
-              Konfirmasi Pengiriman Data
-            </h2>
+            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">Konfirmasi Pengiriman Data</h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              Pastikan data laporan telah dikirim kepada Fakultas/Unit terkait
-              melalui kanal eksternal sebelum melanjutkan.
+              Pastikan data laporan telah dikirim kepada Fakultas/Unit terkait melalui kanal
+              eksternal sebelum melanjutkan.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button

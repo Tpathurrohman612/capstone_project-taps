@@ -1,17 +1,15 @@
-import { useState } from "react"
-import { getWorkflowReports } from "../../../shared/lib/workflow-storage"
-import { AdminWorkflowShell, WorkflowTable } from "../components/workflow-ui"
+import { useState } from 'react'
+import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { AdminWorkflowShell, WorkflowTable } from '../components/workflow-ui'
 
 export function AdminWorkflowHistoryScreen() {
-  const [status, setStatus] = useState("Semua")
-  const [query, setQuery] = useState("")
+  const [status, setStatus] = useState('Semua')
+  const [query, setQuery] = useState('')
   const reports = getWorkflowReports().filter(
     (report) =>
-      report.status === "Selesai" &&
-      (status === "Semua" || report.status === status) &&
-      `${report.id} ${report.title}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      report.status === 'Selesai' &&
+      (status === 'Semua' || report.status === status) &&
+      `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
   )
   return (
     <AdminWorkflowShell activeIndex={2}>
@@ -59,20 +57,16 @@ export function AdminWorkflowHistoryScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
                 DAFTAR RIWAYAT LAPORAN
               </p>
-              <h2 className="mt-2 font-slab text-2xl text-[#12355B]">
-                Riwayat Laporan
-              </h2>
+              <h2 className="mt-2 font-slab text-2xl text-[#12355B]">Riwayat Laporan</h2>
             </div>
             <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-              {String(reports.length).padStart(2, "0")} LAPORAN
+              {String(reports.length).padStart(2, '0')} LAPORAN
             </span>
           </div>
           <WorkflowTable reports={reports} context="history" />
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
-              <p className="font-slab text-xl text-[#12355B]">
-                Belum ada laporan selesai.
-              </p>
+              <p className="font-slab text-xl text-[#12355B]">Belum ada laporan selesai.</p>
             </div>
           )}
         </section>

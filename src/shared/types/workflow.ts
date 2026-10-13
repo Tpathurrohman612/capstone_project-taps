@@ -1,9 +1,9 @@
 export type WorkflowStatus =
-  | "Diterima"
-  | "Diverifikasi"
-  | "Menunggu Validasi"
-  | "Diproses"
-  | "Selesai"
+  | 'Diterima'
+  | 'Diverifikasi'
+  | 'Menunggu Validasi'
+  | 'Diproses'
+  | 'Selesai'
 
 export type WorkflowUpdate = {
   time: string

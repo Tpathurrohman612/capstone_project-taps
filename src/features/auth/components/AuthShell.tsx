@@ -1,5 +1,5 @@
-import type { ReactNode } from "react"
-import universitasTerbukaLogo from "../../../assets/universitas-terbuka-logo.png"
+import type { ReactNode } from 'react'
+import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
 
 function AuthBrand() {
   return (

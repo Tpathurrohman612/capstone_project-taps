@@ -1,17 +1,15 @@
-import { useState } from "react"
-import { Link } from "react-router"
-import { getStudentHistoryReports } from "../lib/history-reports"
-import { statusBadge } from "../lib/status-badge"
+import { useState } from 'react'
+import { Link } from 'react-router'
+import { getStudentHistoryReports } from '../lib/history-reports'
+import { statusBadge } from '../lib/status-badge'
 
 export function ReportHistoryScreen() {
-  const [status, setStatus] = useState("Semua")
-  const [query, setQuery] = useState("")
+  const [status, setStatus] = useState('Semua')
+  const [query, setQuery] = useState('')
   const visibleReports = getStudentHistoryReports().filter(
     (report) =>
-      (status === "Semua" || report.status === status) &&
-      `${report.id} ${report.title}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      (status === 'Semua' || report.status === status) &&
+      `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
   )
 
   return (
@@ -62,31 +60,21 @@ export function ReportHistoryScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
               DAFTAR PENGAJUAN
             </p>
-            <h2
-              id="daftar-laporan"
-              className="mt-2 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="daftar-laporan" className="mt-2 font-slab text-2xl text-[#12355B]">
               Laporan Anda
             </h2>
           </div>
           <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-            {String(visibleReports.length).padStart(2, "0")} LAPORAN
+            {String(visibleReports.length).padStart(2, '0')} LAPORAN
           </span>
         </div>
         <div className="mt-4 space-y-4">
           {visibleReports.map((report) => (
-            <article
-              key={report.id}
-              className="border border-[#D9E2EC] bg-white"
-            >
+            <article key={report.id} className="border border-[#D9E2EC] bg-white">
               <div className="flex items-start justify-between gap-5 border-b border-[#D9E2EC] bg-[#F7F9FC] px-5 py-4 max-[620px]:block">
                 <div>
-                  <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                    {report.id}
-                  </p>
-                  <h3 className="mt-1 text-base font-semibold text-[#12355B]">
-                    {report.title}
-                  </h3>
+                  <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
+                  <h3 className="mt-1 text-base font-semibold text-[#12355B]">{report.title}</h3>
                 </div>
                 <span
                   className={`shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${statusBadge(report.status)} max-[620px]:mt-3 max-[620px]:inline-flex`}
@@ -99,28 +87,16 @@ export function ReportHistoryScreen() {
                   <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
                     MATA KULIAH
                   </p>
-                  <p className="mt-1 text-sm font-medium text-[#1F2937]">
-                    {report.course}
-                  </p>
+                  <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.course}</p>
                 </div>
                 <div>
-                  <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
-                    KELAS
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-[#1F2937]">
-                    {report.className}
-                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">KELAS</p>
+                  <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.className}</p>
                 </div>
                 <div>
-                  <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
-                    TUTOR
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-[#1F2937]">
-                    {report.tutor}
-                  </p>
-                  <p className="mt-1 text-xs text-[#52657A]">
-                    Diterima {report.submitted}
-                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">TUTOR</p>
+                  <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.tutor}</p>
+                  <p className="mt-1 text-xs text-[#52657A]">Diterima {report.submitted}</p>
                 </div>
                 <Link
                   to={`/riwayat-laporan/detail-laporan?report=${report.id}`}
@@ -134,9 +110,7 @@ export function ReportHistoryScreen() {
         </div>
         {visibleReports.length === 0 && (
           <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
-            <p className="font-slab text-xl text-[#12355B]">
-              Laporan tidak ditemukan
-            </p>
+            <p className="font-slab text-xl text-[#12355B]">Laporan tidak ditemukan</p>
             <p className="mt-2 text-sm text-[#52657A]">
               Coba ubah kata kunci atau status laporan Anda.
             </p>

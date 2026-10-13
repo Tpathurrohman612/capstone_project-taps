@@ -1,7 +1,13 @@
 export type HistoryReport = {
   id: string
   title: string
-  status: "Diterima" | "Perlu Verifikasi" | "Diverifikasi" | "Menunggu Validasi" | "Sedang Diproses" | "Selesai"
+  status:
+    | 'Diterima'
+    | 'Perlu Verifikasi'
+    | 'Diverifikasi'
+    | 'Menunggu Validasi'
+    | 'Sedang Diproses'
+    | 'Selesai'
   course: string
   className: string
   tutor: string

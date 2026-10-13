@@ -7,19 +7,26 @@
   --font-mono: 'Poppins', Arial, sans-serif;
 }
 
-html { font-family: 'Poppins', Arial, sans-serif; }
+html {
+  font-family: 'Poppins', Arial, sans-serif;
+}
 
 @media (max-width: 900px) {
   html {
-    scroll-padding-top: calc(
-      max(4rem, env(safe-area-inset-top)) + 4.5rem
-    );
+    scroll-padding-top: calc(max(4rem, env(safe-area-inset-top)) + 4.5rem);
   }
 }
 
-.font-slab { font-family: 'Poppins', Arial, sans-serif; font-weight: 600; }
-.font-mono { font-family: 'Poppins', Arial, sans-serif; }
-.font-mono.font-semibold { font-weight: 500; }
+.font-slab {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-weight: 600;
+}
+.font-mono {
+  font-family: 'Poppins', Arial, sans-serif;
+}
+.font-mono.font-semibold {
+  font-weight: 500;
+}
 
 button {
   cursor: pointer;

@@ -1,16 +1,16 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from 'react'
 
 const designColors = [
-  ["Primary", "#005BAC", "bg-[#005BAC]"],
-  ["Secondary / Navy", "#12355B", "bg-[#12355B]"],
-  ["Background", "#F7F9FC", "bg-[#F7F9FC]"],
-  ["Surface", "#FFFFFF", "bg-white"],
-  ["Text", "#1F2937", "bg-[#1F2937]"],
-  ["Muted Text", "#52657A", "bg-[#52657A]"],
-  ["Border", "#D9E2EC", "bg-[#D9E2EC]"],
-  ["Success", "#12355B", "bg-[#12355B]"],
-  ["Warning", "#F2C94C", "bg-[#F2C94C]"],
-  ["Error", "#B42318", "bg-[#B42318]"],
+  ['Primary', '#005BAC', 'bg-[#005BAC]'],
+  ['Secondary / Navy', '#12355B', 'bg-[#12355B]'],
+  ['Background', '#F7F9FC', 'bg-[#F7F9FC]'],
+  ['Surface', '#FFFFFF', 'bg-white'],
+  ['Text', '#1F2937', 'bg-[#1F2937]'],
+  ['Muted Text', '#52657A', 'bg-[#52657A]'],
+  ['Border', '#D9E2EC', 'bg-[#D9E2EC]'],
+  ['Success', '#12355B', 'bg-[#12355B]'],
+  ['Warning', '#F2C94C', 'bg-[#F2C94C]'],
+  ['Error', '#B42318', 'bg-[#B42318]'],
 ] as const
 
 function DesignSystemSection({
@@ -37,11 +37,11 @@ function DesignSystemSection({
 
 export function DesignSystemScreen() {
   const statusSamples = [
-    ["Diterima", "border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]"],
-    ["Diverifikasi", "border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]"],
-    ["Menunggu Validasi", "border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]"],
-    ["Sedang Diproses", "border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]"],
-    ["Selesai", "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"],
+    ['Diterima', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
+    ['Diverifikasi', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
+    ['Menunggu Validasi', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
+    ['Sedang Diproses', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
+    ['Selesai', 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'],
   ]
   return (
     <main className="min-h-screen bg-[#F7F9FC] px-6 py-8 text-[#1F2937] max-[620px]:px-5">
@@ -56,8 +56,8 @@ export function DesignSystemScreen() {
                 Design System
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#52657A]">
-                Referensi visual yang dirangkum dari pola antarmuka Mahasiswa
-                dan Administrator Lapor Tuton.
+                Referensi visual yang dirangkum dari pola antarmuka Mahasiswa dan Administrator
+                Lapor Tuton.
               </p>
             </div>
             <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] text-[#005BAC] max-[620px]:mt-4 max-[620px]:inline-block">
@@ -70,16 +70,9 @@ export function DesignSystemScreen() {
           <DesignSystemSection number="01 / WARNA" title="Colors">
             <div className="grid grid-cols-5 gap-4 max-[950px]:grid-cols-3 max-[620px]:grid-cols-2">
               {designColors.map(([name, value, colorClass]) => (
-                <div
-                  key={name}
-                  className="border border-[#D9E2EC] bg-white p-3"
-                >
-                  <span
-                    className={`block h-14 border border-[#D9E2EC] ${colorClass}`}
-                  />
-                  <p className="mt-3 text-sm font-semibold text-[#12355B]">
-                    {name}
-                  </p>
+                <div key={name} className="border border-[#D9E2EC] bg-white p-3">
+                  <span className={`block h-14 border border-[#D9E2EC] ${colorClass}`} />
+                  <p className="mt-3 text-sm font-semibold text-[#12355B]">{name}</p>
                   <p className="mt-1 font-mono text-[10px] tracking-[0.08em] text-[#52657A]">
                     {value}
                   </p>
@@ -103,9 +96,7 @@ export function DesignSystemScreen() {
                   <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                     SECTION TITLE / POPPINS 600 / 24PX
                   </p>
-                  <p className="mt-1 font-slab text-2xl text-[#12355B]">
-                    Informasi Laporan
-                  </p>
+                  <p className="mt-1 font-slab text-2xl text-[#12355B]">Informasi Laporan</p>
                 </div>
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
@@ -120,8 +111,7 @@ export function DesignSystemScreen() {
                     BODY / POPPINS 400 / 14PX
                   </p>
                   <p className="mt-1 text-sm leading-6">
-                    Informasi disajikan dengan bahasa yang ringkas dan mudah
-                    dipindai.
+                    Informasi disajikan dengan bahasa yang ringkas dan mudah dipindai.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -129,17 +119,13 @@ export function DesignSystemScreen() {
                     <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                       LABEL / POPPINS 500
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-[#12355B]">
-                      Nama Tutor
-                    </p>
+                    <p className="mt-1 text-sm font-semibold text-[#12355B]">Nama Tutor</p>
                   </div>
                   <div>
                     <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                       CAPTION / TABLE / POPPINS 400
                     </p>
-                    <p className="mt-1 font-mono text-xs text-[#52657A]">
-                      LT-2026-0009
-                    </p>
+                    <p className="mt-1 font-mono text-xs text-[#52657A]">LT-2026-0009</p>
                   </div>
                 </div>
                 <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
@@ -151,19 +137,14 @@ export function DesignSystemScreen() {
             <DesignSystemSection number="03 / SPASI" title="Spacing">
               <dl className="divide-y divide-[#D9E2EC]">
                 {[
-                  ["Margin halaman", "px-8 py-7 · mobile px-5"],
-                  ["Jarak antarseksi", "mt-8 hingga mt-10"],
-                  ["Padding kartu", "p-6 · mobile p-5"],
-                  ["Form field", "mt-2 untuk kontrol · gap-4 antarfield"],
-                  ["Modal", "p-6 · aksi mt-7"],
+                  ['Margin halaman', 'px-8 py-7 · mobile px-5'],
+                  ['Jarak antarseksi', 'mt-8 hingga mt-10'],
+                  ['Padding kartu', 'p-6 · mobile p-5'],
+                  ['Form field', 'mt-2 untuk kontrol · gap-4 antarfield'],
+                  ['Modal', 'p-6 · aksi mt-7'],
                 ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between gap-5 py-4"
-                  >
-                    <dt className="text-sm font-semibold text-[#12355B]">
-                      {label}
-                    </dt>
+                  <div key={label} className="flex items-center justify-between gap-5 py-4">
+                    <dt className="text-sm font-semibold text-[#12355B]">{label}</dt>
                     <dd className="font-mono text-[10px] text-right tracking-[0.08em] text-[#52657A]">
                       {value}
                     </dd>
@@ -177,9 +158,7 @@ export function DesignSystemScreen() {
             <div className="grid grid-cols-2 gap-8 max-[900px]:grid-cols-1">
               <div className="space-y-5">
                 <div>
-                  <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
-                    BUTTONS
-                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">BUTTONS</p>
                   <div className="mt-3 flex flex-wrap gap-3">
                     <button className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white">
                       Primary
@@ -251,12 +230,8 @@ export function DesignSystemScreen() {
                   </div>
                   <div className="grid grid-cols-[1fr_auto] gap-3 px-4 py-4">
                     <div>
-                      <p className="text-sm font-semibold text-[#12355B]">
-                        LT-2026-0009
-                      </p>
-                      <p className="mt-1 text-xs text-[#52657A]">
-                        Aktivitas tutor · Akuntansi
-                      </p>
+                      <p className="text-sm font-semibold text-[#12355B]">LT-2026-0009</p>
+                      <p className="mt-1 text-xs text-[#52657A]">Aktivitas tutor · Akuntansi</p>
                     </div>
                     <span className="border-b border-[#005BAC] pb-1 text-xs font-semibold text-[#005BAC]">
                       Lihat Detail
@@ -268,23 +243,20 @@ export function DesignSystemScreen() {
           </DesignSystemSection>
 
           <div className="grid grid-cols-2 gap-8 max-[900px]:grid-cols-1">
-            <DesignSystemSection
-              number="05 / STATUS LAPORAN"
-              title="Status Components"
-            >
+            <DesignSystemSection number="05 / STATUS LAPORAN" title="Status Components">
               <ol className="space-y-4">
                 {statusSamples.map(([label, className], index) => (
                   <li key={label} className="flex items-center gap-4">
                     <span
                       className={`flex h-6 w-6 items-center justify-center border-2 text-[10px] font-bold ${
                         index < 3
-                          ? "border-[#005BAC] bg-[#005BAC] text-white"
+                          ? 'border-[#005BAC] bg-[#005BAC] text-white'
                           : index === 3
-                            ? "border-[#C99C20] bg-[#F2C94C] text-[#12355B]"
-                            : "border-[#B9C8D7] bg-white text-[#7D8B99]"
+                            ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
+                            : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
                       }`}
                     >
-                      {index < 3 ? "✓" : index + 1}
+                      {index < 3 ? '✓' : index + 1}
                     </span>
                     <span
                       className={`inline-flex border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${className}`}
@@ -298,19 +270,16 @@ export function DesignSystemScreen() {
             <DesignSystemSection number="06 / STATE" title="Component States">
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  ["Default", "border-[#B9C8D7] bg-white text-[#1F2937]"],
-                  ["Hover", "border-[#12355B] bg-[#12355B] text-white"],
-                  ["Active", "border-[#005BAC] bg-[#EEF5FB] text-[#005BAC]"],
-                  ["Disabled", "border-[#D9E2EC] bg-[#F7F9FC] text-[#7D8B99]"],
-                  ["Success", "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"],
-                  ["Warning", "border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]"],
-                  ["Error", "border-[#B42318] bg-white text-[#B42318]"],
-                  ["Selected", "border-[#005BAC] bg-[#EEF5FB] text-[#005BAC]"],
+                  ['Default', 'border-[#B9C8D7] bg-white text-[#1F2937]'],
+                  ['Hover', 'border-[#12355B] bg-[#12355B] text-white'],
+                  ['Active', 'border-[#005BAC] bg-[#EEF5FB] text-[#005BAC]'],
+                  ['Disabled', 'border-[#D9E2EC] bg-[#F7F9FC] text-[#7D8B99]'],
+                  ['Success', 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'],
+                  ['Warning', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
+                  ['Error', 'border-[#B42318] bg-white text-[#B42318]'],
+                  ['Selected', 'border-[#005BAC] bg-[#EEF5FB] text-[#005BAC]'],
                 ].map(([label, className]) => (
-                  <div
-                    key={label}
-                    className={`border p-3 text-sm font-semibold ${className}`}
-                  >
+                  <div key={label} className={`border p-3 text-sm font-semibold ${className}`}>
                     {label}
                   </div>
                 ))}
@@ -324,9 +293,7 @@ export function DesignSystemScreen() {
           >
             <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-8 max-[900px]:grid-cols-1">
               <div className="border border-[#D9E2EC] bg-[#F7F9FC] p-4">
-                <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
-                  BREADCRUMB
-                </p>
+                <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">BREADCRUMB</p>
                 <p className="mt-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
                   ADMINISTRATOR / ANTREAN LAPORAN
                 </p>
@@ -334,9 +301,7 @@ export function DesignSystemScreen() {
                   <p className="border-l-2 border-[#005BAC] bg-white px-3 py-2 text-sm font-semibold text-[#12355B]">
                     Antrean Laporan
                   </p>
-                  <p className="px-3 py-2 text-sm text-[#52657A]">
-                    Riwayat Laporan
-                  </p>
+                  <p className="px-3 py-2 text-sm text-[#52657A]">Riwayat Laporan</p>
                 </div>
               </div>
               <div>
@@ -345,17 +310,13 @@ export function DesignSystemScreen() {
                 </p>
                 <ol className="mt-4 space-y-4 border-l border-[#B8D3E8] pl-5">
                   <li>
-                    <p className="font-mono text-[10px] text-[#52657A]">
-                      17 September 2026, 10:00
-                    </p>
+                    <p className="font-mono text-[10px] text-[#52657A]">17 September 2026, 10:00</p>
                     <p className="mt-1 text-sm font-semibold text-[#12355B]">
                       Laporan diverifikasi
                     </p>
                   </li>
                   <li>
-                    <p className="font-mono text-[10px] text-[#52657A]">
-                      17 September 2026, 17:00
-                    </p>
+                    <p className="font-mono text-[10px] text-[#52657A]">17 September 2026, 17:00</p>
                     <p className="mt-1 text-sm font-semibold text-[#12355B]">
                       Laporan memasuki proses tindak lanjut
                     </p>
@@ -365,9 +326,7 @@ export function DesignSystemScreen() {
                   <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                     CONTOH MODAL
                   </p>
-                  <p className="mt-2 font-slab text-xl text-[#12355B]">
-                    Konfirmasi Tindakan
-                  </p>
+                  <p className="mt-2 font-slab text-xl text-[#12355B]">Konfirmasi Tindakan</p>
                   <div className="mt-4 flex justify-end gap-2">
                     <button className="border border-[#12355B] px-3 py-2 text-xs font-semibold text-[#12355B]">
                       Batal
@@ -381,24 +340,17 @@ export function DesignSystemScreen() {
             </div>
           </DesignSystemSection>
 
-          <DesignSystemSection
-            number="08 / AUTENTIKASI"
-            title="Login & Identity Components"
-          >
+          <DesignSystemSection number="08 / AUTENTIKASI" title="Login & Identity Components">
             <div className="grid grid-cols-2 gap-8 max-[900px]:grid-cols-1">
               <div className="border border-[#D9E2EC] bg-[#F7F9FC] p-5">
                 <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                   LOGIN FORM LAYOUT
                 </p>
                 <div className="mt-4 border border-[#D9E2EC] bg-white p-5">
-                  <p className="font-slab text-xl text-[#12355B]">
-                    Masuk ke Lapor Tuton
-                  </p>
+                  <p className="font-slab text-xl text-[#12355B]">Masuk ke Lapor Tuton</p>
                   <div className="mt-5 space-y-4">
                     <label className="block">
-                      <span className="text-sm font-medium text-[#12355B]">
-                        Email
-                      </span>
+                      <span className="text-sm font-medium text-[#12355B]">Email</span>
                       <input
                         readOnly
                         value="administrator@laportuton.example"
@@ -406,9 +358,7 @@ export function DesignSystemScreen() {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-[#12355B]">
-                        Password
-                      </span>
+                      <span className="text-sm font-medium text-[#12355B]">Password</span>
                       <input
                         readOnly
                         type="password"
@@ -456,12 +406,8 @@ export function DesignSystemScreen() {
                     READ-ONLY ACCOUNT EMAIL
                   </p>
                   <div className="mt-3 border border-[#D9E2EC] bg-[#F7F9FC] px-4 py-3">
-                    <p className="text-sm font-medium text-[#12355B]">
-                      Email Google
-                    </p>
-                    <p className="mt-1 text-sm text-[#52657A]">
-                      registered.student@gmail.com
-                    </p>
+                    <p className="text-sm font-medium text-[#12355B]">Email Google</p>
+                    <p className="mt-1 text-sm text-[#52657A]">registered.student@gmail.com</p>
                   </div>
                 </div>
 
@@ -470,8 +416,8 @@ export function DesignSystemScreen() {
                     VALIDATION / ERROR MESSAGE
                   </p>
                   <p className="mt-3 border-l-2 border-[#B42318] bg-[#F7F9FC] px-3 py-2 text-xs leading-5 text-[#B42318]">
-                    NIM sudah terdaftar pada akun lain. Silakan gunakan akun
-                    Google yang telah terhubung dengan NIM tersebut.
+                    NIM sudah terdaftar pada akun lain. Silakan gunakan akun Google yang telah
+                    terhubung dengan NIM tersebut.
                   </p>
                 </div>
               </div>

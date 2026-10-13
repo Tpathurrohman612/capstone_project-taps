@@ -1,24 +1,22 @@
-import { useState, type ReactNode } from "react"
-import { Link } from "react-router"
-import universitasTerbukaLogo from "../../../assets/universitas-terbuka-logo.png"
-import type { WorkflowReport, WorkflowStatus } from "../../../shared/types/workflow"
-import { handlePrototypeLogout } from "../../../shared/lib/auth-session"
-import { adminNavItems } from "../data/navigation"
+import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
+import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
+import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
+import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
+import { adminNavItems } from '../data/navigation'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
     active
-      ? "border-[#12355B] bg-[#12355B] font-medium text-white"
-      : "border-transparent hover:border-[#D9E2EC] hover:bg-white"
+      ? 'border-[#12355B] bg-[#12355B] font-medium text-white'
+      : 'border-transparent hover:border-[#D9E2EC] hover:bg-white'
   }`
 
 function NavNumber({ active, number }: { active: boolean; number: number }) {
   return (
     <span
       className={`flex h-5 w-5 items-center justify-center border text-[10px] ${
-        active
-          ? "border-[#9FC8EA] text-[#DCEBF8]"
-          : "border-[#A9B8C8] text-[#52657A]"
+        active ? 'border-[#9FC8EA] text-[#DCEBF8]' : 'border-[#A9B8C8] text-[#52657A]'
       }`}
     >
       0{number}
@@ -26,13 +24,12 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   )
 }
 
-
 export const workflowStatusClass = (status: WorkflowStatus) =>
-  status === "Selesai"
-    ? "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"
-    : status === "Diproses" || status === "Diterima"
-      ? "border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]"
-      : "border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]"
+  status === 'Selesai'
+    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
+    : status === 'Diproses' || status === 'Diterima'
+      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
+      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
 
 export function AdminWorkflowShell({
   activeIndex,
@@ -44,13 +41,11 @@ export function AdminWorkflowShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const nav = (mobile = false) => (
     <nav
-      className={
-        mobile ? "mt-6 flex flex-col gap-2" : "mt-7 flex flex-col gap-1"
-      }
+      className={mobile ? 'mt-6 flex flex-col gap-2' : 'mt-7 flex flex-col gap-1'}
       aria-label="Navigasi administrator"
     >
       {adminNavItems.map((item, index) =>
-        item.to === "#" ? (
+        item.to === '#' ? (
           <button
             key={item.label}
             onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
@@ -79,8 +74,8 @@ export function AdminWorkflowShell({
         <header
           className={`${
             mobileMenuOpen
-              ? "hidden"
-              : "sticky top-0 z-10 hidden items-center justify-between border-b border-[#D9E2EC] bg-[#F7F9FC] pb-4 pt-[max(4rem,env(safe-area-inset-top))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] max-[900px]:flex"
+              ? 'hidden'
+              : 'sticky top-0 z-10 hidden items-center justify-between border-b border-[#D9E2EC] bg-[#F7F9FC] pb-4 pt-[max(4rem,env(safe-area-inset-top))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] max-[900px]:flex'
           }`}
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -117,15 +112,16 @@ export function AdminWorkflowShell({
               alt="Universitas Terbuka"
               className="h-auto w-[142px]"
             />
-            <span className="mt-4 font-slab text-[26px] leading-none">
-              Lapor Tuton
-            </span>
+            <span className="mt-4 font-slab text-[26px] leading-none">Lapor Tuton</span>
             <span className="mt-2 font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
               ADMINISTRATOR
             </span>
           </div>
           {nav()}
-          <button className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
+          <button
+            className="mt-auto flex items-center gap-3 px-3 py-3 text-left text-sm text-[#52657A]"
+            onClick={handlePrototypeLogout}
+          >
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -182,7 +178,7 @@ export function WorkflowDetailLink({
   children,
 }: {
   report: WorkflowReport
-  context: "queue" | "history"
+  context: 'queue' | 'history'
   className: string
   children: ReactNode
 }) {
@@ -190,8 +186,8 @@ export function WorkflowDetailLink({
     <Link
       to="/detail-laporan"
       onClick={() => {
-        window.sessionStorage.setItem("adminDetailContext", context)
-        window.sessionStorage.setItem("adminDetailId", report.id)
+        window.sessionStorage.setItem('adminDetailContext', context)
+        window.sessionStorage.setItem('adminDetailId', report.id)
       }}
       className={className}
     >
@@ -201,33 +197,31 @@ export function WorkflowDetailLink({
 }
 
 export const reportGroup = (report: WorkflowReport) => {
-  if (report.course.startsWith("AKUN")) {
+  if (report.course.startsWith('AKUN')) {
     return {
-      faculty: "Fakultas Ekonomi dan Bisnis",
-      programStudy: "Akuntansi",
+      faculty: 'Fakultas Ekonomi dan Bisnis',
+      programStudy: 'Akuntansi',
     }
   }
-  if (report.course.startsWith("ESPA")) {
+  if (report.course.startsWith('ESPA')) {
     return {
-      faculty: "Fakultas Ekonomi dan Bisnis",
-      programStudy: "Ekonomi Pembangunan",
+      faculty: 'Fakultas Ekonomi dan Bisnis',
+      programStudy: 'Ekonomi Pembangunan',
     }
   }
-  if (report.course.startsWith("ADBI")) {
+  if (report.course.startsWith('ADBI')) {
     return {
-      faculty: "Fakultas Ilmu Sosial dan Ilmu Politik",
-      programStudy: "Administrasi Bisnis",
+      faculty: 'Fakultas Ilmu Sosial dan Ilmu Politik',
+      programStudy: 'Administrasi Bisnis',
     }
   }
   return {
-    faculty: "Fakultas Ekonomi dan Bisnis",
-    programStudy: report.course.startsWith("PAJA")
-      ? "Akuntansi Keuangan Publik"
-      : "Manajemen",
+    faculty: 'Fakultas Ekonomi dan Bisnis',
+    programStudy: report.course.startsWith('PAJA') ? 'Akuntansi Keuangan Publik' : 'Manajemen',
   }
 }
 
-export const exportFilePart = (value: string) => value.replace(/[^A-Za-z0-9]+/g, "_")
+export const exportFilePart = (value: string) => value.replace(/[^A-Za-z0-9]+/g, '_')
 
 export function WorkflowTable({
   reports,
@@ -238,17 +232,17 @@ export function WorkflowTable({
   showProgramStudy = false,
 }: {
   reports: WorkflowReport[]
-  context: "queue" | "history"
+  context: 'queue' | 'history'
   selectable?: boolean
   selectedIds?: string[]
   onToggle?: (id: string) => void
   showProgramStudy?: boolean
 }) {
   const gridColumns = showProgramStudy
-    ? "grid-cols-[105px_135px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]"
+    ? 'grid-cols-[105px_135px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
     : selectable
-      ? "grid-cols-[28px_105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]"
-      : "grid-cols-[105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]"
+      ? 'grid-cols-[28px_105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
+      : 'grid-cols-[105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
   return (
     <>
       <div
@@ -260,7 +254,7 @@ export function WorkflowTable({
         {showProgramStudy && <span>PROGRAM STUDI</span>}
         <span>MATA KULIAH</span>
         <span>KELAS</span>
-        <span>{context === "queue" ? "TUTOR" : "TUTOR"}</span>
+        <span>{context === 'queue' ? 'TUTOR' : 'TUTOR'}</span>
         <span>TGL PENGAJUAN</span>
         <span>STATUS</span>
         <span>AKSI</span>
@@ -277,18 +271,14 @@ export function WorkflowTable({
                   type="checkbox"
                   checked={selectedIds.includes(report.id)}
                   onChange={() => onToggle?.(report.id)}
-                  disabled={report.status !== "Diverifikasi"}
+                  disabled={report.status !== 'Diverifikasi'}
                   aria-label={`Pilih laporan ${report.id}`}
                   className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                 />
               )}
-              <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                {report.id}
-              </p>
+              <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
               <p className="text-sm">{report.category}</p>
-              {showProgramStudy && (
-                <p className="text-sm">{reportGroup(report).programStudy}</p>
-              )}
+              {showProgramStudy && <p className="text-sm">{reportGroup(report).programStudy}</p>}
               <p className="text-sm font-medium">{report.course}</p>
               <p className="text-sm">{report.className}</p>
               <p className="text-sm">{report.tutor}</p>
@@ -296,8 +286,8 @@ export function WorkflowTable({
               <span
                 className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
               >
-                {context === "queue" && report.status === "Diproses"
-                  ? "Sedang Diproses"
+                {context === 'queue' && report.status === 'Diproses'
+                  ? 'Sedang Diproses'
                   : report.status}
               </span>
               <WorkflowDetailLink
@@ -305,13 +295,10 @@ export function WorkflowTable({
                 context={context}
                 className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
               >
-                {report.status === "Diterima" ? "Verifikasi" : "Lihat Detail"}
+                {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
               </WorkflowDetailLink>
             </article>
-            <article
-              key={`${report.id}-mobile`}
-              className="hidden px-4 py-5 max-xl:block"
-            >
+            <article key={`${report.id}-mobile`} className="hidden px-4 py-5 max-xl:block">
               <div className="flex items-start justify-between gap-4">
                 <label className="flex items-center gap-3">
                   {selectable && (
@@ -319,26 +306,22 @@ export function WorkflowTable({
                       type="checkbox"
                       checked={selectedIds.includes(report.id)}
                       onChange={() => onToggle?.(report.id)}
-                      disabled={report.status !== "Diverifikasi"}
+                      disabled={report.status !== 'Diverifikasi'}
                       aria-label={`Pilih laporan ${report.id}`}
                       className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                     />
                   )}
-                  <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                    {report.id}
-                  </p>
+                  <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                 </label>
                 <span
                   className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                 >
-                  {context === "queue" && report.status === "Diproses"
-                    ? "Sedang Diproses"
+                  {context === 'queue' && report.status === 'Diproses'
+                    ? 'Sedang Diproses'
                     : report.status}
                 </span>
               </div>
-              <p className="mt-3 text-sm font-semibold leading-6 text-[#12355B]">
-                {report.title}
-              </p>
+              <p className="mt-3 text-sm font-semibold leading-6 text-[#12355B]">{report.title}</p>
               <dl className="mt-4 space-y-3 border-t border-[#D9E2EC] pt-4">
                 <div>
                   <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
@@ -351,9 +334,7 @@ export function WorkflowTable({
                     <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                       PROGRAM STUDI
                     </dt>
-                    <dd className="mt-1 text-sm">
-                      {reportGroup(report).programStudy}
-                    </dd>
+                    <dd className="mt-1 text-sm">{reportGroup(report).programStudy}</dd>
                   </div>
                 )}
                 <div>
@@ -363,14 +344,12 @@ export function WorkflowTable({
                   <dd className="mt-1 text-sm">{report.course}</dd>
                 </div>
                 <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    KELAS
-                  </dt>
+                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">KELAS</dt>
                   <dd className="mt-1 text-sm">{report.className}</dd>
                 </div>
                 <div>
                   <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    {context === "queue" ? "TUTOR" : "TUTOR"}
+                    {context === 'queue' ? 'TUTOR' : 'TUTOR'}
                   </dt>
                   <dd className="mt-1 text-sm">{report.tutor}</dd>
                 </div>
@@ -386,7 +365,7 @@ export function WorkflowTable({
                 context={context}
                 className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] hover:bg-[#005BAC] hover:text-white"
               >
-                {report.status === "Diterima" ? "Verifikasi" : "Lihat Detail"}
+                {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
               </WorkflowDetailLink>
             </article>
           </div>

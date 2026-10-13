@@ -1,21 +1,21 @@
-import { useState } from "react"
-import { Link, Outlet, useLocation } from "react-router"
-import universitasTerbukaLogo from "../../../assets/universitas-terbuka-logo.png"
-import { handlePrototypeLogout } from "../../../shared/lib/auth-session"
-import { navItems } from "../data/navigation"
+import { useState } from 'react'
+import { Link, Outlet, useLocation } from 'react-router'
+import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
+import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
+import { navItems } from '../data/navigation'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
     active
-      ? "border-[#12355B] bg-[#12355B] font-medium text-white"
-      : "border-transparent hover:border-[#D9E2EC] hover:bg-white"
+      ? 'border-[#12355B] bg-[#12355B] font-medium text-white'
+      : 'border-transparent hover:border-[#D9E2EC] hover:bg-white'
   }`
 
 export function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
-  const isActive = (to: string) => to !== "#" && location.pathname === to
-  const isCreateReportPage = location.pathname === "/buat-laporan"
+  const isActive = (to: string) => to !== '#' && location.pathname === to
+  const isCreateReportPage = location.pathname === '/buat-laporan'
 
   return (
     <main className="min-h-screen bg-[#F7F9FC] text-[#1F2937] selection:bg-[#DCEBF8]">
@@ -23,11 +23,7 @@ export function AppLayout() {
         <header
           className={`sticky top-0 z-10 hidden items-center justify-between border-b border-[#D9E2EC] bg-[#F7F9FC] pb-4 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(4rem,env(safe-area-inset-top))] max-[900px]:flex`}
         >
-          <div
-            className={`flex items-center gap-3 ${
-              isCreateReportPage ? "min-w-0 flex-1" : ""
-            }`}
-          >
+          <div className={`flex items-center gap-3 ${isCreateReportPage ? 'min-w-0 flex-1' : ''}`}>
             <img
               src={universitasTerbukaLogo}
               alt="Universitas Terbuka"
@@ -35,7 +31,7 @@ export function AppLayout() {
             />
             <span
               className={`${
-                isCreateReportPage ? "whitespace-nowrap" : ""
+                isCreateReportPage ? 'whitespace-nowrap' : ''
               } font-slab text-xl leading-none max-[360px]:text-lg`}
             >
               Lapor Tuton
@@ -45,7 +41,7 @@ export function AppLayout() {
             type="button"
             onClick={() => setMobileMenuOpen(true)}
             className={`flex h-10 w-10 items-center justify-center border border-[#12355B] text-[#12355B] ${
-              isCreateReportPage ? "ml-3 shrink-0" : ""
+              isCreateReportPage ? 'ml-3 shrink-0' : ''
             }`}
             aria-label="Buka menu navigasi"
             aria-expanded={mobileMenuOpen}
@@ -66,31 +62,28 @@ export function AppLayout() {
               className="h-auto w-[142px]"
             />
             <div className="mt-4 flex items-baseline justify-center">
-              <span className="p-0 font-slab text-[26px] leading-none">
-                Lapor Tuton
-              </span>
+              <span className="p-0 font-slab text-[26px] leading-none">Lapor Tuton</span>
             </div>
           </div>
           <nav className="mt-7 flex flex-col gap-1" aria-label="Navigasi utama">
             {navItems.map((item, index) =>
-              item.to === "#" ? (
+              item.to === '#' ? (
                 <button key={item.label} className={navButton(false)}>
                   <NavNumber active={false} number={index + 1} />
                   {item.label}
                 </button>
               ) : (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className={navButton(isActive(item.to))}
-                >
+                <Link key={item.label} to={item.to} className={navButton(isActive(item.to))}>
                   <NavNumber active={isActive(item.to)} number={index + 1} />
                   {item.label}
                 </Link>
               ),
             )}
           </nav>
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
+          <button
+            className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]"
+            onClick={handlePrototypeLogout}
+          >
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -132,7 +125,7 @@ export function AppLayout() {
               </div>
               <nav className="mt-6 flex flex-col gap-2">
                 {navItems.map((item, index) =>
-                  item.to === "#" ? (
+                  item.to === '#' ? (
                     <button key={item.label} className={navButton(false)}>
                       <NavNumber active={false} number={index + 1} />
                       {item.label}
@@ -144,16 +137,16 @@ export function AppLayout() {
                       onClick={() => setMobileMenuOpen(false)}
                       className={navButton(isActive(item.to))}
                     >
-                      <NavNumber
-                        active={isActive(item.to)}
-                        number={index + 1}
-                      />
+                      <NavNumber active={isActive(item.to)} number={index + 1} />
                       {item.label}
                     </Link>
                   ),
                 )}
               </nav>
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
+              <button
+                className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]"
+                onClick={handlePrototypeLogout}
+              >
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -172,9 +165,7 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   return (
     <span
       className={`flex h-5 w-5 items-center justify-center border text-[10px] ${
-        active
-          ? "border-[#9FC8EA] text-[#DCEBF8]"
-          : "border-[#A9B8C8] text-[#52657A]"
+        active ? 'border-[#9FC8EA] text-[#DCEBF8]' : 'border-[#A9B8C8] text-[#52657A]'
       }`}
     >
       0{number}

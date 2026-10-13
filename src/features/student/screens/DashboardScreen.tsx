@@ -1,33 +1,24 @@
-import { useState } from "react"
-import { useNavigate } from "react-router"
-import { studentNotifications, type StudentNotification } from "../data/notifications"
-import type { HistoryReport } from "../../../shared/types/history-report"
-import { getStudentHistoryReports } from "../lib/history-reports"
-import { statusBadge } from "../lib/status-badge"
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import { studentNotifications, type StudentNotification } from '../data/notifications'
+import type { HistoryReport } from '../../../shared/types/history-report'
+import { getStudentHistoryReports } from '../lib/history-reports'
+import { statusBadge } from '../lib/status-badge'
 
 export function DashboardScreen() {
-  const [selectedReport, setSelectedReport] = useState<HistoryReport | null>(
-    null,
-  )
+  const [selectedReport, setSelectedReport] = useState<HistoryReport | null>(null)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notifications, setNotifications] =
-    useState<StudentNotification[]>(studentNotifications)
+  const [notifications, setNotifications] = useState<StudentNotification[]>(studentNotifications)
   const navigate = useNavigate()
   const studentReports = getStudentHistoryReports()
   const recentReports = studentReports.slice(0, 3)
-  const unreadNotifications = notifications.filter(
-    (notification) => notification.unread,
-  ).length
+  const unreadNotifications = notifications.filter((notification) => notification.unread).length
 
   const openNotification = (notification: StudentNotification) => {
-    const report = studentReports.find(
-      (item) => item.id === notification.reportId,
-    )
+    const report = studentReports.find((item) => item.id === notification.reportId)
     if (report) setSelectedReport(report)
     setNotifications((items) =>
-      items.map((item) =>
-        item.id === notification.id ? { ...item, unread: false } : item,
-      ),
+      items.map((item) => (item.id === notification.id ? { ...item, unread: false } : item)),
     )
     setNotificationsOpen(false)
   }
@@ -49,16 +40,14 @@ export function DashboardScreen() {
           </div>
           <div className="relative mt-1 flex items-center gap-3 max-[620px]:mt-6">
             <div className="border-l border-[#D9E2EC] pl-4 text-right max-[620px]:border-l-0 max-[620px]:pl-0 max-[620px]:text-left">
-              <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
-                NIM
-              </p>
+              <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">NIM</p>
               <p className="mt-1 text-sm font-medium">XXXXXXXXXX</p>
             </div>
             <button
               type="button"
               onClick={() => setNotificationsOpen((open) => !open)}
               className="relative flex h-10 w-10 items-center justify-center border border-[#12355B] text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
-              aria-label={`Notifikasi${unreadNotifications ? `, ${unreadNotifications} belum dibaca` : ""}`}
+              aria-label={`Notifikasi${unreadNotifications ? `, ${unreadNotifications} belum dibaca` : ''}`}
               aria-expanded={notificationsOpen}
               aria-controls="student-notifications"
             >
@@ -86,13 +75,11 @@ export function DashboardScreen() {
               >
                 <div className="flex items-center justify-between border-b border-[#D9E2EC] bg-[#EEF5FB] px-4 py-3">
                   <div>
-                    <p className="font-slab text-base text-[#12355B]">
-                      Notifikasi
-                    </p>
+                    <p className="font-slab text-base text-[#12355B]">Notifikasi</p>
                     <p className="mt-0.5 font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                       {unreadNotifications > 0
                         ? `${unreadNotifications} BELUM DIBACA`
-                        : "SEMUA SUDAH DIBACA"}
+                        : 'SEMUA SUDAH DIBACA'}
                     </p>
                   </div>
                   {notifications.length > 0 && (
@@ -129,12 +116,9 @@ export function DashboardScreen() {
                   </div>
                 ) : (
                   <div className="px-4 py-8 text-center">
-                    <p className="font-slab text-base text-[#12355B]">
-                      Tidak ada notifikasi
-                    </p>
+                    <p className="font-slab text-base text-[#12355B]">Tidak ada notifikasi</p>
                     <p className="mt-2 text-xs leading-5 text-[#52657A]">
-                      Pembaruan status dan tindak lanjut laporan akan tampil di
-                      sini.
+                      Pembaruan status dan tindak lanjut laporan akan tampil di sini.
                     </p>
                   </div>
                 )}
@@ -145,42 +129,37 @@ export function DashboardScreen() {
         <div className="mt-8 grid grid-cols-[repeat(3,minmax(0,1fr))] border border-[#D9E2EC] max-[760px]:grid-cols-1">
           {[
             [
-              String(studentReports.length).padStart(2, "0"),
-              "Total Laporan",
-              "Seluruh laporan Anda",
+              String(studentReports.length).padStart(2, '0'),
+              'Total Laporan',
+              'Seluruh laporan Anda',
             ],
             [
               String(
-                studentReports.filter(
-                  (report) => report.status === "Sedang Diproses",
-                ).length,
-              ).padStart(2, "0"),
-              "Sedang Diproses",
-              "Menunggu tindak lanjut",
+                studentReports.filter((report) => report.status === 'Sedang Diproses').length,
+              ).padStart(2, '0'),
+              'Sedang Diproses',
+              'Menunggu tindak lanjut',
             ],
             [
               String(
-                studentReports.filter((report) => report.status === "Selesai")
-                  .length,
-              ).padStart(2, "0"),
-              "Selesai",
-              "Telah ditangani",
+                studentReports.filter((report) => report.status === 'Selesai').length,
+              ).padStart(2, '0'),
+              'Selesai',
+              'Telah ditangani',
             ],
           ].map(([number, label, caption], index) => (
             <div
               key={label}
               className={`min-h-[150px] p-5 ${
                 index !== 0
-                  ? "border-l border-[#D9E2EC] max-[760px]:border-l-0 max-[760px]:border-t"
-                  : ""
+                  ? 'border-l border-[#D9E2EC] max-[760px]:border-l-0 max-[760px]:border-t'
+                  : ''
               }`}
             >
               <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                 {label.toUpperCase()}
               </p>
-              <p className="mt-5 font-slab text-5xl leading-none text-[#12355B]">
-                {number}
-              </p>
+              <p className="mt-5 font-slab text-5xl leading-none text-[#12355B]">{number}</p>
               <p className="mt-3 text-xs text-[#52657A]">{caption}</p>
             </div>
           ))}
@@ -193,7 +172,7 @@ export function DashboardScreen() {
             </p>
           </div>
           <button
-            onClick={() => navigate("/buat-laporan")}
+            onClick={() => navigate('/buat-laporan')}
             className="mt-0 inline-flex items-center gap-4 bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#004784] focus:outline-2 focus:outline-offset-2 focus:outline-[#005BAC] max-[620px]:mt-5"
           >
             Buat Laporan <span aria-hidden="true">→</span>
@@ -205,15 +184,12 @@ export function DashboardScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
                 AKTIVITAS TERKINI
               </p>
-              <h2
-                id="recent-reports"
-                className="mt-2 font-slab text-2xl text-[#12355B]"
-              >
+              <h2 id="recent-reports" className="mt-2 font-slab text-2xl text-[#12355B]">
                 Laporan Terbaru
               </h2>
             </div>
             <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-              {String(recentReports.length).padStart(2, "0")} LAPORAN
+              {String(recentReports.length).padStart(2, '0')} LAPORAN
             </span>
           </div>
           <div className="hidden grid-cols-[170px_minmax(0,1fr)_160px_92px] border-b border-[#D9E2EC] px-4 py-3 font-mono text-[10px] tracking-[0.12em] text-[#52657A] md:grid">
@@ -229,17 +205,11 @@ export function DashboardScreen() {
                 className="grid grid-cols-[170px_minmax(0,1fr)_160px_92px] items-center gap-3 px-4 py-5 max-md:block"
               >
                 <div>
-                  <p className="font-mono text-xs font-medium text-[#005BAC]">
-                    {report.id}
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#52657A] md:hidden">
-                    {report.submitted}
-                  </p>
+                  <p className="font-mono text-xs font-medium text-[#005BAC]">{report.id}</p>
+                  <p className="mt-1 text-[11px] text-[#52657A] md:hidden">{report.submitted}</p>
                 </div>
                 <div className="max-md:mt-3">
-                  <p className="text-sm font-medium">
-                    {report.category ?? "Aktivitas tutor"}
-                  </p>
+                  <p className="text-sm font-medium">{report.category ?? 'Aktivitas tutor'}</p>
                   <p className="mt-1 text-xs text-[#52657A] max-md:hidden">
                     Diajukan {report.submitted}
                   </p>
@@ -272,9 +242,7 @@ export function DashboardScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               RINCIAN LAPORAN
             </p>
-            <h3 className="mt-3 font-slab text-2xl text-[#12355B]">
-              {selectedReport.id}
-            </h3>
+            <h3 className="mt-3 font-slab text-2xl text-[#12355B]">{selectedReport.id}</h3>
             <p className="mt-5 text-sm">
               <span className="text-[#52657A]">Kategori: </span>
               {selectedReport.category}
@@ -283,22 +251,19 @@ export function DashboardScreen() {
               <span className="text-[#52657A]">Status: </span>
               {selectedReport.status}
             </p>
-            <section className="mt-5 border-t border-[#D9E2EC] pt-4" aria-labelledby="informasi-penanganan">
-              <h4
-                id="informasi-penanganan"
-                className="font-slab text-base text-[#12355B]"
-              >
+            <section
+              className="mt-5 border-t border-[#D9E2EC] pt-4"
+              aria-labelledby="informasi-penanganan"
+            >
+              <h4 id="informasi-penanganan" className="font-slab text-base text-[#12355B]">
                 Informasi Penanganan
               </h4>
               <p className="mt-2 text-sm">
-                <span className="text-[#52657A]">
-                  Pihak/Unit Penanganan:{" "}
-                </span>
+                <span className="text-[#52657A]">Pihak/Unit Penanganan: </span>
                 Fakultas/Unit Terkait
               </p>
               <p className="mt-2 text-xs leading-5 text-[#52657A]">
-                Validasi oleh Fakultas/Unit terkait dilakukan melalui kanal
-                eksternal.
+                Validasi oleh Fakultas/Unit terkait dilakukan melalui kanal eksternal.
               </p>
             </section>
             <button

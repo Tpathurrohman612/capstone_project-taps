@@ -1,16 +1,8 @@
-import {
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react"
-import type { ReactNode } from "react"
-import { useNavigate } from "react-router"
-import type { WorkflowReport } from "../../../shared/types/workflow"
-import {
-  getWorkflowReports,
-  saveWorkflowReports,
-} from "../../../shared/lib/workflow-storage"
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import type { WorkflowReport } from '../../../shared/types/workflow'
+import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 
 function Field({
   label,
@@ -29,29 +21,13 @@ function Field({
         {label} <span className="text-[#005BAC]">*</span>
       </span>
       {children}
-      {hint && (
-        <span className="mt-2 block text-xs leading-5 text-[#52657A]">
-          {hint}
-        </span>
-      )}
-      {error && (
-        <span className="mt-2 block text-xs leading-5 text-[#B42318]">
-          {error}
-        </span>
-      )}
+      {hint && <span className="mt-2 block text-xs leading-5 text-[#52657A]">{hint}</span>}
+      {error && <span className="mt-2 block text-xs leading-5 text-[#B42318]">{error}</span>}
     </label>
   )
 }
 
-function GuideHeading({
-  number,
-  id,
-  title,
-}: {
-  number: string
-  id: string
-  title: string
-}) {
+function GuideHeading({ number, id, title }: { number: string; id: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-[#12355B] font-mono text-[10px] font-semibold text-white">
@@ -65,16 +41,16 @@ function GuideHeading({
 }
 
 const control =
-  "mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+  'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15'
 
 export function CreateReportScreen() {
-  const [duration, setDuration] = useState("")
+  const [duration, setDuration] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [guideOpen, setGuideOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionComplete, setSubmissionComplete] = useState(false)
-  const [submittedReportId, setSubmittedReportId] = useState("")
+  const [submittedReportId, setSubmittedReportId] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
   const submissionPending = useRef(false)
   const navigate = useNavigate()
@@ -94,7 +70,7 @@ export function CreateReportScreen() {
       (file) => file.size <= 10 * 1024 * 1024,
     )
     setFiles((current) => [...current, ...incoming].slice(0, 5))
-    event.target.value = ""
+    event.target.value = ''
   }
   const submitReport = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -102,19 +78,19 @@ export function CreateReportScreen() {
 
     const data = new FormData(event.currentTarget)
     const requiredFields = [
-      ["category", "Pilih kategori permasalahan."],
-      ["courseType", "Pilih jenis mata kuliah."],
-      ["courseCode", "Masukkan kode mata kuliah."],
-      ["courseName", "Masukkan nama mata kuliah."],
-      ["className", "Masukkan kelas mata kuliah."],
-      ["tutor", "Masukkan nama tutor."],
-      ["duration", "Pilih perkiraan durasi."],
-      ["title", "Masukkan judul laporan."],
-      ["description", "Masukkan uraian permasalahan."],
+      ['category', 'Pilih kategori permasalahan.'],
+      ['courseType', 'Pilih jenis mata kuliah.'],
+      ['courseCode', 'Masukkan kode mata kuliah.'],
+      ['courseName', 'Masukkan nama mata kuliah.'],
+      ['className', 'Masukkan kelas mata kuliah.'],
+      ['tutor', 'Masukkan nama tutor.'],
+      ['duration', 'Pilih perkiraan durasi.'],
+      ['title', 'Masukkan judul laporan.'],
+      ['description', 'Masukkan uraian permasalahan.'],
     ] as const
     const nextErrors = requiredFields.reduce<Record<string, string>>(
       (current, [field, message]) => {
-        if (!String(data.get(field) ?? "").trim()) current[field] = message
+        if (!String(data.get(field) ?? '').trim()) current[field] = message
         return current
       },
       {},
@@ -122,13 +98,11 @@ export function CreateReportScreen() {
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-      const firstInvalidField = requiredFields.find(
-        ([field]) => nextErrors[field],
-      )?.[0]
+      const firstInvalidField = requiredFields.find(([field]) => nextErrors[field])?.[0]
       window.setTimeout(() => {
         document
           .getElementById(`report-${firstInvalidField}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" })
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 0)
       return
     }
@@ -143,9 +117,9 @@ export function CreateReportScreen() {
           return match ? Number(match[1]) : 0
         }),
       ) + 1
-    const reportId = `LT-2026-${String(nextReportNumber).padStart(4, "0")}`
+    const reportId = `LT-2026-${String(nextReportNumber).padStart(4, '0')}`
     const attachmentDetails = files.map((file) => {
-      const extension = file.name.split(".").pop()?.toUpperCase() ?? "FILE"
+      const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
       return {
         name: file.name,
         type: extension,
@@ -154,22 +128,22 @@ export function CreateReportScreen() {
     })
     const newReport: WorkflowReport = {
       id: reportId,
-      title: String(data.get("title")),
-      category: String(data.get("category")),
-      course: `${String(data.get("courseCode"))} · ${String(data.get("courseName"))}`,
-      className: String(data.get("className")),
-      tutor: String(data.get("tutor")),
-      submitted: "20 September 2026",
-      status: "Diterima",
-      courseType: String(data.get("courseType")),
-      duration: String(data.get("duration")),
-      description: String(data.get("description")),
+      title: String(data.get('title')),
+      category: String(data.get('category')),
+      course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
+      className: String(data.get('className')),
+      tutor: String(data.get('tutor')),
+      submitted: '20 September 2026',
+      status: 'Diterima',
+      courseType: String(data.get('courseType')),
+      duration: String(data.get('duration')),
+      description: String(data.get('description')),
       attachments: attachmentDetails,
       updates: [
         {
-          time: "20 September 2026, 09:00",
-          title: "Laporan diterima",
-          text: "Laporan berhasil diterima oleh sistem Lapor Tuton.",
+          time: '20 September 2026, 09:00',
+          title: 'Laporan diterima',
+          text: 'Laporan berhasil diterima oleh sistem Lapor Tuton.',
         },
       ],
     }
@@ -193,8 +167,8 @@ export function CreateReportScreen() {
           Buat Laporan
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#52657A]">
-          Sampaikan masalah yang Anda alami terkait aktivitas tutor atau layanan
-          selama Tutorial Online (Tuton).
+          Sampaikan masalah yang Anda alami terkait aktivitas tutor atau layanan selama Tutorial
+          Online (Tuton).
         </p>
         <button
           type="button"
@@ -204,38 +178,25 @@ export function CreateReportScreen() {
           Panduan Pengisian
         </button>
       </header>
-      <form
-        className="mt-8 space-y-8"
-        noValidate
-        onSubmit={submitReport}
-      >
-        <section
-          className="border border-[#D9E2EC] bg-white"
-          aria-labelledby="info-laporan"
-        >
+      <form className="mt-8 space-y-8" noValidate onSubmit={submitReport}>
+        <section className="border border-[#D9E2EC] bg-white" aria-labelledby="info-laporan">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               01 / DATA LAPORAN
             </p>
-            <h2
-              id="info-laporan"
-              className="mt-1 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="info-laporan" className="mt-1 font-slab text-2xl text-[#12355B]">
               Informasi Laporan
             </h2>
           </div>
           <div className="space-y-6 p-6 max-[620px]:p-5">
-            <Field
-              label="Kategori Permasalahan"
-              error={errors.category}
-            >
+            <Field label="Kategori Permasalahan" error={errors.category}>
               <select
                 id="report-category"
                 name="category"
                 defaultValue=""
-                onChange={() => clearError("category")}
+                onChange={() => clearError('category')}
                 aria-invalid={Boolean(errors.category)}
-                className={inputClass("category")}
+                className={inputClass('category')}
               >
                 <option value="" disabled>
                   Pilih kategori permasalahan
@@ -250,9 +211,9 @@ export function CreateReportScreen() {
                 id="report-courseType"
                 name="courseType"
                 defaultValue=""
-                onChange={() => clearError("courseType")}
+                onChange={() => clearError('courseType')}
                 aria-invalid={Boolean(errors.courseType)}
-                className={inputClass("courseType")}
+                className={inputClass('courseType')}
               >
                 <option value="" disabled>
                   Pilih jenis mata kuliah
@@ -268,9 +229,9 @@ export function CreateReportScreen() {
                 <input
                   id="report-courseCode"
                   name="courseCode"
-                  onChange={() => clearError("courseCode")}
+                  onChange={() => clearError('courseCode')}
                   aria-invalid={Boolean(errors.courseCode)}
-                  className={inputClass("courseCode")}
+                  className={inputClass('courseCode')}
                   placeholder="Contoh: EKMA4111"
                 />
               </Field>
@@ -278,9 +239,9 @@ export function CreateReportScreen() {
                 <input
                   id="report-courseName"
                   name="courseName"
-                  onChange={() => clearError("courseName")}
+                  onChange={() => clearError('courseName')}
                   aria-invalid={Boolean(errors.courseName)}
-                  className={inputClass("courseName")}
+                  className={inputClass('courseName')}
                   placeholder="Masukkan nama mata kuliah"
                 />
               </Field>
@@ -292,9 +253,9 @@ export function CreateReportScreen() {
                   name="className"
                   type="number"
                   inputMode="numeric"
-                  onChange={() => clearError("className")}
+                  onChange={() => clearError('className')}
                   aria-invalid={Boolean(errors.className)}
-                  className={inputClass("className")}
+                  className={inputClass('className')}
                   placeholder="Contoh: 01"
                 />
               </Field>
@@ -302,16 +263,16 @@ export function CreateReportScreen() {
                 <input
                   id="report-tutor"
                   name="tutor"
-                  onChange={() => clearError("tutor")}
+                  onChange={() => clearError('tutor')}
                   aria-invalid={Boolean(errors.tutor)}
-                  className={inputClass("tutor")}
+                  className={inputClass('tutor')}
                   placeholder="Masukkan nama tutor"
                 />
               </Field>
             </div>
             <label className="block">
               <span className="text-sm font-semibold text-[#12355B]">
-                Perkiraan Durasi Tidak Ada Aktivitas/Respons{" "}
+                Perkiraan Durasi Tidak Ada Aktivitas/Respons{' '}
                 <span className="text-[#005BAC]">*</span>
               </span>
               <select
@@ -320,10 +281,10 @@ export function CreateReportScreen() {
                 value={duration}
                 onChange={(event) => {
                   setDuration(event.target.value)
-                  clearError("duration")
+                  clearError('duration')
                 }}
                 aria-invalid={Boolean(errors.duration)}
-                className={inputClass("duration")}
+                className={inputClass('duration')}
               >
                 <option value="">Pilih perkiraan durasi</option>
                 <option>Kurang dari 3 hari</option>
@@ -332,11 +293,8 @@ export function CreateReportScreen() {
                 <option>Tidak pernah aktif sama sekali</option>
                 <option>Lainnya</option>
               </select>
-              {duration === "Lainnya" && (
-                <input
-                  className={control}
-                  placeholder="Jelaskan perkiraan durasi"
-                />
+              {duration === 'Lainnya' && (
+                <input className={control} placeholder="Jelaskan perkiraan durasi" />
               )}
               {errors.duration && (
                 <span className="mt-2 block text-xs leading-5 text-[#B42318]">
@@ -352,9 +310,9 @@ export function CreateReportScreen() {
               <input
                 id="report-title"
                 name="title"
-                onChange={() => clearError("title")}
+                onChange={() => clearError('title')}
                 aria-invalid={Boolean(errors.title)}
-                className={inputClass("title")}
+                className={inputClass('title')}
                 placeholder="Contoh: Tidak ada umpan balik pada diskusi minggu ke-3"
               />
             </Field>
@@ -367,26 +325,20 @@ export function CreateReportScreen() {
                 id="report-description"
                 name="description"
                 rows={7}
-                onChange={() => clearError("description")}
+                onChange={() => clearError('description')}
                 aria-invalid={Boolean(errors.description)}
-                className={`${inputClass("description")} resize-y`}
+                className={`${inputClass('description')} resize-y`}
                 placeholder="Tuliskan uraian permasalahan Anda"
               />
             </Field>
           </div>
         </section>
-        <section
-          className="border border-[#D9E2EC] bg-white"
-          aria-labelledby="bukti-pendukung"
-        >
+        <section className="border border-[#D9E2EC] bg-white" aria-labelledby="bukti-pendukung">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               02 / LAMPIRAN
             </p>
-            <h2
-              id="bukti-pendukung"
-              className="mt-1 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="bukti-pendukung" className="mt-1 font-slab text-2xl text-[#12355B]">
               Bukti Pendukung
             </h2>
           </div>
@@ -411,8 +363,7 @@ export function CreateReportScreen() {
                 Unggah bukti pendukung
               </span>
               <span className="mt-1 hidden text-xs text-[#52657A] sm:block">
-                Maksimal 5 file · Maksimal 10 MB per file · .jpg, .jpeg, .png,
-                .pdf
+                Maksimal 5 file · Maksimal 10 MB per file · .jpg, .jpeg, .png, .pdf
               </span>
               <span className="mt-2 flex flex-col gap-1 text-xs text-[#52657A] sm:hidden">
                 <span>Maksimal 5 file</span>
@@ -427,15 +378,11 @@ export function CreateReportScreen() {
                     key={`${file.name}-${index}`}
                     className="flex items-center justify-between gap-4 px-3 py-3"
                   >
-                    <span className="min-w-0 truncate text-sm text-[#1F2937]">
-                      {file.name}
-                    </span>
+                    <span className="min-w-0 truncate text-sm text-[#1F2937]">{file.name}</span>
                     <button
                       type="button"
                       onClick={() =>
-                        setFiles((current) =>
-                          current.filter((_, fileIndex) => fileIndex !== index),
-                        )
+                        setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))
                       }
                       className="shrink-0 border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC]"
                     >
@@ -450,7 +397,7 @@ export function CreateReportScreen() {
         <div className="flex justify-end gap-3 border-t border-[#D9E2EC] pt-6 max-[500px]:flex-col-reverse">
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
             className="border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
           >
             Batal
@@ -461,10 +408,10 @@ export function CreateReportScreen() {
             className="bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#004784] focus:outline-2 focus:outline-offset-2 focus:outline-[#005BAC] disabled:cursor-not-allowed disabled:bg-[#7D8B99]"
           >
             {isSubmitting
-              ? "Mengirim Laporan..."
+              ? 'Mengirim Laporan...'
               : submissionComplete
-                ? "Laporan Terkirim"
-                : "Kirim Laporan"}
+                ? 'Laporan Terkirim'
+                : 'Kirim Laporan'}
           </button>
         </div>
       </form>
@@ -479,22 +426,18 @@ export function CreateReportScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               LAPORAN BERHASIL DIBUAT
             </p>
-            <h2
-              id="submission-success-title"
-              className="mt-3 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="submission-success-title" className="mt-3 font-slab text-2xl text-[#12355B]">
               Laporan Berhasil Dikirim
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              Laporan Anda telah dicatat pada prototype Lapor Tuton dan siap
-              untuk ditindaklanjuti.
+              Laporan Anda telah dicatat pada prototype Lapor Tuton dan siap untuk ditindaklanjuti.
             </p>
             <p className="mt-5 border border-[#B8D3E8] bg-[#EEF5FB] px-4 py-3 font-mono text-sm font-semibold text-[#005BAC]">
               ID LAPORAN: {submittedReportId}
             </p>
             <p className="mt-4 text-xs leading-5 text-[#52657A]">
-              Konfirmasi ini menggunakan data mock untuk prototype dan tidak
-              mengirim laporan ke sistem produksi.
+              Konfirmasi ini menggunakan data mock untuk prototype dan tidak mengirim laporan ke
+              sistem produksi.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
@@ -507,9 +450,7 @@ export function CreateReportScreen() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate(
-                    `/riwayat-laporan/detail-laporan?report=${submittedReportId}`,
-                  )
+                  navigate(`/riwayat-laporan/detail-laporan?report=${submittedReportId}`)
                 }
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
@@ -538,51 +479,40 @@ export function CreateReportScreen() {
                 Panduan Pengisian Laporan
               </h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[#52657A]">
-                Gunakan panduan ini untuk mengisi laporan sesuai kondisi yang
-                Anda alami selama Tutorial Online (Tuton).
+                Gunakan panduan ini untuk mengisi laporan sesuai kondisi yang Anda alami selama
+                Tutorial Online (Tuton).
               </p>
             </div>
             <div className="overflow-y-auto overscroll-contain px-5 py-6 sm:px-7 sm:py-7">
               <div className="space-y-7 text-[15px] leading-7 text-[#1F2937] sm:text-base">
                 <section aria-labelledby="guide-category">
-                  <GuideHeading
-                    number="01"
-                    id="guide-category"
-                    title="Kategori Permasalahan"
-                  />
+                  <GuideHeading number="01" id="guide-category" title="Kategori Permasalahan" />
                   <p className="mt-3">
-                    Pilih kategori yang paling mendekati masalah yang benar-benar
-                    Anda alami.
+                    Pilih kategori yang paling mendekati masalah yang benar-benar Anda alami.
                   </p>
                   <ul className="mt-3 space-y-2 border-l-2 border-[#B8D3E8] pl-4">
                     <li>
-                      <strong>Aktivitas tutor</strong> mencakup kegiatan tutor
-                      dalam Tuton, misalnya tanggapan pada forum atau umpan
-                      balik pembelajaran.
+                      <strong>Aktivitas tutor</strong> mencakup kegiatan tutor dalam Tuton, misalnya
+                      tanggapan pada forum atau umpan balik pembelajaran.
                     </li>
                     <li>
-                      <strong>Layanan tutor</strong> mencakup layanan atau
-                      respons tutor yang berkaitan dengan kelas Anda.
+                      <strong>Layanan tutor</strong> mencakup layanan atau respons tutor yang
+                      berkaitan dengan kelas Anda.
                     </li>
                     <li>
-                      <strong>Materi Tutorial Online</strong> mencakup kendala
-                      pada materi yang tersedia di Tuton.
+                      <strong>Materi Tutorial Online</strong> mencakup kendala pada materi yang
+                      tersedia di Tuton.
                     </li>
                   </ul>
                 </section>
 
                 <section aria-labelledby="guide-course-type">
-                  <GuideHeading
-                    number="02"
-                    id="guide-course-type"
-                    title="Jenis Mata Kuliah"
-                  />
+                  <GuideHeading number="02" id="guide-course-type" title="Jenis Mata Kuliah" />
                   <p className="mt-3">
-                    Pilih jenis mata kuliah yang sesuai dengan informasi mata
-                    kuliah Anda: <strong>Teori/Umum</strong>,{" "}
-                    <strong>Berpraktik</strong>, <strong>Praktik</strong>, atau{" "}
-                    <strong>TAPS</strong>. Jika ragu, periksa informasi yang
-                    tersedia di Tuton atau informasi akademik mata kuliah Anda.
+                    Pilih jenis mata kuliah yang sesuai dengan informasi mata kuliah Anda:{' '}
+                    <strong>Teori/Umum</strong>, <strong>Berpraktik</strong>,{' '}
+                    <strong>Praktik</strong>, atau <strong>TAPS</strong>. Jika ragu, periksa
+                    informasi yang tersedia di Tuton atau informasi akademik mata kuliah Anda.
                   </p>
                 </section>
 
@@ -593,32 +523,25 @@ export function CreateReportScreen() {
                     title="Kode Mata Kuliah dan Nama Mata Kuliah"
                   />
                   <p className="mt-3">
-                    Isi kode dan nama mata kuliah yang sama dengan mata kuliah
-                    tempat masalah terjadi. Rujuk informasi mata kuliah resmi
-                    yang tersedia untuk Anda; jangan menebak kode atau nama mata
-                    kuliah.
+                    Isi kode dan nama mata kuliah yang sama dengan mata kuliah tempat masalah
+                    terjadi. Rujuk informasi mata kuliah resmi yang tersedia untuk Anda; jangan
+                    menebak kode atau nama mata kuliah.
                   </p>
                 </section>
 
                 <section aria-labelledby="guide-class">
-                  <GuideHeading
-                    number="04"
-                    id="guide-class"
-                    title="Kelas Mata Kuliah"
-                  />
+                  <GuideHeading number="04" id="guide-class" title="Kelas Mata Kuliah" />
                   <p className="mt-3">
-                    Masukkan kelas yang benar-benar Anda ikuti berdasarkan
-                    informasi yang ditampilkan di Tuton. Contohnya, masukkan
-                    “01” hanya jika itu adalah kelas Anda.
+                    Masukkan kelas yang benar-benar Anda ikuti berdasarkan informasi yang
+                    ditampilkan di Tuton. Contohnya, masukkan “01” hanya jika itu adalah kelas Anda.
                   </p>
                 </section>
 
                 <section aria-labelledby="guide-tutor">
                   <GuideHeading number="05" id="guide-tutor" title="Nama Tutor" />
                   <p className="mt-3">
-                    Isi nama tutor yang bertanggung jawab atas mata kuliah atau
-                    kelas yang Anda laporkan. Jangan memasukkan nama Anda sendiri
-                    pada kolom ini.
+                    Isi nama tutor yang bertanggung jawab atas mata kuliah atau kelas yang Anda
+                    laporkan. Jangan memasukkan nama Anda sendiri pada kolom ini.
                   </p>
                 </section>
 
@@ -629,18 +552,16 @@ export function CreateReportScreen() {
                     title="Perkiraan Durasi Tidak Ada Aktivitas/Respons"
                   />
                   <p className="mt-3">
-                    Perkirakan berapa lama tutor tidak aktif atau belum memberi
-                    respons berdasarkan pengalaman Anda. Pilih opsi yang paling
-                    sesuai pada daftar yang tersedia. Anda tidak perlu
-                    menyebutkan durasi tepat apabila tidak mengetahuinya.
+                    Perkirakan berapa lama tutor tidak aktif atau belum memberi respons berdasarkan
+                    pengalaman Anda. Pilih opsi yang paling sesuai pada daftar yang tersedia. Anda
+                    tidak perlu menyebutkan durasi tepat apabila tidak mengetahuinya.
                   </p>
                 </section>
 
                 <section aria-labelledby="guide-title">
                   <GuideHeading number="07" id="guide-title" title="Judul Laporan" />
                   <p className="mt-3">
-                    Buat judul yang singkat, spesifik, dan langsung menjelaskan
-                    masalah. Contohnya:
+                    Buat judul yang singkat, spesifik, dan langsung menjelaskan masalah. Contohnya:
                   </p>
                   <ul className="mt-3 list-disc space-y-1 pl-5">
                     <li>“Belum ada tanggapan pada forum inisiasi”</li>
@@ -650,16 +571,11 @@ export function CreateReportScreen() {
                 </section>
 
                 <section aria-labelledby="guide-description">
-                  <GuideHeading
-                    number="08"
-                    id="guide-description"
-                    title="Uraian Permasalahan"
-                  />
+                  <GuideHeading number="08" id="guide-description" title="Uraian Permasalahan" />
                   <p className="mt-3">
-                    Jelaskan masalah dengan bahasa yang jelas. Sertakan apa yang
-                    terjadi, mata kuliah atau aktivitas Tuton yang terdampak,
-                    kapan atau berapa lama masalah terjadi jika diketahui,
-                    dampaknya pada kegiatan belajar Anda, serta langkah yang
+                    Jelaskan masalah dengan bahasa yang jelas. Sertakan apa yang terjadi, mata
+                    kuliah atau aktivitas Tuton yang terdampak, kapan atau berapa lama masalah
+                    terjadi jika diketahui, dampaknya pada kegiatan belajar Anda, serta langkah yang
                     sudah dilakukan apabila ada.
                   </p>
                   <div className="mt-4 border border-[#B8D3E8] bg-[#EEF5FB] px-4 py-4">
@@ -667,31 +583,24 @@ export function CreateReportScreen() {
                       CONTOH URAIAN
                     </p>
                     <p className="mt-2 text-[15px] leading-7 text-[#12355B] sm:text-base">
-                      “Pada mata kuliah yang saya ikuti, belum terdapat
-                      tanggapan dari tutor pada forum diskusi setelah saya
-                      menunggu selama beberapa hari. Kondisi tersebut membuat
-                      saya belum memperoleh umpan balik untuk melanjutkan
-                      diskusi.”
+                      “Pada mata kuliah yang saya ikuti, belum terdapat tanggapan dari tutor pada
+                      forum diskusi setelah saya menunggu selama beberapa hari. Kondisi tersebut
+                      membuat saya belum memperoleh umpan balik untuk melanjutkan diskusi.”
                     </p>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-[#52657A]">
-                    Contoh ini hanya sebagai panduan. Sesuaikan uraian dengan
-                    keadaan Anda yang sebenarnya; jangan membuat fakta atau
-                    memasukkan informasi yang tidak dapat Anda pastikan.
+                    Contoh ini hanya sebagai panduan. Sesuaikan uraian dengan keadaan Anda yang
+                    sebenarnya; jangan membuat fakta atau memasukkan informasi yang tidak dapat Anda
+                    pastikan.
                   </p>
                 </section>
 
                 <section aria-labelledby="guide-evidence">
-                  <GuideHeading
-                    number="09"
-                    id="guide-evidence"
-                    title="Bukti Pendukung"
-                  />
+                  <GuideHeading number="09" id="guide-evidence" title="Bukti Pendukung" />
                   <p className="mt-3">
-                    Jika tersedia, lampirkan tangkapan layar atau dokumen yang
-                    relevan dengan masalah yang dilaporkan. Pastikan bukti
-                    berkaitan dengan laporan dan tidak membuka informasi pribadi
-                    lain yang tidak diperlukan.
+                    Jika tersedia, lampirkan tangkapan layar atau dokumen yang relevan dengan
+                    masalah yang dilaporkan. Pastikan bukti berkaitan dengan laporan dan tidak
+                    membuka informasi pribadi lain yang tidak diperlukan.
                   </p>
                   <ul className="mt-3 grid gap-2 border border-[#D9E2EC] bg-[#F7F9FC] p-4 text-sm leading-6 sm:grid-cols-3">
                     <li>
@@ -712,29 +621,18 @@ export function CreateReportScreen() {
                     id="guide-review"
                     title="Pemeriksaan Sebelum Mengirim"
                   />
-                  <p className="mt-3">
-                    Sebelum mengirim, periksa kembali hal-hal berikut:
-                  </p>
+                  <p className="mt-3">Sebelum mengirim, periksa kembali hal-hal berikut:</p>
                   <ul className="mt-3 space-y-2 border-l-2 border-[#005BAC] pl-4">
                     <li>Kategori permasalahan sudah sesuai.</li>
-                    <li>
-                      Jenis dan identitas mata kuliah, kelas, serta tutor sudah
-                      benar.
-                    </li>
-                    <li>
-                      Judul dan uraian menjelaskan permasalahan dengan jelas.
-                    </li>
-                    <li>
-                      Bukti pendukung sudah dilampirkan apabila tersedia dan
-                      relevan.
-                    </li>
+                    <li>Jenis dan identitas mata kuliah, kelas, serta tutor sudah benar.</li>
+                    <li>Judul dan uraian menjelaskan permasalahan dengan jelas.</li>
+                    <li>Bukti pendukung sudah dilampirkan apabila tersedia dan relevan.</li>
                     <li>Seluruh informasi sudah diperiksa kembali.</li>
                   </ul>
                   <p className="mt-4">
-                    Setelah laporan dikirim, baca konfirmasi pengiriman dan
-                    simpan ID laporan Anda. ID tersebut dapat digunakan untuk
-                    memantau perkembangan laporan melalui Dashboard, Riwayat
-                    Laporan, atau Detail Laporan.
+                    Setelah laporan dikirim, baca konfirmasi pengiriman dan simpan ID laporan Anda.
+                    ID tersebut dapat digunakan untuk memantau perkembangan laporan melalui
+                    Dashboard, Riwayat Laporan, atau Detail Laporan.
                   </p>
                 </section>
               </div>

@@ -1,119 +1,104 @@
-import { useState } from "react"
-import { useNavigate } from "react-router"
-import type { WorkflowStatus } from "../../../shared/types/workflow"
-import { workflowSeed } from "../../../shared/data/workflow-seed"
-import {
-  getWorkflowReports,
-  saveWorkflowReports,
-} from "../../../shared/lib/workflow-storage"
-import {
-  AdminWorkflowShell,
-  workflowStatusClass,
-} from "../components/workflow-ui"
-import { ReadOnlyItem } from "../../../shared/components/ReadOnlyItem"
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import type { WorkflowStatus } from '../../../shared/types/workflow'
+import { workflowSeed } from '../../../shared/data/workflow-seed'
+import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
+import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
 export function AdminWorkflowDetailScreen() {
   const [modalOpen, setModalOpen] = useState(false)
   const [validationModalOpen, setValidationModalOpen] = useState(false)
-  const [validationResult, setValidationResult] = useState("")
-  const [validationNote, setValidationNote] = useState("")
-  const [validationError, setValidationError] = useState("")
+  const [validationResult, setValidationResult] = useState('')
+  const [validationNote, setValidationNote] = useState('')
+  const [validationError, setValidationError] = useState('')
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
-  const [completionResult, setCompletionResult] = useState("")
-  const [completionError, setCompletionError] = useState("")
+  const [completionResult, setCompletionResult] = useState('')
+  const [completionError, setCompletionError] = useState('')
   const navigate = useNavigate()
   const context =
-    window.sessionStorage.getItem("adminDetailContext") === "history"
-      ? "history"
-      : "queue"
-  const id = window.sessionStorage.getItem("adminDetailId") ?? "LT-2026-0008"
+    window.sessionStorage.getItem('adminDetailContext') === 'history' ? 'history' : 'queue'
+  const id = window.sessionStorage.getItem('adminDetailId') ?? 'LT-2026-0008'
   const [report, setReport] = useState(
-    () =>
-      getWorkflowReports().find((item) => item.id === id) ?? workflowSeed[0],
+    () => getWorkflowReports().find((item) => item.id === id) ?? workflowSeed[0],
   )
   const nextStatus: Record<WorkflowStatus, WorkflowStatus | null> = {
-    Diterima: "Diverifikasi",
-    Diverifikasi: "Menunggu Validasi",
-    "Menunggu Validasi": "Diproses",
-    Diproses: "Selesai",
+    Diterima: 'Diverifikasi',
+    Diverifikasi: 'Menunggu Validasi',
+    'Menunggu Validasi': 'Diproses',
+    Diproses: 'Selesai',
     Selesai: null,
   }
   const validationRecorded = report.updates.some(
-    (update) => update.title === "Hasil validasi diterima dan dicatat",
+    (update) => update.title === 'Hasil validasi diterima dan dicatat',
   )
   const actionLabel =
-    report.status === "Diterima"
-      ? "Verifikasi Laporan"
-      : report.status === "Diverifikasi"
-        ? "Siapkan Validasi"
-        : report.status === "Menunggu Validasi"
+    report.status === 'Diterima'
+      ? 'Verifikasi Laporan'
+      : report.status === 'Diverifikasi'
+        ? 'Siapkan Validasi'
+        : report.status === 'Menunggu Validasi'
           ? validationRecorded
-            ? "Perbarui Status"
-            : "Catat Hasil Validasi"
-          : report.status === "Selesai"
+            ? 'Perbarui Status'
+            : 'Catat Hasil Validasi'
+          : report.status === 'Selesai'
             ? null
-            : "Perbarui Status"
+            : 'Perbarui Status'
   const stageState = (index: number) => {
-    const level = [
-      "Diterima",
-      "Diverifikasi",
-      "Menunggu Validasi",
-      "Diproses",
-      "Selesai",
-    ].indexOf(report.status)
+    const level = ['Diterima', 'Diverifikasi', 'Menunggu Validasi', 'Diproses', 'Selesai'].indexOf(
+      report.status,
+    )
     return index === 0
-      ? "done"
+      ? 'done'
       : index === level
         ? level === 0
-          ? "next"
-          : "current"
+          ? 'next'
+          : 'current'
         : index < level
-          ? "done"
-          : "upcoming"
+          ? 'done'
+          : 'upcoming'
   }
   const stageClass = (state: string) =>
-    state === "done"
-      ? "border-[#005BAC] bg-[#005BAC] text-white"
-      : state === "current"
-        ? "border-[#C99C20] bg-[#F2C94C] text-[#12355B]"
-        : state === "next"
-          ? "border-[#005BAC] bg-white text-[#005BAC]"
-          : "border-[#B9C8D7] bg-white text-[#7D8B99]"
+    state === 'done'
+      ? 'border-[#005BAC] bg-[#005BAC] text-white'
+      : state === 'current'
+        ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
+        : state === 'next'
+          ? 'border-[#005BAC] bg-white text-[#005BAC]'
+          : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
   const advance = () => {
     const next = nextStatus[report.status]
     if (!next) return
     const title =
-      next === "Diverifikasi"
-        ? "Laporan diverifikasi"
-        : next === "Menunggu Validasi"
-          ? "Validasi disiapkan"
-          : next === "Diproses" && report.status === "Menunggu Validasi"
-            ? "Laporan memasuki proses tindak lanjut"
-            : next === "Diproses"
-              ? "Laporan diproses"
-              : "Laporan selesai"
+      next === 'Diverifikasi'
+        ? 'Laporan diverifikasi'
+        : next === 'Menunggu Validasi'
+          ? 'Validasi disiapkan'
+          : next === 'Diproses' && report.status === 'Menunggu Validasi'
+            ? 'Laporan memasuki proses tindak lanjut'
+            : next === 'Diproses'
+              ? 'Laporan diproses'
+              : 'Laporan selesai'
     const text =
-      next === "Diverifikasi"
-        ? "Informasi laporan dan bukti pendukung telah diperiksa oleh pengelola."
-        : next === "Menunggu Validasi"
-          ? "Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait."
-          : next === "Diproses" && report.status === "Menunggu Validasi"
-            ? "Hasil validasi telah diterima dan dicatat. Laporan memasuki proses tindak lanjut."
-            : next === "Diproses"
-              ? "Laporan diteruskan kepada pengelola Tutorial Online untuk tindak lanjut."
-              : "Tindak lanjut telah dilakukan dan laporan dinyatakan selesai."
+      next === 'Diverifikasi'
+        ? 'Informasi laporan dan bukti pendukung telah diperiksa oleh pengelola.'
+        : next === 'Menunggu Validasi'
+          ? 'Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait.'
+          : next === 'Diproses' && report.status === 'Menunggu Validasi'
+            ? 'Hasil validasi telah diterima dan dicatat. Laporan memasuki proses tindak lanjut.'
+            : next === 'Diproses'
+              ? 'Laporan diteruskan kepada pengelola Tutorial Online untuk tindak lanjut.'
+              : 'Tindak lanjut telah dilakukan dan laporan dinyatakan selesai.'
     const time =
-      next === "Diproses" && report.status === "Menunggu Validasi"
-        ? "17 September 2026, 17:00"
-        : "17 September 2026, 10:00"
+      next === 'Diproses' && report.status === 'Menunggu Validasi'
+        ? '17 September 2026, 17:00'
+        : '17 September 2026, 10:00'
     const updated = {
       ...report,
       status: next,
       updates: [...report.updates, { time, title, text }],
     }
-    const all = getWorkflowReports().map((item) =>
-      item.id === updated.id ? updated : item,
-    )
+    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
     saveWorkflowReports(all)
     setReport(updated)
     setModalOpen(false)
@@ -121,7 +106,7 @@ export function AdminWorkflowDetailScreen() {
   const recordValidation = () => {
     const result = validationResult.trim()
     if (!result) {
-      setValidationError("Hasil Validasi wajib diisi.")
+      setValidationError('Hasil Validasi wajib diisi.')
       return
     }
     const note = validationNote.trim()
@@ -130,86 +115,73 @@ export function AdminWorkflowDetailScreen() {
       updates: [
         ...report.updates,
         {
-          time: "17 September 2026, 16:45",
-          title: "Hasil validasi diterima dan dicatat",
+          time: '17 September 2026, 16:45',
+          title: 'Hasil validasi diterima dan dicatat',
           text: `Hasil validasi dari Fakultas/Unit terkait telah diterima dan dicatat oleh Administrator. Hasil validasi: ${result}${
-            note ? `. Catatan validasi: ${note}` : ""
+            note ? `. Catatan validasi: ${note}` : ''
           }`,
         },
       ],
     }
-    const all = getWorkflowReports().map((item) =>
-      item.id === updated.id ? updated : item,
-    )
+    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
     saveWorkflowReports(all)
     setReport(updated)
     setValidationModalOpen(false)
-    setValidationResult("")
-    setValidationNote("")
-    setValidationError("")
+    setValidationResult('')
+    setValidationNote('')
+    setValidationError('')
   }
   const completeReport = () => {
     const result = completionResult.trim()
     if (!result) {
-      setCompletionError("Tindak Lanjut / Hasil Penanganan wajib diisi.")
+      setCompletionError('Tindak Lanjut / Hasil Penanganan wajib diisi.')
       return
     }
     const updated = {
       ...report,
-      status: "Selesai" as WorkflowStatus,
+      status: 'Selesai' as WorkflowStatus,
       updates: [
         ...report.updates,
         {
-          time: "17 September 2026, 17:30",
-          title: "Laporan selesai",
+          time: '17 September 2026, 17:30',
+          title: 'Laporan selesai',
           text: `Laporan telah selesai ditangani. Tindak lanjut / hasil penanganan: ${result}`,
         },
       ],
     }
-    const all = getWorkflowReports().map((item) =>
-      item.id === updated.id ? updated : item,
-    )
+    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
     saveWorkflowReports(all)
     setReport(updated)
     setCompletionModalOpen(false)
-    setCompletionResult("")
-    setCompletionError("")
+    setCompletionResult('')
+    setCompletionError('')
   }
   const openPrimaryAction = () => {
-    if (report.status === "Diproses") {
-      setCompletionError("")
+    if (report.status === 'Diproses') {
+      setCompletionError('')
       setCompletionModalOpen(true)
       return
     }
-    if (report.status === "Menunggu Validasi" && !validationRecorded) {
-      setValidationError("")
+    if (report.status === 'Menunggu Validasi' && !validationRecorded) {
+      setValidationError('')
       setValidationModalOpen(true)
       return
     }
     setModalOpen(true)
   }
-  const [code, courseName = report.course] = report.course.split(" · ")
+  const [code, courseName = report.course] = report.course.split(' · ')
   const displayStatus = (status: WorkflowStatus) =>
-    status === "Diproses" ? "Sedang Diproses" : status
-  const labels = [
-    "Diterima",
-    "Diverifikasi",
-    "Menunggu Validasi",
-    "Sedang Diproses",
-    "Selesai",
-  ]
+    status === 'Diproses' ? 'Sedang Diproses' : status
+  const labels = ['Diterima', 'Diverifikasi', 'Menunggu Validasi', 'Sedang Diproses', 'Selesai']
   const back =
-    context === "history"
-      ? "/administrator/riwayat-laporan"
-      : "/administrator/antrean-laporan"
+    context === 'history' ? '/administrator/riwayat-laporan' : '/administrator/antrean-laporan'
   return (
-    <AdminWorkflowShell activeIndex={context === "history" ? 2 : 1}>
+    <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
       <section className="px-8 py-7 max-[620px]:px-5">
         <header className="border-b border-[#D9E2EC] pb-8">
           <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
-            ADMINISTRATOR /{" "}
-            {context === "history" ? "RIWAYAT LAPORAN" : "ANTREAN LAPORAN"} /
-            DETAIL LAPORAN
+            ADMINISTRATOR / {context === 'history' ? 'RIWAYAT LAPORAN' : 'ANTREAN LAPORAN'} / DETAIL
+            LAPORAN
           </p>
           <div className="mt-3 flex items-start justify-between gap-6 max-[620px]:block">
             <div>
@@ -233,9 +205,7 @@ export function AdminWorkflowDetailScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 01 / STATUS LAPORAN
               </p>
-              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">
-                Status Laporan
-              </h2>
+              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Status Laporan</h2>
             </div>
             <div className="p-6">
               <ol className="hidden grid-cols-5 md:grid">
@@ -244,20 +214,18 @@ export function AdminWorkflowDetailScreen() {
                     <div
                       className={`absolute left-3 right-0 top-3 h-px ${
                         index === labels.length - 1
-                          ? "hidden"
-                          : stageState(index) === "done"
-                            ? "bg-[#005BAC]"
-                            : "bg-[#D9E2EC]"
+                          ? 'hidden'
+                          : stageState(index) === 'done'
+                            ? 'bg-[#005BAC]'
+                            : 'bg-[#D9E2EC]'
                       }`}
                     />
                     <span
                       className={`relative z-1 flex h-6 w-6 items-center justify-center border-2 text-[10px] font-bold ${stageClass(stageState(index))}`}
                     >
-                      {stageState(index) === "done" ? "✓" : index + 1}
+                      {stageState(index) === 'done' ? '✓' : index + 1}
                     </span>
-                    <p className="mt-4 text-sm font-semibold text-[#12355B]">
-                      {label}
-                    </p>
+                    <p className="mt-4 text-sm font-semibold text-[#12355B]">{label}</p>
                   </li>
                 ))}
               </ol>
@@ -267,30 +235,26 @@ export function AdminWorkflowDetailScreen() {
                     <span
                       className={`flex h-6 w-6 shrink-0 items-center justify-center border-2 text-[10px] font-bold ${stageClass(stageState(index))}`}
                     >
-                      {stageState(index) === "done" ? "✓" : index + 1}
+                      {stageState(index) === 'done' ? '✓' : index + 1}
                     </span>
-                    <p className="text-sm font-semibold text-[#12355B]">
-                      {label}
-                    </p>
+                    <p className="text-sm font-semibold text-[#12355B]">{label}</p>
                   </li>
                 ))}
               </ol>
               {actionLabel && (
                 <div className="mt-7 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
                   <div>
-                    <p className="text-sm font-semibold text-[#12355B]">
-                      Tindakan Administrator
-                    </p>
+                    <p className="text-sm font-semibold text-[#12355B]">Tindakan Administrator</p>
                     <p className="mt-1 text-sm text-[#52657A]">
-                      {report.status === "Diterima"
-                        ? "Periksa informasi dan bukti pendukung sebelum melakukan verifikasi."
-                        : report.status === "Diverifikasi"
-                          ? "Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait."
-                          : report.status === "Menunggu Validasi"
+                      {report.status === 'Diterima'
+                        ? 'Periksa informasi dan bukti pendukung sebelum melakukan verifikasi.'
+                        : report.status === 'Diverifikasi'
+                          ? 'Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait.'
+                          : report.status === 'Menunggu Validasi'
                             ? validationRecorded
-                              ? "Hasil validasi telah dicatat dan laporan siap diperbarui ke status Sedang Diproses."
-                              : "Hasil validasi dari Fakultas/Unit terkait telah diterima dan siap dicatat."
-                            : `Laporan siap diperbarui ke status ${displayStatus(nextStatus[report.status] ?? "Selesai")}.`}
+                              ? 'Hasil validasi telah dicatat dan laporan siap diperbarui ke status Sedang Diproses.'
+                              : 'Hasil validasi dari Fakultas/Unit terkait telah diterima dan siap dicatat.'
+                            : `Laporan siap diperbarui ke status ${displayStatus(nextStatus[report.status] ?? 'Selesai')}.`}
                     </p>
                   </div>
                   <button
@@ -308,31 +272,24 @@ export function AdminWorkflowDetailScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 02 / DATA PENGAJUAN
               </p>
-              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">
-                Informasi Laporan
-              </h2>
+              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Informasi Laporan</h2>
             </div>
             <div className="grid grid-cols-2 gap-x-8 px-6 max-[760px]:grid-cols-1">
               {[
-                ["Kategori Permasalahan", report.category],
-                ["Jenis Mata Kuliah", "Teori/Umum"],
-                ["Kode Mata Kuliah", code],
-                ["Nama Mata Kuliah", courseName],
-                ["Kelas Mata Kuliah", report.className],
-                ["Nama Tutor", report.tutor],
-                [
-                  "Perkiraan Durasi Tidak Ada Aktivitas/Respons",
-                  "1 minggu atau lebih",
-                ],
-                ["Judul Laporan", report.title],
+                ['Kategori Permasalahan', report.category],
+                ['Jenis Mata Kuliah', 'Teori/Umum'],
+                ['Kode Mata Kuliah', code],
+                ['Nama Mata Kuliah', courseName],
+                ['Kelas Mata Kuliah', report.className],
+                ['Nama Tutor', report.tutor],
+                ['Perkiraan Durasi Tidak Ada Aktivitas/Respons', '1 minggu atau lebih'],
+                ['Judul Laporan', report.title],
               ].map(([label, value]) => (
                 <ReadOnlyItem
                   key={label}
                   label={label}
                   value={value}
-                  wide={
-                    label.includes("Perkiraan") || label === "Judul Laporan"
-                  }
+                  wide={label.includes('Perkiraan') || label === 'Judul Laporan'}
                 />
               ))}
             </div>
@@ -342,13 +299,11 @@ export function AdminWorkflowDetailScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 03 / PENJELASAN MAHASISWA
               </p>
-              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">
-                Uraian Permasalahan
-              </h2>
+              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Uraian Permasalahan</h2>
             </div>
             <p className="p-6 text-sm leading-7">
-              Mahasiswa melaporkan kendala terkait “{report.title}” pada mata
-              kuliah {report.course} selama kegiatan Tutorial Online.
+              Mahasiswa melaporkan kendala terkait “{report.title}” pada mata kuliah {report.course}{' '}
+              selama kegiatan Tutorial Online.
             </p>
           </section>
           <section className="border border-[#D9E2EC] bg-white">
@@ -356,16 +311,12 @@ export function AdminWorkflowDetailScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 04 / LAMPIRAN
               </p>
-              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">
-                Bukti Pendukung
-              </h2>
+              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Bukti Pendukung</h2>
             </div>
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <p className="text-sm font-medium">bukti-pendukung-tuton.pdf</p>
-                <p className="mt-1 font-mono text-[10px] text-[#52657A]">
-                  PDF · 824 KB
-                </p>
+                <p className="mt-1 font-mono text-[10px] text-[#52657A]">PDF · 824 KB</p>
               </div>
               <button className="border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC]">
                 Buka
@@ -377,37 +328,24 @@ export function AdminWorkflowDetailScreen() {
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 05 / PEMBARUAN PENGELOLA
               </p>
-              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">
-                Pembaruan Pengelola
-              </h2>
+              <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Pembaruan Pengelola</h2>
             </div>
             <div className="space-y-5 p-6">
               {report.updates.length ? (
                 report.updates.map((update) => (
-                  <div
-                    key={`${update.time}-${update.title}`}
-                    className="flex gap-4"
-                  >
+                  <div key={`${update.time}-${update.title}`} className="flex gap-4">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center border border-[#005BAC] text-[10px] text-[#005BAC]">
                       ●
                     </span>
                     <div>
-                      <p className="font-mono text-[10px] text-[#52657A]">
-                        {update.time}
-                      </p>
-                      <h3 className="mt-1 text-sm font-semibold text-[#12355B]">
-                        {update.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-6 text-[#52657A]">
-                        {update.text}
-                      </p>
+                      <p className="font-mono text-[10px] text-[#52657A]">{update.time}</p>
+                      <h3 className="mt-1 text-sm font-semibold text-[#12355B]">{update.title}</h3>
+                      <p className="mt-1 text-sm leading-6 text-[#52657A]">{update.text}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-[#52657A]">
-                  Belum ada tindak lanjut.
-                </p>
+                <p className="text-sm text-[#52657A]">Belum ada tindak lanjut.</p>
               )}
             </div>
           </section>
@@ -417,18 +355,16 @@ export function AdminWorkflowDetailScreen() {
             onClick={() => navigate(back)}
             className="border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B]"
           >
-            Kembali ke{" "}
-            {context === "history" ? "Riwayat Laporan" : "Antrean Laporan"}
+            Kembali ke {context === 'history' ? 'Riwayat Laporan' : 'Antrean Laporan'}
           </button>
-          {actionLabel &&
-            (report.status !== "Menunggu Validasi" || validationRecorded) && (
-              <button
-                onClick={openPrimaryAction}
-                className="bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white"
-              >
-                {actionLabel}
-              </button>
-            )}
+          {actionLabel && (report.status !== 'Menunggu Validasi' || validationRecorded) && (
+            <button
+              onClick={openPrimaryAction}
+              className="bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white"
+            >
+              {actionLabel}
+            </button>
+          )}
         </div>
       </section>
       {modalOpen && (
@@ -442,15 +378,13 @@ export function AdminWorkflowDetailScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               KONFIRMASI TINDAKAN
             </p>
-            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">
-              {actionLabel}
-            </h2>
+            <h2 className="mt-3 font-slab text-2xl text-[#12355B]">{actionLabel}</h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              {report.status === "Diterima"
-                ? "Pastikan informasi dan bukti pendukung laporan telah diperiksa sebelum melakukan verifikasi."
-                : report.status === "Menunggu Validasi" && validationRecorded
-                  ? "Status laporan akan diubah menjadi Sedang Diproses. Hasil validasi telah diterima dan dicatat. Laporan dapat dilanjutkan ke proses tindak lanjut."
-                  : `Lanjutkan perubahan status laporan menjadi ${displayStatus(nextStatus[report.status] ?? "Selesai")}?`}
+              {report.status === 'Diterima'
+                ? 'Pastikan informasi dan bukti pendukung laporan telah diperiksa sebelum melakukan verifikasi.'
+                : report.status === 'Menunggu Validasi' && validationRecorded
+                  ? 'Status laporan akan diubah menjadi Sedang Diproses. Hasil validasi telah diterima dan dicatat. Laporan dapat dilanjutkan ke proses tindak lanjut.'
+                  : `Lanjutkan perubahan status laporan menjadi ${displayStatus(nextStatus[report.status] ?? 'Selesai')}?`}
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
@@ -463,8 +397,8 @@ export function AdminWorkflowDetailScreen() {
                 onClick={advance}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
-                {report.status === "Menunggu Validasi" && validationRecorded
-                  ? "Simpan"
+                {report.status === 'Menunggu Validasi' && validationRecorded
+                  ? 'Simpan'
                   : actionLabel}
               </button>
             </div>
@@ -482,10 +416,7 @@ export function AdminWorkflowDetailScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               CATATAN VALIDASI
             </p>
-            <h2
-              id="validation-modal-title"
-              className="mt-3 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="validation-modal-title" className="mt-3 font-slab text-2xl text-[#12355B]">
               Catat Hasil Validasi
             </h2>
             <label className="mt-6 block">
@@ -497,19 +428,16 @@ export function AdminWorkflowDetailScreen() {
                 value={validationResult}
                 onChange={(event) => {
                   setValidationResult(event.target.value)
-                  if (validationError) setValidationError("")
+                  if (validationError) setValidationError('')
                 }}
                 placeholder="Masukkan hasil validasi dari Fakultas/Unit terkait"
                 className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
               />
-              {validationError && (
-                <p className="mt-2 text-xs text-[#B42318]">{validationError}</p>
-              )}
+              {validationError && <p className="mt-2 text-xs text-[#B42318]">{validationError}</p>}
             </label>
             <label className="mt-5 block">
               <span className="text-sm font-semibold text-[#12355B]">
-                Catatan Validasi{" "}
-                <span className="font-normal text-[#52657A]">(opsional)</span>
+                Catatan Validasi <span className="font-normal text-[#52657A]">(opsional)</span>
               </span>
               <textarea
                 value={validationNote}
@@ -523,7 +451,7 @@ export function AdminWorkflowDetailScreen() {
                 type="button"
                 onClick={() => {
                   setValidationModalOpen(false)
-                  setValidationError("")
+                  setValidationError('')
                 }}
                 className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
               >
@@ -551,42 +479,35 @@ export function AdminWorkflowDetailScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               KONFIRMASI PENYELESAIAN
             </p>
-            <h2
-              id="completion-modal-title"
-              className="mt-3 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="completion-modal-title" className="mt-3 font-slab text-2xl text-[#12355B]">
               Selesaikan Laporan
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              Laporan akan ditandai sebagai Selesai setelah proses tindak lanjut
-              dinyatakan selesai.
+              Laporan akan ditandai sebagai Selesai setelah proses tindak lanjut dinyatakan selesai.
             </p>
             <label className="mt-6 block">
               <span className="text-sm font-semibold text-[#12355B]">
-                Tindak Lanjut / Hasil Penanganan{" "}
-                <span className="text-[#005BAC]">*</span>
+                Tindak Lanjut / Hasil Penanganan <span className="text-[#005BAC]">*</span>
               </span>
               <textarea
                 required
                 value={completionResult}
                 onChange={(event) => {
                   setCompletionResult(event.target.value)
-                  if (completionError) setCompletionError("")
+                  if (completionError) setCompletionError('')
                 }}
                 rows={4}
                 placeholder="Masukkan hasil tindak lanjut atau penyelesaian laporan"
                 className="mt-2 block w-full resize-y border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
               />
-              {completionError && (
-                <p className="mt-2 text-xs text-[#B42318]">{completionError}</p>
-              )}
+              {completionError && <p className="mt-2 text-xs text-[#B42318]">{completionError}</p>}
             </label>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
                 type="button"
                 onClick={() => {
                   setCompletionModalOpen(false)
-                  setCompletionError("")
+                  setCompletionError('')
                 }}
                 className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
               >

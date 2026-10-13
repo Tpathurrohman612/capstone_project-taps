@@ -1,6 +1,6 @@
-import placeholderAvatar from "../../../assets/placeholder-avatar.svg"
-import { handlePrototypeLogout } from "../../../shared/lib/auth-session"
-import { studentProfile } from "../data/profile"
+import placeholderAvatar from '../../../assets/placeholder-avatar.svg'
+import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
+import { studentProfile } from '../data/profile'
 
 function ProfileItem({ label, value }: { label: string; value: string }) {
   return (
@@ -8,9 +8,7 @@ function ProfileItem({ label, value }: { label: string; value: string }) {
       <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
         {label.toUpperCase()}
       </p>
-      <p className="mt-2 text-sm font-medium leading-6 text-[#1F2937]">
-        {value}
-      </p>
+      <p className="mt-2 text-sm font-medium leading-6 text-[#1F2937]">{value}</p>
     </div>
   )
 }
@@ -22,26 +20,18 @@ export function ProfileScreen() {
         <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
           AKUN / PROFIL
         </p>
-        <h1 className="mt-3 font-slab text-[36px] tracking-[-0.035em] text-[#12355B]">
-          Profil
-        </h1>
+        <h1 className="mt-3 font-slab text-[36px] tracking-[-0.035em] text-[#12355B]">Profil</h1>
         <p className="mt-2 text-sm leading-6 text-[#52657A]">
           Lihat informasi akun yang digunakan dalam Lapor Tuton.
         </p>
       </header>
       <div className="mt-8 grid grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] items-start gap-8 max-[900px]:grid-cols-1">
-        <section
-          className="border border-[#D9E2EC] bg-white"
-          aria-labelledby="informasi-mahasiswa"
-        >
+        <section className="border border-[#D9E2EC] bg-white" aria-labelledby="informasi-mahasiswa">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
               01 / IDENTITAS AKADEMIK
             </p>
-            <h2
-              id="informasi-mahasiswa"
-              className="mt-1 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="informasi-mahasiswa" className="mt-1 font-slab text-2xl text-[#12355B]">
               Informasi Mahasiswa
             </h2>
           </div>
@@ -64,18 +54,12 @@ export function ProfileScreen() {
           </div>
         </section>
         <div className="space-y-8">
-          <section
-            className="border border-[#D9E2EC] bg-white"
-            aria-labelledby="informasi-akun"
-          >
+          <section className="border border-[#D9E2EC] bg-white" aria-labelledby="informasi-akun">
             <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
                 02 / AKSES SISTEM
               </p>
-              <h2
-                id="informasi-akun"
-                className="mt-1 font-slab text-2xl text-[#12355B]"
-              >
+              <h2 id="informasi-akun" className="mt-1 font-slab text-2xl text-[#12355B]">
                 Informasi Akun
               </h2>
             </div>
@@ -101,7 +85,8 @@ export function ProfileScreen() {
             <button
               type="button"
               className="mt-5 inline-flex items-center gap-3 border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
-             onClick={handlePrototypeLogout}>
+              onClick={handlePrototypeLogout}
+            >
               Keluar <span aria-hidden="true">↗</span>
             </button>
           </section>

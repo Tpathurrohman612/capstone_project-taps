@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react"
-import { useNavigate } from "react-router"
-import { AuthShell } from "../components/AuthShell"
+import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
+import { AuthShell } from '../components/AuthShell'
 import {
   ACTIVE_GOOGLE_ACCOUNT_KEY,
   getLinkedGoogleAccountByEmail,
@@ -8,32 +8,31 @@ import {
   NEW_GOOGLE_ACCOUNT_EMAIL,
   REGISTERED_GOOGLE_ACCOUNT_EMAIL,
   SECOND_NEW_GOOGLE_ACCOUNT_EMAIL,
-} from "../lib/google-account"
+} from '../lib/google-account'
 
 export function LoginScreen() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loginError, setLoginError] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [googleAccountDialogOpen, setGoogleAccountDialogOpen] = useState(false)
 
   const fieldClass =
-    "mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]"
+    'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]'
 
   const handleInternalLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const account = INTERNAL_ACCOUNTS.find(
-      (item) =>
-        item.email === email.trim().toLowerCase() && item.password === password,
+      (item) => item.email === email.trim().toLowerCase() && item.password === password,
     )
 
     if (!account) {
-      setLoginError("Email atau password tidak sesuai.")
+      setLoginError('Email atau password tidak sesuai.')
       return
     }
 
-    if (account.role === "Administrator") {
-      navigate("/administrator")
+    if (account.role === 'Administrator') {
+      navigate('/administrator')
     }
   }
 
@@ -43,15 +42,12 @@ export function LoginScreen() {
 
     const linkedAccount = getLinkedGoogleAccountByEmail(googleEmail)
 
-    if (
-      googleEmail === REGISTERED_GOOGLE_ACCOUNT_EMAIL ||
-      linkedAccount
-    ) {
-      navigate("/")
+    if (googleEmail === REGISTERED_GOOGLE_ACCOUNT_EMAIL || linkedAccount) {
+      navigate('/')
       return
     }
 
-    navigate("/lengkapi-identitas")
+    navigate('/lengkapi-identitas')
   }
 
   return (
@@ -77,7 +73,7 @@ export function LoginScreen() {
                 value={email}
                 onChange={(event) => {
                   setEmail(event.target.value)
-                  if (loginError) setLoginError("")
+                  if (loginError) setLoginError('')
                 }}
                 className={fieldClass}
                 placeholder="Masukkan email"
@@ -85,29 +81,24 @@ export function LoginScreen() {
               />
             </label>
             <label className="mt-5 block">
-              <span className="text-sm font-medium text-[#12355B]">
-                Password
-              </span>
+              <span className="text-sm font-medium text-[#12355B]">Password</span>
               <input
                 required
                 type="password"
                 value={password}
                 onChange={(event) => {
                   setPassword(event.target.value)
-                  if (loginError) setLoginError("")
+                  if (loginError) setLoginError('')
                 }}
                 className={fieldClass}
                 placeholder="Masukkan password"
                 autoComplete="current-password"
-                aria-describedby={loginError ? "login-error" : undefined}
+                aria-describedby={loginError ? 'login-error' : undefined}
                 aria-invalid={Boolean(loginError)}
               />
             </label>
             {loginError && (
-              <p
-                id="login-error"
-                className="mt-3 text-xs leading-5 text-[#B42318]"
-              >
+              <p id="login-error" className="mt-3 text-xs leading-5 text-[#B42318]">
                 {loginError}
               </p>
             )}
@@ -119,10 +110,7 @@ export function LoginScreen() {
             </button>
           </form>
 
-          <div
-            className="my-7 flex items-center gap-3 text-xs text-[#52657A]"
-            aria-hidden="true"
-          >
+          <div className="my-7 flex items-center gap-3 text-xs text-[#52657A]" aria-hidden="true">
             <span className="h-px flex-1 bg-[#D9E2EC]" />
             <span>atau</span>
             <span className="h-px flex-1 bg-[#D9E2EC]" />
@@ -159,22 +147,16 @@ export function LoginScreen() {
             <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
               SIMULASI GOOGLE LOGIN
             </p>
-            <h2
-              id="google-account-title"
-              className="mt-2 font-slab text-2xl text-[#12355B]"
-            >
+            <h2 id="google-account-title" className="mt-2 font-slab text-2xl text-[#12355B]">
               Pilih Akun Google
             </h2>
             <p className="mt-2 text-sm leading-6 text-[#52657A]">
-              Pilih akun untuk mencoba alur pengguna baru atau pengguna yang
-              sudah terhubung.
+              Pilih akun untuk mencoba alur pengguna baru atau pengguna yang sudah terhubung.
             </p>
             <div className="mt-6 space-y-3">
               <button
                 type="button"
-                onClick={() =>
-                  handleGoogleAccountSelect(NEW_GOOGLE_ACCOUNT_EMAIL)
-                }
+                onClick={() => handleGoogleAccountSelect(NEW_GOOGLE_ACCOUNT_EMAIL)}
                 className="w-full border border-[#B9C8D7] px-4 py-3 text-left text-sm text-[#12355B] transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
               >
                 <span className="block font-medium">new.student@gmail.com</span>
@@ -184,9 +166,7 @@ export function LoginScreen() {
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  handleGoogleAccountSelect(SECOND_NEW_GOOGLE_ACCOUNT_EMAIL)
-                }
+                onClick={() => handleGoogleAccountSelect(SECOND_NEW_GOOGLE_ACCOUNT_EMAIL)}
                 className="w-full border border-[#B9C8D7] px-4 py-3 text-left text-sm text-[#12355B] transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
               >
                 <span className="block font-medium">second.student@gmail.com</span>
@@ -196,14 +176,10 @@ export function LoginScreen() {
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  handleGoogleAccountSelect(REGISTERED_GOOGLE_ACCOUNT_EMAIL)
-                }
+                onClick={() => handleGoogleAccountSelect(REGISTERED_GOOGLE_ACCOUNT_EMAIL)}
                 className="w-full border border-[#B9C8D7] px-4 py-3 text-left text-sm text-[#12355B] transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
               >
-                <span className="block font-medium">
-                  registered.student@gmail.com
-                </span>
+                <span className="block font-medium">registered.student@gmail.com</span>
                 <span className="mt-1 block text-xs text-[#52657A]">
                   Akun terhubung — buka Dashboard Mahasiswa
                 </span>

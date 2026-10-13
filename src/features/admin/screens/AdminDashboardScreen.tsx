@@ -1,25 +1,23 @@
-import { useState } from "react"
-import { Link } from "react-router"
-import universitasTerbukaLogo from "../../../assets/universitas-terbuka-logo.png"
-import type { WorkflowReport } from "../../../shared/types/workflow"
-import { getWorkflowReports } from "../../../shared/lib/workflow-storage"
-import { handlePrototypeLogout } from "../../../shared/lib/auth-session"
-import { adminNavItems } from "../data/navigation"
+import { useState } from 'react'
+import { Link } from 'react-router'
+import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
+import type { WorkflowReport } from '../../../shared/types/workflow'
+import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
+import { adminNavItems } from '../data/navigation'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
     active
-      ? "border-[#12355B] bg-[#12355B] font-medium text-white"
-      : "border-transparent hover:border-[#D9E2EC] hover:bg-white"
+      ? 'border-[#12355B] bg-[#12355B] font-medium text-white'
+      : 'border-transparent hover:border-[#D9E2EC] hover:bg-white'
   }`
 
 function NavNumber({ active, number }: { active: boolean; number: number }) {
   return (
     <span
       className={`flex h-5 w-5 items-center justify-center border text-[10px] ${
-        active
-          ? "border-[#9FC8EA] text-[#DCEBF8]"
-          : "border-[#A9B8C8] text-[#52657A]"
+        active ? 'border-[#9FC8EA] text-[#DCEBF8]' : 'border-[#A9B8C8] text-[#52657A]'
       }`}
     >
       0{number}
@@ -28,11 +26,11 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
 }
 
 const adminStatusClass = (status: string) =>
-  status === "Selesai"
-    ? "border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]"
-    : status === "Sedang Diproses"
-      ? "border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]"
-      : "border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]"
+  status === 'Selesai'
+    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
+    : status === 'Sedang Diproses'
+      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
+      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
 
 export function AdminDashboardScreen() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -40,33 +38,28 @@ export function AdminDashboardScreen() {
   const dashboardReport = (report: WorkflowReport) => ({
     ...report,
     date: report.submitted,
-    action: report.status === "Diterima" ? "Verifikasi" : "Lihat Detail",
-    status: report.status === "Diproses" ? "Sedang Diproses" : report.status,
+    action: report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail',
+    status: report.status === 'Diproses' ? 'Sedang Diproses' : report.status,
   })
   const dashboardOrder = [
-    "LT-2026-0008",
-    "LT-2026-0007",
-    "LT-2026-0005",
-    "LT-2026-0001",
-    "LT-2026-0003",
-    "LT-2026-0004",
-    "LT-2026-0002",
+    'LT-2026-0008',
+    'LT-2026-0007',
+    'LT-2026-0005',
+    'LT-2026-0001',
+    'LT-2026-0003',
+    'LT-2026-0004',
+    'LT-2026-0002',
   ]
   const byDashboardOrder = (left: WorkflowReport, right: WorkflowReport) =>
     dashboardOrder.indexOf(left.id) - dashboardOrder.indexOf(right.id)
   const priorityReports = dashboardWorkflowReports
-    .filter((report) => report.status !== "Selesai")
+    .filter((report) => report.status !== 'Selesai')
     .sort(byDashboardOrder)
     .map(dashboardReport)
-  const recentReports = [...dashboardWorkflowReports]
-    .sort(byDashboardOrder)
-    .map(dashboardReport)
+  const recentReports = [...dashboardWorkflowReports].sort(byDashboardOrder).map(dashboardReport)
   const setDashboardDetailTarget = (id: string, status: string) => {
-    window.sessionStorage.setItem(
-      "adminDetailContext",
-      status === "Selesai" ? "history" : "queue",
-    )
-    window.sessionStorage.setItem("adminDetailId", id)
+    window.sessionStorage.setItem('adminDetailContext', status === 'Selesai' ? 'history' : 'queue')
+    window.sessionStorage.setItem('adminDetailId', id)
   }
   return (
     <main className="min-h-screen bg-[#F7F9FC] text-[#1F2937] selection:bg-[#DCEBF8]">
@@ -74,8 +67,8 @@ export function AdminDashboardScreen() {
         <header
           className={`${
             mobileMenuOpen
-              ? "hidden"
-              : "sticky top-0 z-10 hidden items-center justify-between border-b border-[#D9E2EC] bg-[#F7F9FC] pb-4 pt-[max(4rem,env(safe-area-inset-top))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] max-[900px]:flex"
+              ? 'hidden'
+              : 'sticky top-0 z-10 hidden items-center justify-between border-b border-[#D9E2EC] bg-[#F7F9FC] pb-4 pt-[max(4rem,env(safe-area-inset-top))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] max-[900px]:flex'
           }`}
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -115,37 +108,31 @@ export function AdminDashboardScreen() {
               className="h-auto w-[142px]"
             />
             <div className="mt-4 flex items-baseline justify-center">
-              <span className="font-slab text-[26px] leading-none">
-                Lapor Tuton
-              </span>
+              <span className="font-slab text-[26px] leading-none">Lapor Tuton</span>
             </div>
             <span className="mt-2 font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
               ADMINISTRATOR
             </span>
           </div>
-          <nav
-            className="mt-7 flex flex-col gap-1"
-            aria-label="Navigasi administrator"
-          >
+          <nav className="mt-7 flex flex-col gap-1" aria-label="Navigasi administrator">
             {adminNavItems.map((item, index) =>
-              item.to === "#" ? (
+              item.to === '#' ? (
                 <button key={item.label} className={navButton(index === 0)}>
                   <NavNumber active={index === 0} number={index + 1} />
                   {item.label}
                 </button>
               ) : (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className={navButton(index === 0)}
-                >
+                <Link key={item.label} to={item.to} className={navButton(index === 0)}>
                   <NavNumber active={index === 0} number={index + 1} />
                   {item.label}
                 </Link>
               ),
             )}
           </nav>
-          <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]" onClick={handlePrototypeLogout}>
+          <button
+            className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A] transition hover:border-[#D9E2EC] hover:bg-white hover:text-[#12355B]"
+            onClick={handlePrototypeLogout}
+          >
             <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
               ↗
             </span>
@@ -191,7 +178,7 @@ export function AdminDashboardScreen() {
               </div>
               <nav className="mt-6 flex flex-col gap-2">
                 {adminNavItems.map((item, index) =>
-                  item.to === "#" ? (
+                  item.to === '#' ? (
                     <button
                       key={item.label}
                       onClick={() => setMobileMenuOpen(false)}
@@ -213,7 +200,10 @@ export function AdminDashboardScreen() {
                   ),
                 )}
               </nav>
-              <button className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]" onClick={handlePrototypeLogout}>
+              <button
+                className="mt-auto flex items-center gap-3 border border-transparent px-3 py-3 text-left text-sm text-[#52657A]"
+                onClick={handlePrototypeLogout}
+              >
                 <span className="flex h-5 w-5 items-center justify-center border border-[#A9B8C8] text-[13px]">
                   ↗
                 </span>
@@ -231,68 +221,58 @@ export function AdminDashboardScreen() {
               Dashboard Administrator
             </h1>
             <p className="mt-2 text-sm leading-6 text-[#52657A]">
-              Pantau dan kelola laporan permasalahan terkait aktivitas dan
-              layanan tutor.
+              Pantau dan kelola laporan permasalahan terkait aktivitas dan layanan tutor.
             </p>
           </header>
           <div className="mt-8 grid grid-cols-5 border border-[#D9E2EC] max-[1100px]:grid-cols-3 max-[760px]:grid-cols-2 max-[620px]:grid-cols-1">
             {[
               [
-                String(dashboardWorkflowReports.length).padStart(2, "0"),
-                "Total Laporan",
-                "Seluruh laporan masuk",
+                String(dashboardWorkflowReports.length).padStart(2, '0'),
+                'Total Laporan',
+                'Seluruh laporan masuk',
               ],
               [
                 String(
-                  dashboardWorkflowReports.filter(
-                    (report) => report.status === "Diterima",
-                  ).length,
-                ).padStart(2, "0"),
-                "Perlu Verifikasi",
-                "Menunggu verifikasi",
+                  dashboardWorkflowReports.filter((report) => report.status === 'Diterima').length,
+                ).padStart(2, '0'),
+                'Perlu Verifikasi',
+                'Menunggu verifikasi',
               ],
               [
                 String(
-                  dashboardWorkflowReports.filter(
-                    (report) => report.status === "Menunggu Validasi",
-                  ).length,
-                ).padStart(2, "0"),
-                "Menunggu Validasi",
-                "Menunggu hasil validasi",
+                  dashboardWorkflowReports.filter((report) => report.status === 'Menunggu Validasi')
+                    .length,
+                ).padStart(2, '0'),
+                'Menunggu Validasi',
+                'Menunggu hasil validasi',
               ],
               [
                 String(
-                  dashboardWorkflowReports.filter(
-                    (report) => report.status === "Diproses",
-                  ).length,
-                ).padStart(2, "0"),
-                "Sedang Diproses",
-                "Dalam tindak lanjut",
+                  dashboardWorkflowReports.filter((report) => report.status === 'Diproses').length,
+                ).padStart(2, '0'),
+                'Sedang Diproses',
+                'Dalam tindak lanjut',
               ],
               [
                 String(
-                  dashboardWorkflowReports.filter(
-                    (report) => report.status === "Selesai",
-                  ).length,
-                ).padStart(2, "0"),
-                "Selesai",
-                "Telah diselesaikan",
+                  dashboardWorkflowReports.filter((report) => report.status === 'Selesai').length,
+                ).padStart(2, '0'),
+                'Selesai',
+                'Telah diselesaikan',
               ],
             ].map(([number, label, caption], index) => (
               <div
                 key={label}
                 className={`min-h-[150px] p-5 ${
                   index > 0
-                    ? "border-l border-[#D9E2EC] max-[1100px]:border-t max-[760px]:border-l-0 max-[620px]:border-t"
-                    : ""
+                    ? 'border-l border-[#D9E2EC] max-[1100px]:border-t max-[760px]:border-l-0 max-[620px]:border-t'
+                    : ''
                 }`}
               >
                 <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">
                   {label.toUpperCase()}
                 </p>
-                <p className="mt-5 font-slab text-5xl leading-none text-[#12355B]">
-                  {number}
-                </p>
+                <p className="mt-5 font-slab text-5xl leading-none text-[#12355B]">{number}</p>
                 <p className="mt-3 text-xs text-[#52657A]">{caption}</p>
               </div>
             ))}
@@ -303,15 +283,12 @@ export function AdminDashboardScreen() {
                 <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
                   ANTREAN PRIORITAS
                 </p>
-                <h2
-                  id="perlu-ditindaklanjuti"
-                  className="mt-2 font-slab text-2xl text-[#12355B]"
-                >
+                <h2 id="perlu-ditindaklanjuti" className="mt-2 font-slab text-2xl text-[#12355B]">
                   Laporan yang Perlu Ditindaklanjuti
                 </h2>
               </div>
               <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                {String(priorityReports.length).padStart(2, "0")} LAPORAN
+                {String(priorityReports.length).padStart(2, '0')} LAPORAN
               </span>
             </div>
             <div className="divide-y divide-[#D9E2EC] border-b border-[#D9E2EC]">
@@ -322,16 +299,10 @@ export function AdminDashboardScreen() {
                     className="grid grid-cols-[150px_minmax(0,1fr)_140px_120px_92px] items-center gap-4 px-4 py-5 max-[850px]:hidden"
                   >
                     <div>
-                      <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                        {report.id}
-                      </p>
-                      <p className="mt-1 text-[11px] text-[#52657A]">
-                        {report.date}
-                      </p>
+                      <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
+                      <p className="mt-1 text-[11px] text-[#52657A]">{report.date}</p>
                     </div>
-                    <p className="text-sm font-medium text-[#1F2937]">
-                      {report.title}
-                    </p>
+                    <p className="text-sm font-medium text-[#1F2937]">{report.title}</p>
                     <span
                       className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
                     >
@@ -340,9 +311,7 @@ export function AdminDashboardScreen() {
                     <p className="text-xs text-[#52657A]">{report.date}</p>
                     <Link
                       to="/detail-laporan"
-                      onClick={() =>
-                        setDashboardDetailTarget(report.id, report.status)
-                      }
+                      onClick={() => setDashboardDetailTarget(report.id, report.status)}
                       className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
                     >
                       {report.action}
@@ -353,9 +322,7 @@ export function AdminDashboardScreen() {
                     className="hidden px-4 py-5 max-[850px]:block"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                        {report.id}
-                      </p>
+                      <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
                         className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
                       >
@@ -369,15 +336,11 @@ export function AdminDashboardScreen() {
                       <p className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                         TANGGAL PENGAJUAN
                       </p>
-                      <p className="mt-1 text-sm text-[#1F2937]">
-                        {report.date}
-                      </p>
+                      <p className="mt-1 text-sm text-[#1F2937]">{report.date}</p>
                     </div>
                     <Link
                       to="/detail-laporan"
-                      onClick={() =>
-                        setDashboardDetailTarget(report.id, report.status)
-                      }
+                      onClick={() => setDashboardDetailTarget(report.id, report.status)}
                       className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] transition hover:bg-[#005BAC] hover:text-white"
                     >
                       {report.action}
@@ -393,10 +356,7 @@ export function AdminDashboardScreen() {
                 <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
                   LAPORAN MASUK
                 </p>
-                <h2
-                  id="laporan-terbaru"
-                  className="mt-2 font-slab text-2xl text-[#12355B]"
-                >
+                <h2 id="laporan-terbaru" className="mt-2 font-slab text-2xl text-[#12355B]">
                   Laporan Terbaru
                 </h2>
               </div>
@@ -417,9 +377,7 @@ export function AdminDashboardScreen() {
                     key={`${report.id}-desktop`}
                     className="grid grid-cols-[110px_150px_minmax(0,1fr)_62px_160px_130px_80px] items-center gap-3 px-4 py-5 max-lg:hidden"
                   >
-                    <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                      {report.id}
-                    </p>
+                    <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                     <p className="text-sm">{report.category}</p>
                     <p className="text-sm font-medium">{report.course}</p>
                     <p className="text-sm">{report.className}</p>
@@ -431,22 +389,15 @@ export function AdminDashboardScreen() {
                     </span>
                     <Link
                       to="/detail-laporan"
-                      onClick={() =>
-                        setDashboardDetailTarget(report.id, report.status)
-                      }
+                      onClick={() => setDashboardDetailTarget(report.id, report.status)}
                       className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
                     >
                       Detail
                     </Link>
                   </article>
-                  <article
-                    key={`${report.id}-mobile`}
-                    className="hidden px-4 py-5 max-lg:block"
-                  >
+                  <article key={`${report.id}-mobile`} className="hidden px-4 py-5 max-lg:block">
                     <div className="flex items-start justify-between gap-4">
-                      <p className="font-mono text-xs font-semibold text-[#005BAC]">
-                        {report.id}
-                      </p>
+                      <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
                         className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
                       >
@@ -461,48 +412,36 @@ export function AdminDashboardScreen() {
                         <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                           KATEGORI PERMASALAHAN
                         </dt>
-                        <dd className="mt-1 text-sm text-[#1F2937]">
-                          {report.category}
-                        </dd>
+                        <dd className="mt-1 text-sm text-[#1F2937]">{report.category}</dd>
                       </div>
                       <div>
                         <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                           MATA KULIAH
                         </dt>
-                        <dd className="mt-1 text-sm text-[#1F2937]">
-                          {report.course}
-                        </dd>
+                        <dd className="mt-1 text-sm text-[#1F2937]">{report.course}</dd>
                       </div>
                       <div>
                         <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                           KELAS
                         </dt>
-                        <dd className="mt-1 text-sm text-[#1F2937]">
-                          {report.className}
-                        </dd>
+                        <dd className="mt-1 text-sm text-[#1F2937]">{report.className}</dd>
                       </div>
                       <div>
                         <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                           NAMA TUTOR/DOSEN
                         </dt>
-                        <dd className="mt-1 text-sm text-[#1F2937]">
-                          {report.tutor}
-                        </dd>
+                        <dd className="mt-1 text-sm text-[#1F2937]">{report.tutor}</dd>
                       </div>
                       <div>
                         <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                           TANGGAL PENGAJUAN
                         </dt>
-                        <dd className="mt-1 text-sm text-[#1F2937]">
-                          {report.submitted}
-                        </dd>
+                        <dd className="mt-1 text-sm text-[#1F2937]">{report.submitted}</dd>
                       </div>
                     </dl>
                     <Link
                       to="/detail-laporan"
-                      onClick={() =>
-                        setDashboardDetailTarget(report.id, report.status)
-                      }
+                      onClick={() => setDashboardDetailTarget(report.id, report.status)}
                       className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] transition hover:bg-[#005BAC] hover:text-white"
                     >
                       Lihat Detail
