@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
 
 function Field({
   label,
@@ -118,6 +119,7 @@ export function CreateReportScreen() {
         }),
       ) + 1
     const reportId = `LT-2026-${String(nextReportNumber).padStart(4, '0')}`
+    const createdAt = new Date()
     const attachmentDetails = files.map((file) => {
       const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
       return {
@@ -133,7 +135,7 @@ export function CreateReportScreen() {
       course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
       className: String(data.get('className')),
       tutor: String(data.get('tutor')),
-      submitted: '20 September 2026',
+      submitted: formatIndonesianDate(createdAt),
       status: 'Diterima',
       courseType: String(data.get('courseType')),
       duration: String(data.get('duration')),
@@ -141,13 +143,17 @@ export function CreateReportScreen() {
       attachments: attachmentDetails,
       updates: [
         {
-          time: '20 September 2026, 09:00',
+          time: formatIndonesianDateTime(createdAt),
           title: 'Laporan diterima',
           text: 'Laporan berhasil diterima oleh sistem Lapor Tuton.',
         },
       ],
     }
-    saveWorkflowReports([...workflowReports, newReport])
+    try {
+      saveWorkflowReports([...workflowReports, newReport])
+    } catch {
+      return
+    }
     setSubmittedReportId(reportId)
     submissionPending.current = true
     setIsSubmitting(true)

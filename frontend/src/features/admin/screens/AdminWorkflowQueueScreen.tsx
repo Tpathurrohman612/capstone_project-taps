@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { WorkflowStatus } from '../../../shared/types/workflow'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import {
   AdminWorkflowShell,
   WorkflowTable,
@@ -88,6 +89,7 @@ export function AdminWorkflowQueueScreen() {
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0)
   }
   const confirmSend = () => {
+    const sentAt = formatIndonesianDateTime(new Date())
     const selected = new Set(exportReports.map((report) => report.id))
     const updated = allReports.map((report) =>
       selected.has(report.id)
@@ -97,7 +99,7 @@ export function AdminWorkflowQueueScreen() {
             updates: [
               ...report.updates,
               {
-                time: '17 September 2026, 17:10',
+                time: sentAt,
                 title: 'Data laporan dikirim ke Fakultas/Unit terkait',
                 text: 'Data laporan telah dikirim oleh Administrator melalui kanal eksternal untuk proses validasi.',
               },
@@ -105,7 +107,11 @@ export function AdminWorkflowQueueScreen() {
           }
         : report,
     )
-    saveWorkflowReports(updated)
+    try {
+      saveWorkflowReports(updated)
+    } catch {
+      return
+    }
     setExportReady(false)
     setSendModalOpen(false)
   }

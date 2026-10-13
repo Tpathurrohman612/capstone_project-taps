@@ -1,35 +1,57 @@
-# figma-make-app
+# TAPS Monorepo — Project Instructions
 
-React + Vite + Tailwind CSS project running inside Figma Make.
+## Repository Structure
 
-## Development Server
+The Git repository root is the monorepo root. The React frontend lives in `frontend/`.
 
-A Vite development server is **already running** on `$PORT` (default 8443). You don't need to start it manually.
+- `frontend/src/main.tsx` — React entry point.
+- `frontend/src/App.tsx` — primary application component.
+- `frontend/src/routes.tsx` — route definitions and client-side role guards.
+- `frontend/src/index.css` — global CSS and Tailwind CSS v4 entry point.
+- `frontend/package.json` — frontend dependencies and scripts.
+- `frontend/pnpm-lock.yaml` — pnpm lockfile.
+- `frontend/vite.config.ts` — Vite configuration.
+- `backend/` and `database/` are planned; they do not exist yet.
 
-- Preview URL: The user can access the running app through the preview panel
-- Hot reload: Changes to source files are reflected immediately
+Keep repository-wide documentation and Git configuration in the repository root.
 
-## Project Structure
+## Toolchain
 
-This is the canonical project structure. Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
+The root `.mise.toml` specifies Node.js 22 and pnpm 10.34.3. Use compatible versions of Node.js, Vite, and Vitest.
 
-- `src/main.tsx` - React entrypoint; imports `src/index.css` and mounts `src/App.tsx` into the `#root` element
-- `src/App.tsx` - Primary application component and the usual starting point for UI work
-- `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
-- `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`
-- `package.json` - Project dependencies and the Vite build, development, preview, and formatting scripts
-- `vite.config.ts` - Vite configuration with React, Tailwind CSS v4, and Figma Make plugins plus the `@` alias for `src`
-- `.mise.toml` - Toolchain versions for Node.js and pnpm
+Run frontend commands from the repository root using `--dir frontend`, for example:
 
-## Dependencies
+- `corepack pnpm@10.34.3 --dir frontend install`
+- `corepack pnpm@10.34.3 --dir frontend run dev`
+- `corepack pnpm@10.34.3 --dir frontend test`
+- `corepack pnpm@10.34.3 --dir frontend run build`
 
-- Runtime: React 19 and React DOM 19
-- Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
-- Build tooling: Vite 8, TypeScript 5.7, and `@vitejs/plugin-react`
-- Formatting: oxfmt
+Alternatively, enter `frontend/` and run the corresponding commands there.
 
-## Styling
+## Code Style
 
-This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin configured in `vite.config.ts`. `src/index.css` imports Tailwind with `@import 'tailwindcss';`. Use Tailwind utility classes directly in JSX and put global CSS or Tailwind v4 theme customization in `src/index.css`. This scaffold does not need a Tailwind config file or PostCSS config.
+The frontend uses React, React Router, TypeScript, Vite, Tailwind CSS v4, Vitest, and Oxfmt.
 
-`src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then add any `@font-face` rules and font-family defaults there.
+Follow `frontend/.oxfmtrc.json`. After source changes, run the formatter and relevant checks.
+
+Recommended verification:
+
+1. `corepack pnpm@10.34.3 --dir frontend test`
+2. `corepack pnpm@10.34.3 --dir frontend exec tsc --noEmit --noUnusedLocals --noUnusedParameters`
+3. `corepack pnpm@10.34.3 --dir frontend run build`
+4. `corepack pnpm@10.34.3 --dir frontend exec oxfmt --check src`
+
+## Prototype Boundaries
+
+- Google sign-in is simulated, not a real OAuth integration.
+- Administrator demo credentials reside in frontend source and are not suitable for production.
+- Client-side route guards are not a substitute for server-side authentication and authorization.
+- Workflow reports use browser `sessionStorage`, not a persistent shared database.
+- Attachment information currently stores file metadata; actual file storage remains to be implemented.
+- Seed records are demonstration data.
+
+## Change Safety
+
+Inspect existing implementation before editing. Keep changes scoped and preserve established UI behavior.
+
+Never commit or push unless explicitly authorized.

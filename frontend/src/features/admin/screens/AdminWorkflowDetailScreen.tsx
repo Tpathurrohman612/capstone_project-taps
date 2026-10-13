@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowStatus } from '../../../shared/types/workflow'
 import { workflowSeed } from '../../../shared/data/workflow-seed'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
@@ -89,17 +90,18 @@ export function AdminWorkflowDetailScreen() {
             : next === 'Diproses'
               ? 'Laporan diteruskan kepada pengelola Tutorial Online untuk tindak lanjut.'
               : 'Tindak lanjut telah dilakukan dan laporan dinyatakan selesai.'
-    const time =
-      next === 'Diproses' && report.status === 'Menunggu Validasi'
-        ? '17 September 2026, 17:00'
-        : '17 September 2026, 10:00'
+    const time = formatIndonesianDateTime(new Date())
     const updated = {
       ...report,
       status: next,
       updates: [...report.updates, { time, title, text }],
     }
     const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    saveWorkflowReports(all)
+    try {
+      saveWorkflowReports(all)
+    } catch {
+      return
+    }
     setReport(updated)
     setModalOpen(false)
   }
@@ -115,7 +117,7 @@ export function AdminWorkflowDetailScreen() {
       updates: [
         ...report.updates,
         {
-          time: '17 September 2026, 16:45',
+          time: formatIndonesianDateTime(new Date()),
           title: 'Hasil validasi diterima dan dicatat',
           text: `Hasil validasi dari Fakultas/Unit terkait telah diterima dan dicatat oleh Administrator. Hasil validasi: ${result}${
             note ? `. Catatan validasi: ${note}` : ''
@@ -124,7 +126,11 @@ export function AdminWorkflowDetailScreen() {
       ],
     }
     const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    saveWorkflowReports(all)
+    try {
+      saveWorkflowReports(all)
+    } catch {
+      return
+    }
     setReport(updated)
     setValidationModalOpen(false)
     setValidationResult('')
@@ -143,14 +149,18 @@ export function AdminWorkflowDetailScreen() {
       updates: [
         ...report.updates,
         {
-          time: '17 September 2026, 17:30',
+          time: formatIndonesianDateTime(new Date()),
           title: 'Laporan selesai',
           text: `Laporan telah selesai ditangani. Tindak lanjut / hasil penanganan: ${result}`,
         },
       ],
     }
     const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    saveWorkflowReports(all)
+    try {
+      saveWorkflowReports(all)
+    } catch {
+      return
+    }
     setReport(updated)
     setCompletionModalOpen(false)
     setCompletionResult('')

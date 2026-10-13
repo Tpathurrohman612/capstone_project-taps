@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthShell } from '../components/AuthShell'
+import { clearPrototypeAuthSession, setActiveUserRole } from '../../../shared/lib/auth-session'
 import {
   ACTIVE_GOOGLE_ACCOUNT_KEY,
   getLinkedGoogleAccountByEmail,
@@ -22,6 +23,7 @@ export function LoginScreen() {
 
   const handleInternalLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    clearPrototypeAuthSession()
     const account = INTERNAL_ACCOUNTS.find(
       (item) => item.email === email.trim().toLowerCase() && item.password === password,
     )
@@ -32,12 +34,15 @@ export function LoginScreen() {
     }
 
     if (account.role === 'Administrator') {
+      setActiveUserRole(account.role)
       navigate('/administrator')
     }
   }
 
   const handleGoogleAccountSelect = (googleEmail: string) => {
+    clearPrototypeAuthSession()
     window.sessionStorage.setItem(ACTIVE_GOOGLE_ACCOUNT_KEY, googleEmail)
+    setActiveUserRole('Mahasiswa')
     setGoogleAccountDialogOpen(false)
 
     const linkedAccount = getLinkedGoogleAccountByEmail(googleEmail)

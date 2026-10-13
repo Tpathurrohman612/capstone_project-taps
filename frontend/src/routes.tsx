@@ -13,26 +13,67 @@ import { DashboardScreen } from './features/student/screens/DashboardScreen'
 import { ReportHistoryScreen } from './features/student/screens/ReportHistoryScreen'
 import { ProfileScreen } from './features/student/screens/ProfileScreen'
 import { DesignSystemScreen } from './screens/DesignSystemScreen'
+import { RoleGuard } from './shared/components/RoleGuard'
 
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginScreen },
-  { path: '/lengkapi-identitas', Component: IdentitySetupScreen },
+  {
+    path: '/lengkapi-identitas',
+    element: (
+      <RoleGuard role="Mahasiswa">
+        <IdentitySetupScreen />
+      </RoleGuard>
+    ),
+  },
   { path: '/mahasiswa', element: <Navigate to="/" replace /> },
-  { path: '/administrator', Component: AdminDashboardScreen },
+  {
+    path: '/administrator',
+    element: (
+      <RoleGuard role="Administrator">
+        <AdminDashboardScreen />
+      </RoleGuard>
+    ),
+  },
   {
     path: '/administrator/antrean-laporan',
-    Component: AdminWorkflowQueueScreen,
+    element: (
+      <RoleGuard role="Administrator">
+        <AdminWorkflowQueueScreen />
+      </RoleGuard>
+    ),
   },
   {
     path: '/administrator/riwayat-laporan',
-    Component: AdminWorkflowHistoryScreen,
+    element: (
+      <RoleGuard role="Administrator">
+        <AdminWorkflowHistoryScreen />
+      </RoleGuard>
+    ),
   },
-  { path: '/administrator/profil-akun', Component: AdminWorkflowProfileScreen },
-  { path: '/detail-laporan', Component: AdminWorkflowDetailScreen },
+  {
+    path: '/administrator/profil-akun',
+    element: (
+      <RoleGuard role="Administrator">
+        <AdminWorkflowProfileScreen />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: '/detail-laporan',
+    element: (
+      <RoleGuard role="Administrator">
+        <AdminWorkflowDetailScreen />
+      </RoleGuard>
+    ),
+  },
   { path: '/design-system', Component: DesignSystemScreen },
   {
     path: '/',
-    Component: AppLayout,
+    element: (
+      <RoleGuard role="Mahasiswa">
+        <AppLayout />
+      </RoleGuard>
+    ),
     children: [
       { index: true, Component: DashboardScreen },
       { path: 'buat-laporan', Component: CreateReportScreen },
