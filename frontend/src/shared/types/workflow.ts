@@ -22,6 +22,7 @@ export type WorkflowReport = {
   status: WorkflowStatus
   updates: WorkflowUpdate[]
   courseType?: string
+  studentFaculty?: string
   duration?: string
   description?: string
   attachments?: { name: string; type: string; size: string }[]

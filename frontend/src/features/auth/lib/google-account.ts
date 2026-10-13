@@ -1,3 +1,5 @@
+import { FACULTIES, type Faculty } from '../../../shared/data/faculties'
+
 export const NEW_GOOGLE_ACCOUNT_EMAIL = 'new.student@gmail.com'
 export const SECOND_NEW_GOOGLE_ACCOUNT_EMAIL = 'second.student@gmail.com'
 export const REGISTERED_GOOGLE_ACCOUNT_EMAIL = 'registered.student@gmail.com'
@@ -15,7 +17,11 @@ export const INTERNAL_ACCOUNTS = [
 export type LinkedGoogleAccount = {
   email: string
   nim: string
+  faculty?: Faculty
 }
+
+const isFaculty = (value: unknown): value is Faculty =>
+  typeof value === 'string' && (FACULTIES as readonly string[]).includes(value)
 
 export function getLinkedGoogleAccounts(): LinkedGoogleAccount[] {
   const storedAccounts = window.localStorage.getItem(GOOGLE_ACCOUNT_LINK_KEY)
@@ -25,17 +31,23 @@ export function getLinkedGoogleAccounts(): LinkedGoogleAccount[] {
     const parsed: unknown = JSON.parse(storedAccounts)
     const entries: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
 
-    return entries.filter(
-      (entry): entry is LinkedGoogleAccount =>
-        typeof entry === 'object' &&
-        entry !== null &&
-        'email' in entry &&
-        typeof entry.email === 'string' &&
-        entry.email.trim() !== '' &&
-        'nim' in entry &&
-        typeof entry.nim === 'string' &&
-        entry.nim.trim() !== '',
-    )
+    return entries
+      .filter(
+        (entry): entry is { email: string; nim: string; faculty?: unknown } =>
+          typeof entry === 'object' &&
+          entry !== null &&
+          'email' in entry &&
+          typeof entry.email === 'string' &&
+          entry.email.trim() !== '' &&
+          'nim' in entry &&
+          typeof entry.nim === 'string' &&
+          entry.nim.trim() !== '',
+      )
+      .map((entry) => ({
+        email: entry.email,
+        nim: entry.nim,
+        ...(isFaculty(entry.faculty) ? { faculty: entry.faculty } : {}),
+      }))
   } catch {
     return []
   }
@@ -49,4 +61,12 @@ export function getLinkedGoogleAccountByEmail(email: string): LinkedGoogleAccoun
 
 export function getActiveGoogleAccountEmail() {
   return window.sessionStorage.getItem(ACTIVE_GOOGLE_ACCOUNT_KEY) ?? NEW_GOOGLE_ACCOUNT_EMAIL
+}
+
+export function getActiveStudentFaculty(): Faculty | undefined {
+  const activeEmail = getActiveGoogleAccountEmail()
+  if (activeEmail.toLowerCase() === REGISTERED_GOOGLE_ACCOUNT_EMAIL.toLowerCase()) {
+    return 'Fakultas Sains dan Teknologi'
+  }
+  return getLinkedGoogleAccountByEmail(activeEmail)?.faculty
 }

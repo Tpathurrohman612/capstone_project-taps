@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
+import { getActiveStudentFaculty } from '../../auth/lib/google-account'
 
 function Field({
   label,
@@ -128,6 +129,7 @@ export function CreateReportScreen() {
         size: `${Math.max(1, Math.ceil(file.size / 1024))} KB`,
       }
     })
+    const studentFaculty = getActiveStudentFaculty()
     const newReport: WorkflowReport = {
       id: reportId,
       title: String(data.get('title')),
@@ -138,6 +140,7 @@ export function CreateReportScreen() {
       submitted: formatIndonesianDate(createdAt),
       status: 'Diterima',
       courseType: String(data.get('courseType')),
+      ...(studentFaculty ? { studentFaculty } : {}),
       duration: String(data.get('duration')),
       description: String(data.get('description')),
       attachments: attachmentDetails,

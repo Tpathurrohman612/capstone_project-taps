@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthShell } from '../components/AuthShell'
+import { FACULTIES, type Faculty } from '../../../shared/data/faculties'
 import {
   GOOGLE_ACCOUNT_LINK_KEY,
   getActiveGoogleAccountEmail,
@@ -10,33 +11,56 @@ import {
 
 export function IdentitySetupScreen() {
   const navigate = useNavigate()
-  const [nim, setNim] = useState('')
+  const activeEmail = getActiveGoogleAccountEmail()
+  const linkedAccounts = getLinkedGoogleAccounts()
+  const existingEmailAccount = linkedAccounts.find(
+    (account) => account.email.toLowerCase() === activeEmail.toLowerCase(),
+  )
+
+  const [nim, setNim] = useState(existingEmailAccount?.nim ?? '')
+  const [faculty, setFaculty] = useState<Faculty | ''>(existingEmailAccount?.faculty ?? '')
   const [error, setError] = useState('')
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const normalizedNim = nim.trim()
-    const activeEmail = getActiveGoogleAccountEmail()
-    const linkedAccounts = getLinkedGoogleAccounts()
+    const currentActiveEmail = getActiveGoogleAccountEmail()
+    const currentLinkedAccounts = getLinkedGoogleAccounts()
 
-    const existingEmailAccount = linkedAccounts.find(
-      (account) => account.email.toLowerCase() === activeEmail.toLowerCase(),
+    const currentExistingAccount = currentLinkedAccounts.find(
+      (account) => account.email.toLowerCase() === currentActiveEmail.toLowerCase(),
     )
 
-    if (existingEmailAccount) {
-      if (existingEmailAccount.nim !== normalizedNim) {
+    if (!faculty) {
+      setError('Pilih fakultas asal mahasiswa.')
+      return
+    }
+
+    if (currentExistingAccount) {
+      if (currentExistingAccount.nim !== normalizedNim) {
         setError('Akun Google ini sudah terhubung dengan NIM lain.')
         return
       }
 
+      const updatedAccounts = currentLinkedAccounts.map((account) =>
+        account.email.toLowerCase() === currentActiveEmail.toLowerCase()
+          ? {
+              ...account,
+              nim: currentExistingAccount.nim,
+              faculty: account.faculty ?? faculty,
+            }
+          : account,
+      )
+
+      window.localStorage.setItem(GOOGLE_ACCOUNT_LINK_KEY, JSON.stringify(updatedAccounts))
       navigate('/')
       return
     }
 
     if (
       REGISTERED_NIMS.has(normalizedNim) ||
-      linkedAccounts.some((account) => account.nim === normalizedNim)
+      currentLinkedAccounts.some((account) => account.nim === normalizedNim)
     ) {
       setError(
         'NIM sudah terdaftar pada akun lain. Silakan gunakan akun Google yang telah terhubung dengan NIM tersebut.',
@@ -44,7 +68,10 @@ export function IdentitySetupScreen() {
       return
     }
 
-    const updatedAccounts = [...linkedAccounts, { email: activeEmail, nim: normalizedNim }]
+    const updatedAccounts = [
+      ...currentLinkedAccounts,
+      { email: currentActiveEmail, nim: normalizedNim, faculty },
+    ]
 
     window.localStorage.setItem(GOOGLE_ACCOUNT_LINK_KEY, JSON.stringify(updatedAccounts))
 
@@ -58,7 +85,7 @@ export function IdentitySetupScreen() {
     <AuthShell>
       <div className="mt-8 border-t border-[#D9E2EC] pt-7">
         <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
-          AKUN GOOGLE BARU
+          {existingEmailAccount ? 'LENGKAPI DATA AKUN' : 'AKUN GOOGLE BARU'}
         </p>
         <h1 className="mt-3 font-slab text-3xl leading-none text-[#12355B]">Lengkapi Identitas</h1>
         <p className="mt-3 text-sm leading-6 text-[#52657A]">
@@ -80,16 +107,20 @@ export function IdentitySetupScreen() {
             <input
               required
               value={nim}
+              readOnly={Boolean(existingEmailAccount?.nim)}
               onChange={(event) => {
                 setNim(event.target.value)
                 if (error) setError('')
               }}
-              className={fieldClass}
+              className={`${fieldClass} ${existingEmailAccount?.nim ? 'cursor-not-allowed bg-[#F7F9FC]' : ''}`}
               inputMode="numeric"
               placeholder="Masukkan NIM"
               aria-describedby={error ? 'nim-error' : undefined}
               aria-invalid={Boolean(error)}
             />
+            {existingEmailAccount?.nim && (
+              <p className="mt-1 text-xs text-[#52657A]">NIM terhubung dari akun yang sudah ada.</p>
+            )}
             {error && (
               <p id="nim-error" className="mt-2 text-xs leading-5 text-[#B42318]">
                 {error}
@@ -101,7 +132,24 @@ export function IdentitySetupScreen() {
             <span className="text-sm font-medium text-[#12355B]">
               Fakultas <span className="text-[#005BAC]">*</span>
             </span>
-            <input required className={fieldClass} placeholder="Masukkan fakultas" />
+            <select
+              required
+              value={faculty}
+              onChange={(event) => {
+                setFaculty(event.target.value as Faculty)
+                if (error) setError('')
+              }}
+              className={fieldClass}
+            >
+              <option value="" disabled>
+                Pilih fakultas
+              </option>
+              {FACULTIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="block">
@@ -120,7 +168,7 @@ export function IdentitySetupScreen() {
 
           <div className="border border-[#D9E2EC] bg-[#F7F9FC] px-4 py-3">
             <p className="text-sm font-medium text-[#12355B]">Email Google</p>
-            <p className="mt-1 text-sm text-[#52657A]">{getActiveGoogleAccountEmail()}</p>
+            <p className="mt-1 text-sm text-[#52657A]">{activeEmail}</p>
           </div>
 
           <button

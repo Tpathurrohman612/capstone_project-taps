@@ -4,6 +4,7 @@ import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/wor
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import {
   AdminWorkflowShell,
+  FACULTIES,
   WorkflowTable,
   exportFilePart,
   reportGroup,
@@ -13,17 +14,17 @@ export function AdminWorkflowQueueScreen() {
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
   const [faculty, setFaculty] = useState('Semua')
+  const [courseType, setCourseType] = useState('Semua')
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
   const allReports = getWorkflowReports()
-  const faculties = Array.from(new Set(allReports.map((report) => reportGroup(report).faculty)))
   const reports = allReports.filter((report) => {
-    const group = reportGroup(report)
     return (
       report.status !== 'Selesai' &&
       (status === 'Semua' || report.status === status) &&
-      (faculty === 'Semua' || group.faculty === faculty) &&
+      (faculty === 'Semua' || report.studentFaculty === faculty) &&
+      (courseType === 'Semua' || report.courseType === courseType) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase())
     )
   })
@@ -31,7 +32,8 @@ export function AdminWorkflowQueueScreen() {
     (report) =>
       faculty !== 'Semua' &&
       report.status === 'Diverifikasi' &&
-      reportGroup(report).faculty === faculty,
+      report.studentFaculty === faculty &&
+      (courseType === 'Semua' || report.courseType === courseType),
   )
   const includedPrograms = Array.from(
     new Set(exportReports.map((report) => reportGroup(report).programStudy)),
@@ -64,8 +66,8 @@ export function AdminWorkflowQueueScreen() {
         report.id,
         report.category,
         group.programStudy,
-        group.faculty,
-        report.courseType ?? 'Teori/Umum',
+        report.studentFaculty ?? '—',
+        report.courseType ?? '—',
         courseCode,
         courseName,
         report.className,
@@ -129,7 +131,7 @@ export function AdminWorkflowQueueScreen() {
             Kelola dan tindak lanjuti laporan permasalahan terkait aktivitas dan layanan tutor.
           </p>
         </header>
-        <div className="mt-8 grid grid-cols-3 gap-4 max-[900px]:grid-cols-2 max-[620px]:grid-cols-1">
+        <div className="mt-8 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[620px]:grid-cols-1">
           <label>
             <span className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
               STATUS LAPORAN
@@ -156,9 +158,25 @@ export function AdminWorkflowQueueScreen() {
               className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
             >
               <option>Semua</option>
-              {faculties.map((item) => (
+              {FACULTIES.map((item) => (
                 <option key={item}>{item}</option>
               ))}
+            </select>
+          </label>
+          <label>
+            <span className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
+              JENIS MATA KULIAH
+            </span>
+            <select
+              value={courseType}
+              onChange={(event) => setCourseType(event.target.value)}
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+            >
+              <option value="Semua">Semua Jenis</option>
+              <option>Teori/Umum</option>
+              <option>Berpraktik</option>
+              <option>Praktik</option>
+              <option>TAPS</option>
             </select>
           </label>
           <label>
@@ -277,8 +295,9 @@ export function AdminWorkflowQueueScreen() {
               </div>
             </dl>
             <p className="mt-4 text-sm leading-6 text-[#52657A]">
-              Data yang diekspor mencakup seluruh laporan berstatus Diverifikasi dari Fakultas yang
-              dipilih, termasuk laporan dari berbagai Program Studi.
+              Data yang diekspor mencakup laporan berstatus Diverifikasi dari Fakultas yang dipilih,
+              sesuai dengan filter jenis mata kuliah yang aktif, termasuk laporan dari satu atau
+              beberapa Program Studi.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button

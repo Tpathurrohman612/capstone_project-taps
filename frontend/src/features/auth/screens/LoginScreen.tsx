@@ -47,7 +47,10 @@ export function LoginScreen() {
 
     const linkedAccount = getLinkedGoogleAccountByEmail(googleEmail)
 
-    if (googleEmail === REGISTERED_GOOGLE_ACCOUNT_EMAIL || linkedAccount) {
+    if (
+      googleEmail === REGISTERED_GOOGLE_ACCOUNT_EMAIL ||
+      (linkedAccount && linkedAccount.faculty)
+    ) {
       navigate('/')
       return
     }

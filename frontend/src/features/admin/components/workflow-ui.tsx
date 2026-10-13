@@ -196,6 +196,8 @@ export function WorkflowDetailLink({
   )
 }
 
+export { FACULTIES, type Faculty } from '../../../shared/data/faculties'
+
 export const reportGroup = (report: WorkflowReport) => {
   if (report.course.startsWith('AKUN')) {
     return {
@@ -211,7 +213,7 @@ export const reportGroup = (report: WorkflowReport) => {
   }
   if (report.course.startsWith('ADBI')) {
     return {
-      faculty: 'Fakultas Ilmu Sosial dan Ilmu Politik',
+      faculty: 'Fakultas Hukum, Ilmu Sosial, dan Ilmu Politik',
       programStudy: 'Administrasi Bisnis',
     }
   }
@@ -239,137 +241,151 @@ export function WorkflowTable({
   showProgramStudy?: boolean
 }) {
   const gridColumns = showProgramStudy
-    ? 'grid-cols-[105px_135px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
+    ? 'grid-cols-[105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
     : selectable
-      ? 'grid-cols-[28px_105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
-      : 'grid-cols-[105px_135px_minmax(0,1fr)_52px_155px_120px_130px_100px]'
+      ? 'grid-cols-[28px_105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
+      : 'grid-cols-[105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
   return (
     <>
-      <div
-        className={`hidden ${gridColumns} gap-3 border-b border-[#D9E2EC] px-4 py-3 font-mono text-[9px] tracking-[0.09em] text-[#52657A] xl:grid`}
-      >
-        {selectable && <span aria-hidden="true" />}
-        <span>ID LAPORAN</span>
-        <span>KATEGORI</span>
-        {showProgramStudy && <span>PROGRAM STUDI</span>}
-        <span>MATA KULIAH</span>
-        <span>KELAS</span>
-        <span>{context === 'queue' ? 'TUTOR' : 'TUTOR'}</span>
-        <span>TGL PENGAJUAN</span>
-        <span>STATUS</span>
-        <span>AKSI</span>
-      </div>
-      <div className="divide-y divide-[#D9E2EC] border-b border-[#D9E2EC]">
-        {reports.map((report) => (
-          <div key={report.id} className="contents">
-            <article
-              key={`${report.id}-desktop`}
-              className={`grid ${gridColumns} items-center gap-3 px-4 py-5 max-xl:hidden`}
-            >
-              {selectable && (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(report.id)}
-                  onChange={() => onToggle?.(report.id)}
-                  disabled={report.status !== 'Diverifikasi'}
-                  aria-label={`Pilih laporan ${report.id}`}
-                  className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
-                />
-              )}
-              <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
-              <p className="text-sm">{report.category}</p>
-              {showProgramStudy && <p className="text-sm">{reportGroup(report).programStudy}</p>}
-              <p className="text-sm font-medium">{report.course}</p>
-              <p className="text-sm">{report.className}</p>
-              <p className="text-sm">{report.tutor}</p>
-              <p className="text-sm">{report.submitted}</p>
-              <span
-                className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
+      <div className={showProgramStudy ? 'overflow-x-auto' : undefined}>
+        <div
+          className={`hidden ${gridColumns} ${showProgramStudy ? 'xl:min-w-[1500px]' : ''} gap-3 border-b border-[#D9E2EC] px-4 py-3 font-mono text-[9px] tracking-[0.09em] text-[#52657A] xl:grid`}
+        >
+          {selectable && <span aria-hidden="true" />}
+          <span>ID LAPORAN</span>
+          <span>KATEGORI</span>
+          <span>FAKULTAS</span>
+          {showProgramStudy && <span>PROGRAM STUDI</span>}
+          <span>MATA KULIAH</span>
+          <span>KELAS</span>
+          <span>{context === 'queue' ? 'TUTOR' : 'TUTOR'}</span>
+          <span>TGL PENGAJUAN</span>
+          <span>STATUS</span>
+          <span>AKSI</span>
+        </div>
+        <div
+          className={`divide-y divide-[#D9E2EC] border-b border-[#D9E2EC] ${showProgramStudy ? 'xl:min-w-[1500px]' : ''}`}
+        >
+          {reports.map((report) => (
+            <div key={report.id} className="contents">
+              <article
+                key={`${report.id}-desktop`}
+                className={`grid ${gridColumns} items-center gap-3 px-4 py-5 max-xl:hidden`}
               >
-                {context === 'queue' && report.status === 'Diproses'
-                  ? 'Sedang Diproses'
-                  : report.status}
-              </span>
-              <WorkflowDetailLink
-                report={report}
-                context={context}
-                className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
-              >
-                {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
-              </WorkflowDetailLink>
-            </article>
-            <article key={`${report.id}-mobile`} className="hidden px-4 py-5 max-xl:block">
-              <div className="flex items-start justify-between gap-4">
-                <label className="flex items-center gap-3">
-                  {selectable && (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(report.id)}
-                      onChange={() => onToggle?.(report.id)}
-                      disabled={report.status !== 'Diverifikasi'}
-                      aria-label={`Pilih laporan ${report.id}`}
-                      className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
-                    />
-                  )}
-                  <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
-                </label>
+                {selectable && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(report.id)}
+                    onChange={() => onToggle?.(report.id)}
+                    disabled={report.status !== 'Diverifikasi'}
+                    aria-label={`Pilih laporan ${report.id}`}
+                    className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
+                  />
+                )}
+                <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
+                <p className="text-sm">{report.category}</p>
+                <p className="text-sm">{report.studentFaculty ?? '—'}</p>
+                {showProgramStudy && <p className="text-sm">{reportGroup(report).programStudy}</p>}
+                <p className="text-sm font-medium">{report.course}</p>
+                <p className="text-sm">{report.className}</p>
+                <p className="text-sm">{report.tutor}</p>
+                <p className="text-sm">{report.submitted}</p>
                 <span
-                  className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
+                  className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                 >
                   {context === 'queue' && report.status === 'Diproses'
                     ? 'Sedang Diproses'
                     : report.status}
                 </span>
-              </div>
-              <p className="mt-3 text-sm font-semibold leading-6 text-[#12355B]">{report.title}</p>
-              <dl className="mt-4 space-y-3 border-t border-[#D9E2EC] pt-4">
-                <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    KATEGORI
-                  </dt>
-                  <dd className="mt-1 text-sm">{report.category}</dd>
+                <WorkflowDetailLink
+                  report={report}
+                  context={context}
+                  className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
+                >
+                  {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
+                </WorkflowDetailLink>
+              </article>
+              <article key={`${report.id}-mobile`} className="hidden px-4 py-5 max-xl:block">
+                <div className="flex items-start justify-between gap-4">
+                  <label className="flex items-center gap-3">
+                    {selectable && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(report.id)}
+                        onChange={() => onToggle?.(report.id)}
+                        disabled={report.status !== 'Diverifikasi'}
+                        aria-label={`Pilih laporan ${report.id}`}
+                        className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
+                      />
+                    )}
+                    <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
+                  </label>
+                  <span
+                    className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
+                  >
+                    {context === 'queue' && report.status === 'Diproses'
+                      ? 'Sedang Diproses'
+                      : report.status}
+                  </span>
                 </div>
-                {showProgramStudy && (
+                <p className="mt-3 text-sm font-semibold leading-6 text-[#12355B]">
+                  {report.title}
+                </p>
+                <dl className="mt-4 space-y-3 border-t border-[#D9E2EC] pt-4">
                   <div>
                     <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                      PROGRAM STUDI
+                      KATEGORI
                     </dt>
-                    <dd className="mt-1 text-sm">{reportGroup(report).programStudy}</dd>
+                    <dd className="mt-1 text-sm">{report.category}</dd>
                   </div>
-                )}
-                <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    MATA KULIAH
-                  </dt>
-                  <dd className="mt-1 text-sm">{report.course}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">KELAS</dt>
-                  <dd className="mt-1 text-sm">{report.className}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    {context === 'queue' ? 'TUTOR' : 'TUTOR'}
-                  </dt>
-                  <dd className="mt-1 text-sm">{report.tutor}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
-                    TGL PENGAJUAN
-                  </dt>
-                  <dd className="mt-1 text-sm">{report.submitted}</dd>
-                </div>
-              </dl>
-              <WorkflowDetailLink
-                report={report}
-                context={context}
-                className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] hover:bg-[#005BAC] hover:text-white"
-              >
-                {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
-              </WorkflowDetailLink>
-            </article>
-          </div>
-        ))}
+                  <div>
+                    <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
+                      FAKULTAS
+                    </dt>
+                    <dd className="mt-1 text-sm">{report.studentFaculty ?? '—'}</dd>
+                  </div>
+                  {showProgramStudy && (
+                    <div>
+                      <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
+                        PROGRAM STUDI
+                      </dt>
+                      <dd className="mt-1 text-sm">{reportGroup(report).programStudy}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
+                      MATA KULIAH
+                    </dt>
+                    <dd className="mt-1 text-sm">{report.course}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">KELAS</dt>
+                    <dd className="mt-1 text-sm">{report.className}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
+                      {context === 'queue' ? 'TUTOR' : 'TUTOR'}
+                    </dt>
+                    <dd className="mt-1 text-sm">{report.tutor}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
+                      TGL PENGAJUAN
+                    </dt>
+                    <dd className="mt-1 text-sm">{report.submitted}</dd>
+                  </div>
+                </dl>
+                <WorkflowDetailLink
+                  report={report}
+                  context={context}
+                  className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] hover:bg-[#005BAC] hover:text-white"
+                >
+                  {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
+                </WorkflowDetailLink>
+              </article>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   )
