@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Aturan keamanan Cloud Storage — berkas bukti pendukung laporan.
+//
+// Status awal: seluruh jalur ditolak. Dibuka saat fitur unggah lampiran
+// dikerjakan, dengan pembatasan pemilik laporan, tipe berkas, dan ukuran.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

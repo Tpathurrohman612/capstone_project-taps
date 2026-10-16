@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// Aturan keamanan Cloud Firestore — lapisan otorisasi sistem.
+//
+// Proteksi route di React hanya menyembunyikan tampilan. Pemeriksaan yang
+// mengikat terjadi di sini, dievaluasi server pada setiap permintaan baca dan
+// tulis, sesuai subbab 3.4 proposal.
+//
+// Status awal: semua koleksi ditolak. Setiap koleksi dibuka satu per satu
+// ketika fiturnya diimplementasikan, supaya tidak ada koleksi yang terbuka
+// sebelum aturannya dipikirkan.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Peran Administrator ditentukan oleh keberadaan dokumen pada koleksi
+    // `administrator`, bukan oleh field yang dikirim klien. exists() di dalam
+    // aturan dievaluasi server dan tidak tunduk pada aturan koleksi itu
+    // sendiri, sehingga allowlist tetap tertutup bagi klien.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/administrator/$(request.auth.uid));
+    }
+
+    // Allowlist peran. Ditambahkan manual lewat Firebase Console oleh
+    // pengelola; klien tidak pernah boleh membaca maupun menulisnya, supaya
+    // tidak ada pengguna yang dapat mengangkat dirinya sendiri.
+    match /administrator/{uid} {
+      allow read, write: if false;
+    }
+
+    // Profil pengguna. Dokumen memakai Firebase UID sebagai pengenal, sesuai
+    // pemetaan ERD pada subbab 3.3.3.
+    match /pengguna/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      // Peran tidak boleh ikut ditulis klien — sumbernya koleksi administrator.
+      allow create, update: if isOwner(uid)
+        && !('role' in request.resource.data);
+      allow delete: if false;
+    }
+
+    // Koleksi lain (laporan, lampiran, riwayat_status_laporan,
+    // pengiriman_validasi, validasi, tindak_lanjut, kategori_laporan,
+    // status_laporan) belum dibuka. Tambahkan blok match tersendiri saat
+    // fiturnya dikerjakan.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

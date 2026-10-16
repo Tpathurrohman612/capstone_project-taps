@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "firebase": "^13.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.12.0"
