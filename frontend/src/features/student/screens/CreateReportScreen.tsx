@@ -2,6 +2,12 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { submitReport } from '../../../shared/data/report-store'
+import {
+  checkAttachments,
+  formatFileSize,
+  MAX_FILE_COUNT,
+  MAX_FILE_SIZE_LABEL,
+} from '../../../shared/domain/attachment-rules'
 import { useStudentIdentity } from '../lib/student-identity'
 
 function Field({
@@ -50,6 +56,7 @@ export function CreateReportScreen() {
   const [guideOpen, setGuideOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState('')
+  const [fileError, setFileError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionComplete, setSubmissionComplete] = useState(false)
   const [submittedReportId, setSubmittedReportId] = useState('')
@@ -68,11 +75,18 @@ export function CreateReportScreen() {
       return next
     })
   const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
-    const incoming = Array.from(event.target.files ?? []).filter(
-      (file) => file.size <= 10 * 1024 * 1024,
-    )
-    setFiles((current) => [...current, ...incoming].slice(0, 5))
+    const incoming = Array.from(event.target.files ?? [])
     event.target.value = ''
+
+    // Sebelumnya berkas yang terlalu besar dibuang diam-diam dan kelebihan
+    // jumlahnya dipotong begitu saja, sehingga pengguna tidak pernah tahu
+    // berkasnya tidak ikut terkirim. Kini penolakan selalu disertai alasan.
+    setFileError('')
+    setFiles((current) => {
+      const hasil = checkAttachments({ sudahAda: current, tambahan: incoming })
+      if (!hasil.diterima) setFileError(hasil.alasan)
+      return hasil.berkas as File[]
+    })
   }
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -129,7 +143,7 @@ export function CreateReportScreen() {
       return {
         name: file.name,
         type: extension,
-        size: `${Math.max(1, Math.ceil(file.size / 1024))} KB`,
+        size: formatFileSize(file.size),
       }
     })
 
@@ -378,14 +392,24 @@ export function CreateReportScreen() {
                 Unggah bukti pendukung
               </span>
               <span className="mt-1 hidden text-xs text-[#52657A] sm:block">
-                Maksimal 5 file · Maksimal 10 MB per file · .jpg, .jpeg, .png, .pdf
+                Maksimal {MAX_FILE_COUNT} file · Maksimal {MAX_FILE_SIZE_LABEL} per file · .jpg,
+                .jpeg, .png, .pdf
               </span>
               <span className="mt-2 flex flex-col gap-1 text-xs text-[#52657A] sm:hidden">
-                <span>Maksimal 5 file</span>
-                <span>Maksimal 10 MB per file</span>
+                <span>Maksimal {MAX_FILE_COUNT} file</span>
+                <span>Maksimal {MAX_FILE_SIZE_LABEL} per file</span>
                 <span>Format: JPG, JPEG, PNG, PDF</span>
               </span>
             </button>
+            {fileError && (
+              <p
+                role="alert"
+                className="mt-3 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-xs leading-5 text-[#B42318]"
+              >
+                {fileError}
+              </p>
+            )}
+
             {files.length > 0 && (
               <ul className="mt-5 divide-y divide-[#D9E2EC] border-y border-[#D9E2EC]">
                 {files.map((file, index) => (
@@ -627,10 +651,10 @@ export function CreateReportScreen() {
                   </p>
                   <ul className="mt-3 grid gap-2 border border-[#D9E2EC] bg-[#F7F9FC] p-4 text-sm leading-6 sm:grid-cols-3">
                     <li>
-                      <strong>Maksimal:</strong> 5 file
+                      <strong>Maksimal:</strong> {MAX_FILE_COUNT} file
                     </li>
                     <li>
-                      <strong>Ukuran:</strong> 10 MB per file
+                      <strong>Ukuran:</strong> {MAX_FILE_SIZE_LABEL} per file
                     </li>
                     <li>
                       <strong>Format:</strong> JPG, JPEG, PNG, dan PDF

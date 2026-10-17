@@ -18,6 +18,35 @@ export function DetailReportScreen() {
   // milik data demo lengkap dengan nama tutor dan lampirannya seolah itu
   // laporan pengguna. Kegagalan yang terlihat jauh lebih baik daripada data
   // palsu yang meyakinkan.
+  // Seluruh hook wajib dipanggil tanpa syarat dan mendahului setiap return,
+  // sehingga urutannya tetap sama pada setiap render. Menempatkannya setelah
+  // penjaga "laporan tidak ditemukan" membuat React melihat jumlah hook yang
+  // berubah-ubah dan menghentikan aplikasi.
+  const laporanPenuh = reports.find((item) => item.id === selectedReportId)
+  const administratorReport =
+    laporanPenuh ?? getWorkflowReports().find((item) => item.id === selectedReportId)
+
+  const [attachments, setAttachments] = useState<{ name: string; type: string; size?: string }[]>(
+    [],
+  )
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchAttachments(administratorReport)
+      .then((hasil) => {
+        if (aktif) setAttachments(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca bukti pendukung tidak boleh mengosongkan laporannya.
+        if (aktif) setAttachments([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [administratorReport])
+
   const report = riwayat.find((item) => item.id === selectedReportId)
 
   if (!report) {
@@ -48,32 +77,7 @@ export function DetailReportScreen() {
   }
 
   const [courseCode, courseName] = report.course.split(' · ')
-  // Bentuk penuh laporan, yang membawa docId Firestore. riwayat hanya memuat
-  // bidang yang ditampilkan, sehingga tidak cukup untuk membaca lampiran.
-  const laporanPenuh = reports.find((item) => item.id === report.id)
-  const administratorReport =
-    laporanPenuh ?? getWorkflowReports().find((item) => item.id === report.id)
 
-  const [attachments, setAttachments] = useState<{ name: string; type: string; size?: string }[]>(
-    [],
-  )
-
-  useEffect(() => {
-    let aktif = true
-
-    fetchAttachments(administratorReport)
-      .then((hasil) => {
-        if (aktif) setAttachments(hasil)
-      })
-      .catch(() => {
-        // Gagal membaca bukti pendukung tidak boleh mengosongkan laporannya.
-        if (aktif) setAttachments([])
-      })
-
-    return () => {
-      aktif = false
-    }
-  }, [administratorReport])
   // Lini masa menampilkan lima tahap alur utama. Dua status percabangan
   // dipetakan ke tahap tempat percabangan itu terjadi: keduanya bercabang dari
   // Diterima, sehingga keduanya berhenti di tahap 0. Record ditulis lengkap
