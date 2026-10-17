@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router'
-import { historyReports } from '../data/history-reports'
 import { followUps, statusStages } from '../data/detail-report'
 import { useStudentReports } from '../lib/use-student-reports'
 import { statusBadge } from '../lib/status-badge'
@@ -8,11 +7,44 @@ import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 
 export function DetailReportScreen() {
-  const { riwayat } = useStudentReports()
+  const { riwayat, memuat: memuatLaporan } = useStudentReports()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
-  const report = riwayat.find((item) => item.id === selectedReportId) ?? historyReports[0]
+  // Jangan pernah jatuh ke rekaman contoh. Sebelumnya laporan yang tidak
+  // ditemukan diganti historyReports[0], sehingga halaman menampilkan laporan
+  // milik data demo lengkap dengan nama tutor dan lampirannya seolah itu
+  // laporan pengguna. Kegagalan yang terlihat jauh lebih baik daripada data
+  // palsu yang meyakinkan.
+  const report = riwayat.find((item) => item.id === selectedReportId)
+
+  if (!report) {
+    return (
+      <section className="px-8 py-10 max-[620px]:px-5">
+        <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
+          LAPORAN / DETAIL LAPORAN
+        </p>
+        <h1 className="mt-3 font-slab text-[32px] tracking-[-0.035em] text-[#12355B]">
+          {memuatLaporan ? 'Memuat laporan…' : 'Laporan tidak ditemukan'}
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-[#52657A]">
+          {memuatLaporan
+            ? 'Mengambil laporan Anda dari basis data.'
+            : `Laporan ${selectedReportId ?? ''} tidak ada pada riwayat Anda.`}
+        </p>
+        {!memuatLaporan && (
+          <button
+            type="button"
+            onClick={() => navigate('/riwayat-laporan')}
+            className="mt-7 border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
+          >
+            Kembali ke Riwayat Laporan
+          </button>
+        )}
+      </section>
+    )
+  }
+
   const [courseCode, courseName] = report.course.split(' · ')
   const administratorReport = getWorkflowReports().find((item) => item.id === report.id)
   // Lini masa menampilkan lima tahap alur utama. Dua status percabangan

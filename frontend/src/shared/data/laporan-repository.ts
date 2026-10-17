@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
   query,
   runTransaction,
   serverTimestamp,
@@ -160,30 +159,31 @@ export function toLaporan(id: string, data: DocumentData): Laporan | undefined {
 export async function listLaporanMilik(uid: string): Promise<Laporan[]> {
   pastikanSiap()
 
+  // Penyaring dan pengurutan pada field berbeda menuntut composite index di
+  // Firestore, dan tanpa indeks itu kueri gagal seluruhnya. Pengurutan karena
+  // itu dilakukan setelah data diterima: jumlah laporan per mahasiswa kecil,
+  // dan menghindari indeks membuat penyiapan proyek tidak menyimpan jebakan
+  // yang baru terasa saat dijalankan.
   const hasil = await getDocs(
-    query(
-      collection(db, LAPORAN_COLLECTION),
-      where('uid_pelapor', '==', uid),
-      orderBy('tanggal_laporan', 'desc'),
-    ),
+    query(collection(db, LAPORAN_COLLECTION), where('uid_pelapor', '==', uid)),
   )
 
   return hasil.docs
     .map((snapshot) => toLaporan(snapshot.id, snapshot.data()))
     .filter((laporan): laporan is Laporan => laporan !== undefined)
+    .sort((kiri, kanan) => kanan.tanggal_laporan.getTime() - kiri.tanggal_laporan.getTime())
 }
 
 /** Membaca seluruh laporan. Hanya berhasil bila pemanggil Administrator. */
 export async function listSemuaLaporan(): Promise<Laporan[]> {
   pastikanSiap()
 
-  const hasil = await getDocs(
-    query(collection(db, LAPORAN_COLLECTION), orderBy('tanggal_laporan', 'desc')),
-  )
+  const hasil = await getDocs(collection(db, LAPORAN_COLLECTION))
 
   return hasil.docs
     .map((snapshot) => toLaporan(snapshot.id, snapshot.data()))
     .filter((laporan): laporan is Laporan => laporan !== undefined)
+    .sort((kiri, kanan) => kanan.tanggal_laporan.getTime() - kiri.tanggal_laporan.getTime())
 }
 
 export async function getLaporan(idLaporan: string): Promise<Laporan | undefined> {

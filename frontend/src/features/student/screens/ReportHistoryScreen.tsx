@@ -4,7 +4,7 @@ import { useStudentReports } from '../lib/use-student-reports'
 import { statusBadge } from '../lib/status-badge'
 
 export function ReportHistoryScreen() {
-  const { riwayat, memuat: memuatLaporan } = useStudentReports()
+  const { riwayat, memuat: memuatLaporan, galat } = useStudentReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
   const visibleReports = riwayat.filter(
@@ -114,13 +114,21 @@ export function ReportHistoryScreen() {
             {/* Selama laporan masih diambil dari basis data, menampilkan
                 "tidak ditemukan" akan menyesatkan: datanya belum tiba, bukan
                 tidak ada. */}
+            {/* Kegagalan membaca basis data dibedakan dari daftar yang memang
+                kosong. Menyamakan keduanya membuat galat jaringan atau aturan
+                keamanan terlihat seperti "belum pernah membuat laporan", dan
+                itu menyesatkan saat mencari penyebabnya. */}
             <p className="font-slab text-xl text-[#12355B]">
-              {memuatLaporan ? 'Memuat laporan…' : 'Laporan tidak ditemukan'}
+              {memuatLaporan
+                ? 'Memuat laporan…'
+                : galat
+                  ? 'Gagal memuat laporan'
+                  : 'Laporan tidak ditemukan'}
             </p>
             <p className="mt-2 text-sm text-[#52657A]">
               {memuatLaporan
                 ? 'Mengambil laporan Anda dari basis data.'
-                : 'Coba ubah kata kunci atau status laporan Anda.'}
+                : (galat ?? 'Coba ubah kata kunci atau status laporan Anda.')}
             </p>
           </div>
         )}
