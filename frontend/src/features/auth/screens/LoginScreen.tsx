@@ -2,6 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthShell } from '../components/AuthShell'
 import { clearPrototypeAuthSession, setActiveUserRole } from '../../../shared/lib/auth-session'
+import { useAuth } from '../../../shared/lib/auth-context'
+import { describeAuthError, signInWithGoogle } from '../lib/firebase-auth'
+import { readUserProfile } from '../lib/user-profile'
 import {
   ACTIVE_GOOGLE_ACCOUNT_KEY,
   getLinkedGoogleAccountByEmail,
@@ -13,10 +16,39 @@ import {
 
 export function LoginScreen() {
   const navigate = useNavigate()
+  const { mode } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [googleError, setGoogleError] = useState('')
+  const [signingIn, setSigningIn] = useState(false)
   const [googleAccountDialogOpen, setGoogleAccountDialogOpen] = useState(false)
+
+  /**
+   * Masuk dengan Google sungguhan. Tujuan setelah masuk ditentukan oleh ada
+   * tidaknya profil pada koleksi `pengguna`: belum ada berarti identitas belum
+   * dilengkapi.
+   */
+  const handleFirebaseGoogleSignIn = async () => {
+    setGoogleError('')
+    setSigningIn(true)
+
+    try {
+      clearPrototypeAuthSession()
+      const user = await signInWithGoogle()
+      setActiveUserRole('Mahasiswa')
+
+      const profile = await readUserProfile(user.uid)
+      navigate(profile ? '/' : '/lengkapi-identitas')
+    } catch (error) {
+      const message = describeAuthError(error)
+      // Pesan kosong berarti pengguna menutup jendela Google sendiri, bukan
+      // kegagalan yang perlu ditampilkan.
+      if (message) setGoogleError(message)
+    } finally {
+      setSigningIn(false)
+    }
+  }
 
   const fieldClass =
     'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]'
@@ -126,8 +158,16 @@ export function LoginScreen() {
 
           <button
             type="button"
-            onClick={() => setGoogleAccountDialogOpen(true)}
-            className="flex w-full items-center justify-center gap-3 border border-[#12355B] bg-white px-5 py-3.5 text-sm text-[#12355B] transition hover:bg-[#EEF5FB] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2"
+            disabled={signingIn}
+            onClick={() => {
+              if (mode === 'firebase') {
+                void handleFirebaseGoogleSignIn()
+                return
+              }
+              setGoogleAccountDialogOpen(true)
+            }}
+            className="flex w-full items-center justify-center gap-3 border border-[#12355B] bg-white px-5 py-3.5 text-sm text-[#12355B] transition hover:bg-[#EEF5FB] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-describedby={googleError ? 'google-error' : undefined}
           >
             <span
               className="flex h-6 w-6 items-center justify-center rounded-full border border-[#D9E2EC] bg-white text-sm font-semibold text-[#005BAC]"
@@ -135,8 +175,22 @@ export function LoginScreen() {
             >
               G
             </span>
-            Masuk dengan Google
+            {signingIn ? 'Menghubungkan ke Google…' : 'Masuk dengan Google'}
           </button>
+
+          {googleError && (
+            <p id="google-error" className="mt-3 text-xs leading-5 text-[#B42318]">
+              {googleError}
+            </p>
+          )}
+
+          {mode === 'simulasi' && (
+            <p className="mt-4 border border-dashed border-[#B9C8D7] bg-[#F7F9FC] px-3 py-2 text-xs leading-5 text-[#52657A]">
+              Mode simulasi: Firebase belum dikonfigurasi, sehingga tombol di atas membuka pilihan
+              akun contoh. Salin <code>frontend/.env.example</code> menjadi{' '}
+              <code>frontend/.env.local</code> untuk memakai akun Google sungguhan.
+            </p>
+          )}
         </div>
 
         <p className="mt-7 border-t border-[#D9E2EC] pt-5 text-center text-xs leading-5 text-[#52657A]">

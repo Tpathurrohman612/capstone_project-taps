@@ -1,3 +1,5 @@
+import { signOutFromFirebase } from '../../features/auth/lib/firebase-auth'
+
 export type UserRole = 'Administrator' | 'Mahasiswa'
 
 const ACTIVE_USER_ROLE_KEY = 'taps-active-user-role'
@@ -21,5 +23,14 @@ export function clearPrototypeAuthSession() {
 
 export function handlePrototypeLogout() {
   clearPrototypeAuthSession()
-  window.location.assign('/login')
+
+  // Sesi Firebase bertahan di IndexedDB dan tidak ikut terhapus oleh
+  // sessionStorage, sehingga tanpa signOut pengguna akan langsung masuk
+  // kembali begitu /login dimuat. Kegagalan di sini tidak boleh menahan
+  // pengguna di dalam aplikasi, jadi perpindahan halaman tetap dijalankan.
+  void signOutFromFirebase()
+    .catch(() => {})
+    .finally(() => {
+      window.location.assign('/login')
+    })
 }

@@ -47,6 +47,23 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Indeks keunikan NIM. Aturan di atas hanya mengizinkan seorang pengguna
+    // membaca dokumen `pengguna` miliknya sendiri, sehingga keunikan NIM tidak
+    // dapat diperiksa dengan kueri biasa. Koleksi ini menyimpan satu dokumen
+    // per NIM berisi uid pemiliknya, dan tautannya dibuat dalam transaksi yang
+    // sama dengan penulisan profil.
+    //
+    // Dokumen tidak pernah boleh diubah atau dihapus klien, supaya satu NIM
+    // terkunci permanen pada satu akun. Melepas tautan adalah tindakan
+    // administratif yang dilakukan lewat Firebase Console.
+    match /nim_terpakai/{nim} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     // Koleksi lain (laporan, lampiran, riwayat_status_laporan,
     // pengiriman_validasi, validasi, tindak_lanjut, kategori_laporan,
     // status_laporan) belum dibuka. Tambahkan blok match tersendiri saat
