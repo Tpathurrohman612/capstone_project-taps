@@ -31,10 +31,18 @@ service cloud.firestore {
     }
 
     // Allowlist peran. Ditambahkan manual lewat Firebase Console oleh
-    // pengelola; klien tidak pernah boleh membaca maupun menulisnya, supaya
-    // tidak ada pengguna yang dapat mengangkat dirinya sendiri.
+    // pengelola; klien tidak pernah boleh menulisnya, supaya tidak ada
+    // pengguna yang dapat mengangkat dirinya sendiri.
+    //
+    // Seorang pengguna boleh membaca dokumen miliknya sendiri agar aplikasi
+    // dapat mengetahui perannya setelah masuk. `list` tetap ditutup, sehingga
+    // daftar administrator tidak dapat dikumpulkan oleh siapa pun. Membaca
+    // dokumen sendiri tidak memberi hak apa pun: setiap akses ke koleksi lain
+    // tetap diperiksa ulang lewat isAdmin() yang dievaluasi server.
     match /administrator/{uid} {
-      allow read, write: if false;
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow write: if false;
     }
 
     // Profil pengguna. Dokumen memakai Firebase UID sebagai pengenal, sesuai

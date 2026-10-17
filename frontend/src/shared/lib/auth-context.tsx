@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 import type { User } from 'firebase/auth'
 import { isFirebaseConfigured } from './firebase'
 import { observeAuthState } from '../../features/auth/lib/firebase-auth'
+import { isAdministrator } from '../../features/auth/lib/administrator'
 import { readUserProfile, type UserProfile } from '../../features/auth/lib/user-profile'
+import { setActiveUserRole, type UserRole } from './auth-session'
 
 /**
  * Status autentikasi untuk seluruh aplikasi.
@@ -25,6 +27,12 @@ export type AuthContextValue = {
   user: User | null
   /** Profil dari koleksi `pengguna`; null bila identitas belum dilengkapi. */
   profile: UserProfile | null
+  /**
+   * Peran pengguna, ditentukan oleh keberadaan dokumen pada koleksi
+   * `administrator`. Null saat belum masuk. Nilai ini hanya menentukan
+   * tampilan; otorisasi sebenarnya ditegakkan firestore.rules.
+   */
+  role: UserRole | null
   /** Membaca ulang profil setelah identitas disimpan. */
   refreshProfile: () => Promise<UserProfile | null>
 }
@@ -39,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(mode === 'firebase')
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [role, setRole] = useState<UserRole | null>(null)
 
   const loadProfile = useCallback(async (current: User | null) => {
     if (!current) return null
@@ -60,11 +69,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const unsubscribe = observeAuthState((current) => {
       void (async () => {
-        const loaded = await loadProfile(current)
+        if (!current) {
+          if (!aktif) return
+          setUser(null)
+          setProfile(null)
+          setRole(null)
+          setLoading(false)
+          return
+        }
+
+        // Administrator tidak memerlukan profil mahasiswa, jadi kedua
+        // pembacaan dijalankan bersamaan daripada berurutan.
+        const [loaded, admin] = await Promise.all([
+          loadProfile(current),
+          isAdministrator(current.uid),
+        ])
         if (!aktif) return
+
+        const peran: UserRole = admin ? 'Administrator' : 'Mahasiswa'
 
         setUser(current)
         setProfile(loaded)
+        setRole(peran)
+        // RoleGuard masih membaca sessionStorage untuk mode simulasi, jadi
+        // nilainya tetap disinkronkan agar kedua mode berperilaku sama.
+        setActiveUserRole(peran)
         setLoading(false)
       })()
     })
@@ -82,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile, user])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ mode, loading, user, profile, refreshProfile }),
-    [mode, loading, user, profile, refreshProfile],
+    () => ({ mode, loading, user, profile, role, refreshProfile }),
+    [mode, loading, user, profile, role, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

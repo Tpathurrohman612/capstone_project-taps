@@ -13,14 +13,6 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_APP_ID: string
   /** 'true' points the app at the local Emulator Suite instead of the real project. */
   readonly VITE_FIREBASE_USE_EMULATOR?: string
-  /**
-   * Administrator credentials for the prototype login screen. Transitional:
-   * once Firebase Authentication is wired up, the Administrator role comes
-   * from the `administrator` collection checked in firestore.rules, and these
-   * two variables are removed.
-   */
-  readonly VITE_ADMIN_EMAIL?: string
-  readonly VITE_ADMIN_PASSWORD?: string
 }
 
 interface ImportMeta {

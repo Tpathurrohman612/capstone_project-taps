@@ -4,8 +4,10 @@ import { getActiveUserRole, type UserRole } from '../lib/auth-session'
 import { useAuth } from '../lib/auth-context'
 
 export function RoleGuard({ role, children }: { role: UserRole; children: ReactNode }) {
-  const { mode, loading, user } = useAuth()
-  const activeRole = getActiveUserRole()
+  const { mode, loading, user, role: firebaseRole } = useAuth()
+  // Dalam mode Firebase peran berasal dari koleksi `administrator`, bukan dari
+  // sessionStorage yang dapat disunting siapa pun lewat devtools.
+  const activeRole = mode === 'firebase' ? firebaseRole : getActiveUserRole()
 
   // Status masuk Firebase tiba satu tick setelah render pertama. Tanpa jeda ini
   // pengguna yang sebenarnya sudah masuk akan terlempar ke /login setiap kali
@@ -22,10 +24,9 @@ export function RoleGuard({ role, children }: { role: UserRole; children: ReactN
     )
   }
 
-  // Mahasiswa diautentikasi Firebase, sehingga sesi peran di sessionStorage
-  // saja tidak cukup. Administrator masih memakai formulir internal sampai
-  // custom claims dipasang, jadi perannya belum diverifikasi di sini.
-  if (mode === 'firebase' && role === 'Mahasiswa' && !user) {
+  // Kedua peran kini diautentikasi Firebase, sehingga tanpa sesi masuk tidak
+  // ada halaman terlindungi yang boleh dibuka.
+  if (mode === 'firebase' && !user) {
     return <Navigate to="/login" replace />
   }
 
