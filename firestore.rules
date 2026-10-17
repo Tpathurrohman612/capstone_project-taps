@@ -72,6 +72,25 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Pencacah nomor laporan, satu dokumen per tahun.
+    //
+    // Nomor laporan tidak dapat ditentukan dengan mencari nomor tertinggi pada
+    // koleksi laporan, karena aturan di bawah melarang mahasiswa membaca
+    // laporan milik orang lain sehingga kueri semacam itu pasti ditolak.
+    // Dokumen pencacah menyelesaikannya tanpa membuka data siapa pun.
+    //
+    // Nilainya hanya boleh naik tepat satu setiap penulisan, sehingga pengguna
+    // tidak dapat melompati atau mengulang nomor. Penurunan dan penghapusan
+    // ditutup sama sekali.
+    match /pencacah_laporan/{tahun} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn() && request.resource.data.terakhir == 1;
+      allow update: if isSignedIn()
+        && request.resource.data.terakhir == resource.data.terakhir + 1;
+      allow delete: if false;
+    }
+
     // Daftar status laporan (Tabel 4.1) dan kategori laporan. Keduanya data
     // acuan yang dibaca setiap pengguna dan hanya diubah pengelola lewat
     // Console.
@@ -138,9 +157,16 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       // Pencatat wajib dirinya sendiri, sehingga riwayat tidak dapat
       // dipalsukan atas nama orang lain.
+      //
+      // Kepemilikan laporan induk sengaja tidak diperiksa di sini. Catatan
+      // riwayat pertama ditulis dalam transaksi yang sama dengan laporannya,
+      // dan aturan dievaluasi terhadap keadaan sebelum transaksi tersimpan,
+      // sehingga get() ke laporan induk akan selalu menemukan dokumen kosong
+      // dan menolak pembuatan laporan yang sah. Pembatasan sudah memadai
+      // karena uid_pencatat tidak dapat dipalsukan dan laporan induknya
+      // sendiri tetap dilindungi aturannya masing-masing.
       allow create: if isSignedIn()
-        && request.resource.data.uid_pencatat == request.auth.uid
-        && bolehBacaLaporan(request.resource.data.id_laporan);
+        && request.resource.data.uid_pencatat == request.auth.uid;
       // Hanya penanda baca notifikasi (FR-07) yang boleh berubah.
       allow update: if isSignedIn()
         && request.resource.data.diff(resource.data).affectedKeys()

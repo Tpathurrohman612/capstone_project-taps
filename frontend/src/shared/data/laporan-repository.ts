@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  limit,
   orderBy,
   query,
   runTransaction,
@@ -19,7 +18,7 @@ import {
   type ReportStatus,
   type StatusActor,
 } from '../domain/report-status'
-import { isReportNumber, nextReportNumber, parseReportNumber } from '../domain/report-number'
+import { formatReportNumber, parseReportNumber } from '../domain/report-number'
 
 /**
  * Akses data laporan di Cloud Firestore.
@@ -68,9 +67,21 @@ export type Laporan = {
   tanggal_diperbarui?: Date
 }
 
+/**
+ * Data laporan yang berasal dari formulir.
+ *
+ * `uid_pelapor`, `nomor_laporan`, `id_status`, dan kedua tanggal sengaja tidak
+ * termasuk: seluruhnya ditentukan lapisan data dari sesi yang sedang masuk dan
+ * dari transaksi penomoran, bukan dari apa pun yang dikirim layar.
+ */
 export type LaporanBaru = Omit<
   Laporan,
-  'id_laporan' | 'nomor_laporan' | 'id_status' | 'tanggal_laporan' | 'tanggal_diperbarui'
+  | 'id_laporan'
+  | 'nomor_laporan'
+  | 'uid_pelapor'
+  | 'id_status'
+  | 'tanggal_laporan'
+  | 'tanggal_diperbarui'
 >
 
 const pastikanSiap = () => {
@@ -184,29 +195,7 @@ export async function getLaporan(idLaporan: string): Promise<Laporan | undefined
   return toLaporan(snapshot.id, snapshot.data())
 }
 
-/**
- * Menentukan nomor laporan berikutnya untuk satu tahun.
- *
- * Mengambil satu nomor tertinggi pada tahun berjalan, bukan seluruh laporan,
- * supaya biaya pembacaan tidak tumbuh seiring jumlah laporan.
- */
-async function nomorBerikutnya(tahun: number): Promise<string> {
-  const batasBawah = `LT-${tahun}-0000`
-  const batasAtas = `LT-${tahun}-9999`
-
-  const hasil = await getDocs(
-    query(
-      collection(db, LAPORAN_COLLECTION),
-      where('nomor_laporan', '>=', batasBawah),
-      where('nomor_laporan', '<=', batasAtas),
-      orderBy('nomor_laporan', 'desc'),
-      limit(1),
-    ),
-  )
-
-  const tertinggi = hasil.docs[0]?.data().nomor_laporan
-  return nextReportNumber(isReportNumber(tertinggi) ? [tertinggi] : [], tahun)
-}
+export const PENCACAH_COLLECTION = 'pencacah_laporan'
 
 /**
  * Membuat laporan baru beserta catatan riwayat pertamanya.
@@ -225,12 +214,27 @@ export async function createLaporan(params: {
 
   const sekarang = params.sekarang ?? new Date()
   const tahun = sekarang.getFullYear()
-  const nomor = await nomorBerikutnya(tahun)
 
   const laporanRef = doc(collection(db, LAPORAN_COLLECTION))
   const riwayatRef = doc(collection(db, RIWAYAT_COLLECTION))
+  const pencacahRef = doc(db, PENCACAH_COLLECTION, String(tahun))
+
+  let nomor = ''
 
   await runTransaction(db, async (transaction) => {
+    // Seluruh pembacaan harus mendahului penulisan dalam satu transaksi
+    // Firestore, sehingga pencacah dibaca lebih dulu.
+    const pencacah = await transaction.get(pencacahRef)
+    const terakhir = pencacah.exists() ? pencacah.data().terakhir : 0
+    const urutan = (typeof terakhir === 'number' && Number.isInteger(terakhir) ? terakhir : 0) + 1
+
+    nomor = formatReportNumber(tahun, urutan)
+
+    // Menulis nilai utuh, bukan increment(), supaya aturan keamanan dapat
+    // membuktikan kenaikannya tepat satu. increment() tidak dapat diperiksa
+    // aturan karena nilainya baru dihitung server setelah aturan berjalan.
+    transaction.set(pencacahRef, { terakhir: urutan })
+
     transaction.set(laporanRef, {
       ...params.data,
       nomor_laporan: nomor,

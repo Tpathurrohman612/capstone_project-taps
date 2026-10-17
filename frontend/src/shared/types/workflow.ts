@@ -14,7 +14,11 @@ export type WorkflowUpdate = {
 }
 
 export type WorkflowReport = {
+  // Nomor laporan yang dilihat pengguna, misalnya LT-2026-0007.
   id: string
+  // Pengenal dokumen Firestore. Kosong pada data yang masih tersimpan di
+  // peramban, dan terisi begitu laporan berasal dari basis data.
+  docId?: string
   // NIM of the student who filed the report. This is the ownership key: student
   // facing queries must filter on it so one student never reads another's
   // report. Legacy records stored before this field existed carry an empty
