@@ -72,9 +72,110 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Koleksi lain (laporan, lampiran, riwayat_status_laporan,
-    // pengiriman_validasi, validasi, tindak_lanjut, kategori_laporan,
-    // status_laporan) belum dibuka. Tambahkan blok match tersendiri saat
+    // Daftar status laporan (Tabel 4.1) dan kategori laporan. Keduanya data
+    // acuan yang dibaca setiap pengguna dan hanya diubah pengelola lewat
+    // Console.
+    match /status_laporan/{id} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /kategori_laporan/{id} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Laporan. Inilah penegakan pembatasan akses yang diminta subbab 3.7:
+    // mahasiswa hanya dapat membaca laporan miliknya sendiri, dan pemeriksaan
+    // itu dijalankan server pada setiap permintaan, bukan oleh penyaringan di
+    // peramban yang dapat dilewati.
+    //
+    // `list` memakai syarat yang sama dengan `get`. Firestore menolak kueri
+    // yang tidak dapat dibuktikan memenuhi aturan, sehingga kueri tanpa
+    // penyaring uid_pelapor akan gagal, bukan diam-diam mengembalikan laporan
+    // milik orang lain.
+    function laporanMilikSendiri() {
+      return isSignedIn() && resource.data.uid_pelapor == request.auth.uid;
+    }
+
+    match /laporan/{id} {
+      allow get, list: if laporanMilikSendiri() || isAdmin();
+
+      // Mahasiswa membuat laporan atas namanya sendiri, dan status awal wajib
+      // Diterima sesuai baris pertama Tabel 4.2. Dengan begitu tidak ada
+      // laporan yang lahir langsung berstatus Selesai.
+      allow create: if isSignedIn()
+        && request.resource.data.uid_pelapor == request.auth.uid
+        && request.resource.data.id_status == 'Diterima'
+        && request.resource.data.nomor_laporan is string
+        && request.resource.data.judul_laporan is string;
+
+      // Perubahan status adalah wewenang Administrator. Mahasiswa hanya boleh
+      // menyunting laporannya sendiri selama status masih memungkinkan, yaitu
+      // saat diminta melengkapi, dan tidak boleh memindahkan kepemilikan.
+      allow update: if isAdmin()
+        || (laporanMilikSendiri()
+            && resource.data.id_status == 'Perlu Informasi Tambahan'
+            && request.resource.data.uid_pelapor == resource.data.uid_pelapor
+            && request.resource.data.nomor_laporan == resource.data.nomor_laporan
+            && request.resource.data.id_status == 'Diterima');
+
+      // Laporan tidak pernah dihapus; riwayatnya adalah bukti penanganan.
+      allow delete: if false;
+    }
+
+    // Riwayat status, lampiran, dan catatan penanganan mengikuti hak akses
+    // laporan induknya.
+    function laporanInduk(idLaporan) {
+      return get(/databases/$(database)/documents/laporan/$(idLaporan)).data;
+    }
+
+    function bolehBacaLaporan(idLaporan) {
+      return isAdmin() || (isSignedIn() && laporanInduk(idLaporan).uid_pelapor == request.auth.uid);
+    }
+
+    match /riwayat_status_laporan/{id} {
+      allow get, list: if isSignedIn();
+      // Pencatat wajib dirinya sendiri, sehingga riwayat tidak dapat
+      // dipalsukan atas nama orang lain.
+      allow create: if isSignedIn()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && bolehBacaLaporan(request.resource.data.id_laporan);
+      // Hanya penanda baca notifikasi (FR-07) yang boleh berubah.
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['dibaca_pada']);
+      allow delete: if false;
+    }
+
+    match /lampiran/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && bolehBacaLaporan(request.resource.data.id_laporan);
+      allow update, delete: if false;
+    }
+
+    // Pengiriman validasi, hasil validasi, dan tindak lanjut sepenuhnya
+    // wewenang Administrator. Mahasiswa boleh membacanya pada laporannya
+    // sendiri agar dapat melihat perkembangan penanganan.
+    match /pengiriman_validasi/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin() && request.resource.data.uid_pengirim == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /validasi/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin() && request.resource.data.uid_pencatat == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /tindak_lanjut/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin() && request.resource.data.uid_pencatat == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Koleksi lain belum dibuka. Tambahkan blok match tersendiri saat
     // fiturnya dikerjakan.
     match /{document=**} {
       allow read, write: if false;

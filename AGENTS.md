@@ -55,3 +55,26 @@ Recommended verification:
 Inspect existing implementation before editing. Keep changes scoped and preserve established UI behavior.
 
 Never commit or push unless explicitly authorized.
+
+## Firebase
+
+The project is `lapor-tutor` (`.firebaserc`). Copy `frontend/.env.example` to
+`frontend/.env.local` and fill it from Firebase Console; without it the app
+runs in simulation mode and Firebase-backed features are inert.
+
+Security rules live in `firestore.rules` and are the authorization layer.
+Client-side checks only decide what to render.
+
+Rules tests require the Firestore emulator, which needs JDK 21 or newer:
+
+```
+JAVA_HOME=$(brew --prefix openjdk@21) \
+  corepack pnpm@10.34.3 --dir frontend run test:rules:emulator
+```
+
+Without the emulator those tests skip rather than fail, so `pnpm test` works
+without Java.
+
+Status values come from `frontend/src/shared/domain/report-status.ts`, a direct
+translation of Tabel 4.1 and Tabel 4.2 in the proposal. Change the tables first,
+then the module — never only the code.
