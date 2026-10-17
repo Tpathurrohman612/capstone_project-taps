@@ -176,7 +176,21 @@ service cloud.firestore {
 
     match /lampiran/{id} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && bolehBacaLaporan(request.resource.data.id_laporan);
+
+      // Bukti pendukung ditulis dalam transaksi yang sama dengan laporannya,
+      // sehingga saat aturan dievaluasi laporan induknya belum tersimpan dan
+      // pemeriksaan kepemilikan terhadapnya pasti gagal. Karena itu pembuatan
+      // diizinkan ketika induknya memang belum ada, dan tetap diperiksa
+      // kepemilikannya ketika induknya sudah ada, sehingga tidak ada yang
+      // dapat menambahkan bukti pada laporan milik orang lain.
+      allow create: if isSignedIn()
+        && request.resource.data.id_laporan is string
+        && (
+          !exists(/databases/$(database)/documents/laporan/$(request.resource.data.id_laporan))
+          || laporanInduk(request.resource.data.id_laporan).uid_pelapor == request.auth.uid
+          || isAdmin()
+        );
+
       allow update, delete: if false;
     }
 

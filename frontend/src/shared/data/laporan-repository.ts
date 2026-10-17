@@ -29,6 +29,7 @@ import { formatReportNumber, parseReportNumber } from '../domain/report-number'
  */
 
 export const LAPORAN_COLLECTION = 'laporan'
+export const LAMPIRAN_COLLECTION = 'lampiran'
 export const RIWAYAT_COLLECTION = 'riwayat_status_laporan'
 
 export class LaporanNotConfiguredError extends Error {
@@ -73,6 +74,25 @@ export type Laporan = {
  * termasuk: seluruhnya ditentukan lapisan data dari sesi yang sedang masuk dan
  * dari transaksi penomoran, bukan dari apa pun yang dikirim layar.
  */
+/**
+ * Keterangan satu berkas bukti pendukung.
+ *
+ * Hanya metadata yang disimpan. Mengunggah berkasnya sendiri memerlukan Cloud
+ * Storage, yang tidak tersedia pada paket Spark, sehingga path_storage
+ * dibiarkan kosong sampai paket dinaikkan. Menyimpan metadata lebih dulu
+ * membuat daftar bukti tetap benar dan tidak perlu dibangun ulang nanti.
+ */
+export type LampiranBaru = {
+  nama_file: string
+  tipe_file: string
+  ukuran_file?: string
+}
+
+export type Lampiran = LampiranBaru & {
+  id_lampiran: string
+  id_laporan: string
+}
+
 export type LaporanBaru = Omit<
   Laporan,
   | 'id_laporan'
@@ -208,6 +228,7 @@ export const PENCACAH_COLLECTION = 'pencacah_laporan'
 export async function createLaporan(params: {
   uid: string
   data: LaporanBaru
+  lampiran?: readonly LampiranBaru[]
   sekarang?: Date
 }): Promise<Laporan> {
   pastikanSiap()
@@ -251,6 +272,19 @@ export async function createLaporan(params: {
       keterangan: 'Laporan dikirim mahasiswa',
       tanggal_riwayat: serverTimestamp(),
     })
+
+    // Bukti pendukung ditulis dalam transaksi yang sama, sehingga laporan
+    // tanpa lampirannya tidak mungkin tersimpan sebagian.
+    for (const berkas of params.lampiran ?? []) {
+      transaction.set(doc(collection(db, LAMPIRAN_COLLECTION)), {
+        id_laporan: laporanRef.id,
+        nama_file: berkas.nama_file,
+        tipe_file: berkas.tipe_file,
+        ...(berkas.ukuran_file ? { ukuran_file: berkas.ukuran_file } : {}),
+        path_storage: '',
+        tanggal_upload: serverTimestamp(),
+      })
+    }
   })
 
   return {
@@ -327,6 +361,30 @@ export async function ubahStatusLaporan(params: {
   })
 
   return params.ke
+}
+
+/** Membaca bukti pendukung milik satu laporan. */
+export async function listLampiran(idLaporan: string): Promise<Lampiran[]> {
+  pastikanSiap()
+
+  const hasil = await getDocs(
+    query(collection(db, LAMPIRAN_COLLECTION), where('id_laporan', '==', idLaporan)),
+  )
+
+  return hasil.docs
+    .map((snapshot) => {
+      const data = snapshot.data()
+      if (typeof data.nama_file !== 'string' || data.nama_file === '') return undefined
+
+      return {
+        id_lampiran: snapshot.id,
+        id_laporan: idLaporan,
+        nama_file: data.nama_file,
+        tipe_file: typeof data.tipe_file === 'string' ? data.tipe_file : 'FILE',
+        ...(typeof data.ukuran_file === 'string' ? { ukuran_file: data.ukuran_file } : {}),
+      } satisfies Lampiran
+    })
+    .filter((berkas): berkas is Lampiran => berkas !== undefined)
 }
 
 /** Tahun pada satu nomor laporan, untuk pengelompokan dan pelaporan. */

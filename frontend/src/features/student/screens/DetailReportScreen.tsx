@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { followUps, statusStages } from '../data/detail-report'
+import { statusStages } from '../data/detail-report'
 import { useStudentReports } from '../lib/use-student-reports'
+import { fetchAttachments } from '../../../shared/data/report-store'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 
 export function DetailReportScreen() {
-  const { riwayat, memuat: memuatLaporan } = useStudentReports()
+  const { riwayat, reports, memuat: memuatLaporan } = useStudentReports()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
@@ -46,7 +48,32 @@ export function DetailReportScreen() {
   }
 
   const [courseCode, courseName] = report.course.split(' · ')
-  const administratorReport = getWorkflowReports().find((item) => item.id === report.id)
+  // Bentuk penuh laporan, yang membawa docId Firestore. riwayat hanya memuat
+  // bidang yang ditampilkan, sehingga tidak cukup untuk membaca lampiran.
+  const laporanPenuh = reports.find((item) => item.id === report.id)
+  const administratorReport =
+    laporanPenuh ?? getWorkflowReports().find((item) => item.id === report.id)
+
+  const [attachments, setAttachments] = useState<{ name: string; type: string; size?: string }[]>(
+    [],
+  )
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchAttachments(administratorReport)
+      .then((hasil) => {
+        if (aktif) setAttachments(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca bukti pendukung tidak boleh mengosongkan laporannya.
+        if (aktif) setAttachments([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [administratorReport])
   // Lini masa menampilkan lima tahap alur utama. Dua status percabangan
   // dipetakan ke tahap tempat percabangan itu terjadi: keduanya bercabang dari
   // Diterima, sehingga keduanya berhenti di tahap 0. Record ditulis lengkap
@@ -92,11 +119,12 @@ export function DetailReportScreen() {
     ['Perkiraan Durasi Tidak Ada Aktivitas/Respons', report.duration ?? '1 minggu atau lebih'],
     ['Judul Laporan', report.title],
   ]
-  const detailFollowUps = administratorReport?.updates ?? followUps
-  const detailAttachments = report.attachments ?? [
-    { name: 'tangkapan-layar-diskusi-minggu-3.png', type: 'PNG' },
-    { name: 'riwayat-aktivitas-tuton.pdf', type: 'PDF' },
-  ]
+  // Tidak ada lagi penggantian dengan rekaman contoh. Laporan yang belum
+  // memiliki tindak lanjut atau bukti pendukung ditampilkan apa adanya sebagai
+  // kosong, karena menampilkan berkas dan catatan milik data demo membuat
+  // pengguna mengira unggahannya tersimpan padahal tidak.
+  const detailFollowUps = administratorReport?.updates ?? []
+  const detailAttachments = attachments
   return (
     <section className="px-8 py-7 max-[620px]:px-5">
       <header className="border-b border-[#D9E2EC] pb-8">

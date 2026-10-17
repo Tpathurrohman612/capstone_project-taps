@@ -6,6 +6,7 @@ import { getWorkflowReports, saveWorkflowReports } from '../lib/workflow-storage
 import { formToLaporanBaru, laporanToWorkflowReport } from './report-mapper'
 import {
   createLaporan,
+  listLampiran,
   listLaporanMilik,
   listSemuaLaporan,
   ubahStatusLaporan,
@@ -78,6 +79,11 @@ export async function submitReport(params: {
     const hasil = await createLaporan({
       uid: params.ownerKey,
       data: formToLaporanBaru(params.input),
+      lampiran: (params.input.attachments ?? []).map((berkas) => ({
+        nama_file: berkas.name,
+        tipe_file: berkas.type,
+        ukuran_file: berkas.size,
+      })),
     })
     return hasil.nomor_laporan
   }
@@ -161,6 +167,31 @@ export async function changeReportStatus(params: {
 
   target.status = params.ke
   saveWorkflowReports(tersimpan)
+}
+
+/**
+ * Bukti pendukung milik satu laporan.
+ *
+ * Pada mode prototipe, lampiran menempel pada laporannya di sessionStorage.
+ * Pada mode Firestore, lampiran berada pada koleksi tersendiri sesuai ERD,
+ * sehingga dibaca terpisah dan hanya saat halaman detail dibuka.
+ */
+export async function fetchAttachments(
+  report: WorkflowReport | undefined,
+): Promise<{ name: string; type: string; size?: string }[]> {
+  if (!report) return []
+
+  if (usingFirestore()) {
+    if (!report.docId) return []
+    const lampiran = await listLampiran(report.docId)
+    return lampiran.map((berkas) => ({
+      name: berkas.nama_file,
+      type: berkas.tipe_file,
+      ...(berkas.ukuran_file ? { size: berkas.ukuran_file } : {}),
+    }))
+  }
+
+  return report.attachments ?? []
 }
 
 /** Mengubah laporan menjadi bentuk riwayat yang dipakai layar mahasiswa. */

@@ -169,6 +169,68 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
     })
   })
 
+  describe('lampiran', () => {
+    it('menyimpan metadata bukti pendukung bersama laporannya', async () => {
+      const konteks = sebagaiFirestore(env.authenticatedContext(UID))
+      const repo = await muatRepository(konteks)
+
+      const dibuat = await repo.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'tangkapan-layar.png', tipe_file: 'PNG', ukuran_file: '84 KB' }],
+      })
+
+      const berkas = await repo.listLampiran(dibuat.id_laporan)
+
+      expect(berkas).toHaveLength(1)
+      expect(berkas[0]).toMatchObject({
+        nama_file: 'tangkapan-layar.png',
+        tipe_file: 'PNG',
+        ukuran_file: '84 KB',
+      })
+    })
+
+    it('menyimpan tepat sebanyak berkas yang diunggah', async () => {
+      // Pengguna mengunggah satu berkas tetapi melihat dua, karena layar
+      // menampilkan daftar contoh ketika lampiran kosong. Jumlahnya kini
+      // mengikuti apa yang benar-benar tersimpan.
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+
+      const satu = await repo.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'satu.pdf', tipe_file: 'PDF' }],
+      })
+
+      expect(await repo.listLampiran(satu.id_laporan)).toHaveLength(1)
+    })
+
+    it('mengembalikan daftar kosong untuk laporan tanpa bukti pendukung', async () => {
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      const tanpa = await repo.createLaporan({ uid: UID, data: dataLaporan })
+
+      expect(await repo.listLampiran(tanpa.id_laporan)).toEqual([])
+    })
+
+    it('tidak mencampur lampiran antarlaporan', async () => {
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+
+      const pertama = await repo.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'pertama.png', tipe_file: 'PNG' }],
+      })
+      const kedua = await repo.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'kedua.png', tipe_file: 'PNG' }],
+      })
+
+      expect((await repo.listLampiran(pertama.id_laporan))[0]?.nama_file).toBe('pertama.png')
+      expect((await repo.listLampiran(kedua.id_laporan))[0]?.nama_file).toBe('kedua.png')
+    })
+  })
+
   describe('listLaporanMilik', () => {
     it('hanya mengembalikan laporan milik pemanggil', async () => {
       const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
