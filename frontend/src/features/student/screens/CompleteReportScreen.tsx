@@ -5,6 +5,7 @@ import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/wor
 import { checkTransition } from '../../../shared/domain/report-status'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
+import { useStudentIdentity } from '../lib/student-identity'
 
 /**
  * Halaman Lengkapi Laporan.
@@ -15,11 +16,14 @@ import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
  * kelima Tabel 4.2 yang menetapkan Mahasiswa sebagai pemicunya.
  */
 export function CompleteReportScreen() {
+  const identity = useStudentIdentity()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
 
-  const report = getStudentHistoryReports().find((item) => item.id === selectedReportId)
+  const report = getStudentHistoryReports(identity.ownerKey).find(
+    (item) => item.id === selectedReportId,
+  )
   const [penjelasan, setPenjelasan] = useState('')
   const [error, setError] = useState('')
 

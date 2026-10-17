@@ -1,14 +1,25 @@
 import type { HistoryReport } from '../../../shared/types/history-report'
 import { historyReports } from '../data/history-reports'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { getActiveStudentNim, REGISTERED_GOOGLE_ACCOUNT_NIM } from '../../auth/lib/google-account'
+import { REGISTERED_GOOGLE_ACCOUNT_NIM } from '../../auth/lib/google-account'
 
-export const getStudentHistoryReports = (): HistoryReport[] => {
-  const activeNim = getActiveStudentNim()
+/**
+ * Riwayat laporan milik satu mahasiswa.
+ *
+ * Kunci pemilik wajib diberikan pemanggil, tidak lagi dibaca sendiri dari
+ * localStorage. Sebelumnya fungsi ini memanggil getActiveStudentNim() yang
+ * membaca peramban, sedangkan laporan kini disimpan dengan Firebase UID
+ * sebagai pemilik. Keduanya tidak pernah cocok, sehingga riwayat selalu kosong
+ * meskipun laporan berhasil dikirim.
+ *
+ * Menjadikan kunci pemilik sebagai parameter membuat ketidakcocokan semacam
+ * itu tampak pada tanda tangan fungsi, bukan tersembunyi di dalamnya.
+ */
+export const getStudentHistoryReports = (ownerKey: string | undefined): HistoryReport[] => {
+  // Tanpa pemilik, sesi ini tidak memiliki laporan apa pun.
+  if (ownerKey === undefined || ownerKey === '') return []
 
-  // Without a NIM the session owns no report, so the history stays empty rather
-  // than falling back to every stored report.
-  if (activeNim === undefined) return []
+  const activeNim = ownerKey
 
   const workflowHistory = getWorkflowReports()
     .filter((report) => report.studentNim === activeNim)

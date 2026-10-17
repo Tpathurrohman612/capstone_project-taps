@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { getStudentHistoryReports } from '../lib/history-reports'
 import { statusBadge } from '../lib/status-badge'
+import { useStudentIdentity } from '../lib/student-identity'
 
 export function ReportHistoryScreen() {
+  const identity = useStudentIdentity()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
-  const visibleReports = getStudentHistoryReports().filter(
+  const visibleReports = getStudentHistoryReports(identity.ownerKey).filter(
     (report) =>
       (status === 'Semua' || report.status === status) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),

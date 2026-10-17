@@ -6,13 +6,16 @@ import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
+import { useStudentIdentity } from '../lib/student-identity'
 
 export function DetailReportScreen() {
+  const identity = useStudentIdentity()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
   const report =
-    getStudentHistoryReports().find((item) => item.id === selectedReportId) ?? historyReports[0]
+    getStudentHistoryReports(identity.ownerKey).find((item) => item.id === selectedReportId) ??
+    historyReports[0]
   const [courseCode, courseName] = report.course.split(' · ')
   const administratorReport = getWorkflowReports().find((item) => item.id === report.id)
   // Lini masa menampilkan lima tahap alur utama. Dua status percabangan

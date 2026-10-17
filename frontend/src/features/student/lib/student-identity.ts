@@ -28,6 +28,8 @@ export type StudentIdentity = {
   fakultas: string | undefined
   programStudi: string | undefined
   utDaerah: string | undefined
+  /** URL foto akun Google. Tidak selalu ada; akun tanpa foto mengembalikan null. */
+  foto: string | undefined
   /** Benar selama identitas masih dimuat, sehingga layar tidak salah menyimpulkan. */
   memuat: boolean
   /** Benar bila identitas sudah lengkap dan laporan boleh dibuat. */
@@ -46,6 +48,7 @@ export function useStudentIdentity(): StudentIdentity {
       fakultas: profile?.faculty,
       programStudi: profile?.programStudi,
       utDaerah: profile?.utDaerah,
+      foto: user?.photoURL ?? undefined,
       memuat: loading,
       // Identitas dianggap lengkap hanya bila profil benar-benar terbaca.
       // Selama masih memuat, jawabannya belum lengkap tetapi `memuat` bernilai
@@ -64,6 +67,7 @@ export function useStudentIdentity(): StudentIdentity {
     fakultas: getActiveStudentFaculty(),
     programStudi: undefined,
     utDaerah: undefined,
+    foto: undefined,
     memuat: false,
     lengkap: nim !== undefined,
   }

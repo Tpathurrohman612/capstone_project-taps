@@ -53,8 +53,15 @@ export function ProfileScreen() {
           <div className="px-6 max-[620px]:px-5">
             <div className="flex items-center gap-5">
               <img
-                src={placeholderAvatar}
-                alt="Avatar profil netral"
+                src={identity.foto ?? placeholderAvatar}
+                // Foto Google kadang gagal dimuat karena pembatasan perujuk.
+                // Saat itu terjadi gambar diganti avatar netral, bukan
+                // dibiarkan menjadi ikon gambar rusak.
+                onError={(event) => {
+                  event.currentTarget.src = placeholderAvatar
+                }}
+                referrerPolicy="no-referrer"
+                alt={identity.nama ? `Foto profil ${identity.nama}` : 'Avatar profil netral'}
                 className="h-[76px] w-[76px] shrink-0"
               />
               <div className="min-w-0 flex-1">

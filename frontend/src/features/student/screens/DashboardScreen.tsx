@@ -12,7 +12,7 @@ export function DashboardScreen() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<StudentNotification[]>(studentNotifications)
   const navigate = useNavigate()
-  const studentReports = getStudentHistoryReports()
+  const studentReports = getStudentHistoryReports(identity.ownerKey)
   const recentReports = studentReports.slice(0, 3)
   const unreadNotifications = notifications.filter((notification) => notification.unread).length
 
