@@ -13,6 +13,11 @@ export type WorkflowUpdate = {
 
 export type WorkflowReport = {
   id: string
+  // NIM of the student who filed the report. This is the ownership key: student
+  // facing queries must filter on it so one student never reads another's
+  // report. Legacy records stored before this field existed carry an empty
+  // string, which matches no signed-in student.
+  studentNim: string
   title: string
   category: string
   course: string

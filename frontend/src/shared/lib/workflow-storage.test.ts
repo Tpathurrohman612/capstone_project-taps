@@ -82,7 +82,7 @@ describe('workflow-storage', () => {
 
     expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Diverifikasi')
     expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Diproses')
-    expect(browser.values.get(VERSION_KEY)).toBe('7')
+    expect(browser.values.get(VERSION_KEY)).toBe('8')
   })
 
   it('preserves malformed JSON and creates a backup instead of overwriting it', () => {
@@ -108,6 +108,22 @@ describe('workflow-storage', () => {
     expect(browser.values.get(REPORTS_KEY)).toBe(invalidRaw)
     expect(browser.values.get(BACKUP_KEY)).toBe(invalidRaw)
     expect(browser.values.get(WARNING_KEY)).toContain('struktur data tidak sesuai')
+  })
+
+  it('backfills an empty owner on reports stored before studentNim existed', () => {
+    const legacyReports = structuredClone(workflowSeed).map(
+      ({ studentNim: _studentNim, ...report }) => report,
+    )
+
+    browser.values.set(REPORTS_KEY, JSON.stringify(legacyReports))
+    browser.values.set(VERSION_KEY, '7')
+
+    const result = getWorkflowReports()
+
+    expect(result.length).toBe(workflowSeed.length)
+    expect(result.every((report) => report.studentNim === '')).toBe(true)
+    expect(browser.values.get(BACKUP_KEY)).toBeUndefined()
+    expect(browser.values.get(WARNING_KEY)).toBeUndefined()
   })
 
   it('refuses to save over an existing malformed workflow value', () => {

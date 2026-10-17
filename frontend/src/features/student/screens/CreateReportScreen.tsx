@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
-import { getActiveStudentFaculty } from '../../auth/lib/google-account'
+import { getActiveStudentFaculty, getActiveStudentNim } from '../../auth/lib/google-account'
 
 function Field({
   label,
@@ -110,6 +110,16 @@ export function CreateReportScreen() {
     }
 
     setErrors({})
+
+    const studentNim = getActiveStudentNim()
+
+    // A report with no owner cannot be filtered back to its author, so identity
+    // setup has to be completed before one can be stored.
+    if (studentNim === undefined) {
+      navigate('/lengkapi-identitas')
+      return
+    }
+
     const workflowReports = getWorkflowReports()
     const nextReportNumber =
       Math.max(
@@ -132,6 +142,7 @@ export function CreateReportScreen() {
     const studentFaculty = getActiveStudentFaculty()
     const newReport: WorkflowReport = {
       id: reportId,
+      studentNim,
       title: String(data.get('title')),
       category: String(data.get('category')),
       course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,

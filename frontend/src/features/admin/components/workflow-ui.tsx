@@ -4,6 +4,7 @@ import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
+import { courseProgram } from '../../../shared/data/course-programs'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -198,30 +199,13 @@ export function WorkflowDetailLink({
 
 export { FACULTIES, type Faculty } from '../../../shared/data/faculties'
 
-export const reportGroup = (report: WorkflowReport) => {
-  if (report.course.startsWith('AKUN')) {
-    return {
-      faculty: 'Fakultas Ekonomi dan Bisnis',
-      programStudy: 'Akuntansi',
-    }
-  }
-  if (report.course.startsWith('ESPA')) {
-    return {
-      faculty: 'Fakultas Ekonomi dan Bisnis',
-      programStudy: 'Ekonomi Pembangunan',
-    }
-  }
-  if (report.course.startsWith('ADBI')) {
-    return {
-      faculty: 'Fakultas Hukum, Ilmu Sosial, dan Ilmu Politik',
-      programStudy: 'Administrasi Bisnis',
-    }
-  }
-  return {
-    faculty: 'Fakultas Ekonomi dan Bisnis',
-    programStudy: report.course.startsWith('PAJA') ? 'Akuntansi Keuangan Publik' : 'Manajemen',
-  }
-}
+// Program study of the reported course, resolved from its course code through
+// COURSE_PROGRAMS. An unlisted course code yields a dash instead of being
+// folded into an unrelated program study, and no faculty is derived here: the
+// faculty shown and exported is report.studentFaculty, so a course code can no
+// longer contradict it.
+export const reportProgramStudy = (report: WorkflowReport) =>
+  courseProgram(report.course)?.programStudy ?? '—'
 
 export const exportFilePart = (value: string) => value.replace(/[^A-Za-z0-9]+/g, '_')
 
@@ -285,7 +269,7 @@ export function WorkflowTable({
                 <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                 <p className="text-sm">{report.category}</p>
                 <p className="text-sm">{report.studentFaculty ?? '—'}</p>
-                {showProgramStudy && <p className="text-sm">{reportGroup(report).programStudy}</p>}
+                {showProgramStudy && <p className="text-sm">{reportProgramStudy(report)}</p>}
                 <p className="text-sm font-medium">{report.course}</p>
                 <p className="text-sm">{report.className}</p>
                 <p className="text-sm">{report.tutor}</p>
@@ -349,7 +333,7 @@ export function WorkflowTable({
                       <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                         PROGRAM STUDI
                       </dt>
-                      <dd className="mt-1 text-sm">{reportGroup(report).programStudy}</dd>
+                      <dd className="mt-1 text-sm">{reportProgramStudy(report)}</dd>
                     </div>
                   )}
                   <div>

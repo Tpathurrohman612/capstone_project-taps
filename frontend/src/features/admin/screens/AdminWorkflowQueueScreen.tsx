@@ -7,7 +7,7 @@ import {
   FACULTIES,
   WorkflowTable,
   exportFilePart,
-  reportGroup,
+  reportProgramStudy,
 } from '../components/workflow-ui'
 
 export function AdminWorkflowQueueScreen() {
@@ -35,9 +35,7 @@ export function AdminWorkflowQueueScreen() {
       report.studentFaculty === faculty &&
       (courseType === 'Semua' || report.courseType === courseType),
   )
-  const includedPrograms = Array.from(
-    new Set(exportReports.map((report) => reportGroup(report).programStudy)),
-  )
+  const includedPrograms = Array.from(new Set(exportReports.map(reportProgramStudy)))
   const exportFaculty = faculty
   const exportProgram =
     includedPrograms.length > 1 ? 'Beberapa Program Studi' : (includedPrograms[0] ?? '—')
@@ -61,11 +59,10 @@ export function AdminWorkflowQueueScreen() {
     const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`
     const rows = exportReports.map((report) => {
       const [courseCode, courseName] = report.course.split(' · ')
-      const group = reportGroup(report)
       return [
         report.id,
         report.category,
-        group.programStudy,
+        reportProgramStudy(report),
         report.studentFaculty ?? '—',
         report.courseType ?? '—',
         courseCode,

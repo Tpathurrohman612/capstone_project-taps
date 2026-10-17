@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -40,6 +41,22 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
+    },
+    test: {
+      coverage: {
+        provider: 'v8',
+        // 'lcov' writes coverage/lcov.info, which is the file SonarQube Cloud
+        // reads through sonar.javascript.lcov.reportPaths.
+        reporter: ['text', 'lcov'],
+        reportsDirectory: './coverage',
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/*.test.{ts,tsx}',
+          'src/**/*.d.ts',
+          'src/main.tsx',
+          'src/screens/DesignSystemScreen.tsx',
+        ],
+      },
     },
   }
 })

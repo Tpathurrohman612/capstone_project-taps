@@ -362,7 +362,7 @@ export function DesignSystemScreen() {
                       <input
                         readOnly
                         type="password"
-                        value="Admin123!"
+                        value="••••••••"
                         className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937]"
                       />
                     </label>
