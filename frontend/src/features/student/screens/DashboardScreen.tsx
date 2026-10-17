@@ -4,8 +4,10 @@ import { studentNotifications, type StudentNotification } from '../data/notifica
 import type { HistoryReport } from '../../../shared/types/history-report'
 import { getStudentHistoryReports } from '../lib/history-reports'
 import { statusBadge } from '../lib/status-badge'
+import { useStudentIdentity } from '../lib/student-identity'
 
 export function DashboardScreen() {
+  const identity = useStudentIdentity()
   const [selectedReport, setSelectedReport] = useState<HistoryReport | null>(null)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<StudentNotification[]>(studentNotifications)
@@ -32,7 +34,7 @@ export function DashboardScreen() {
               DASHBOARD / MAHASISWA
             </p>
             <h1 className="mt-3 font-slab text-[36px] tracking-[-0.035em] text-[#12355B]">
-              Selamat datang, Nama Mahasiswa.
+              Selamat datang{identity.nama ? `, ${identity.nama}` : ''}.
             </h1>
             <p className="mt-2 text-sm text-[#52657A]">
               Pantau laporan terkait layanan dan aktivitas tutor Anda.
@@ -41,7 +43,7 @@ export function DashboardScreen() {
           <div className="relative mt-1 flex items-center gap-3 max-[620px]:mt-6">
             <div className="border-l border-[#D9E2EC] pl-4 text-right max-[620px]:border-l-0 max-[620px]:pl-0 max-[620px]:text-left">
               <p className="font-mono text-[10px] tracking-[0.14em] text-[#52657A]">NIM</p>
-              <p className="mt-1 text-sm font-medium">XXXXXXXXXX</p>
+              <p className="mt-1 text-sm font-medium">{identity.nim ?? 'Belum diisi'}</p>
             </div>
             <button
               type="button"

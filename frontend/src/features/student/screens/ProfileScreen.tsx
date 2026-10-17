@@ -1,6 +1,6 @@
 import placeholderAvatar from '../../../assets/placeholder-avatar.svg'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
-import { studentProfile } from '../data/profile'
+import { useStudentIdentity } from '../lib/student-identity'
 
 function ProfileItem({ label, value }: { label: string; value: string }) {
   return (
@@ -14,6 +14,21 @@ function ProfileItem({ label, value }: { label: string; value: string }) {
 }
 
 export function ProfileScreen() {
+  const identity = useStudentIdentity()
+
+  // Nilai yang belum diisi ditampilkan apa adanya sebagai "Belum diisi",
+  // bukan diganti contoh. Data contoh pada halaman profil membuat pengguna
+  // mengira datanya sudah tersimpan padahal belum.
+  const atau = (nilai: string | undefined) => (nilai && nilai !== '' ? nilai : 'Belum diisi')
+
+  const studentProfile: [string, string][] = [
+    ['Nama Lengkap', atau(identity.nama)],
+    ['NIM', atau(identity.nim)],
+    ['Fakultas', atau(identity.fakultas)],
+    ['Program Studi', atau(identity.programStudi)],
+    ['UT Daerah', atau(identity.utDaerah)],
+  ]
+
   return (
     <section className="px-8 py-7 max-[620px]:px-5">
       <header className="border-b border-[#D9E2EC] pb-8">
@@ -64,7 +79,7 @@ export function ProfileScreen() {
               </h2>
             </div>
             <div className="px-6 max-[620px]:px-5">
-              <ProfileItem label="Email" value="nama.mahasiswa@example.com" />
+              <ProfileItem label="Email" value={atau(identity.email)} />
               <div className="py-4">
                 <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
                   STATUS AKUN

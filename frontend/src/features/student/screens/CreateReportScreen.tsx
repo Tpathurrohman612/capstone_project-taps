@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
-import { getActiveStudentFaculty, getActiveStudentNim } from '../../auth/lib/google-account'
+import { useStudentIdentity } from '../lib/student-identity'
 
 function Field({
   label,
@@ -46,6 +46,7 @@ const control =
   'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15'
 
 export function CreateReportScreen() {
+  const identity = useStudentIdentity()
   const [duration, setDuration] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [guideOpen, setGuideOpen] = useState(false)
@@ -111,14 +112,19 @@ export function CreateReportScreen() {
 
     setErrors({})
 
-    const studentNim = getActiveStudentNim()
+    // Laporan tanpa pemilik tidak dapat disaring kembali kepada pembuatnya,
+    // sehingga identitas wajib lengkap sebelum laporan disimpan. Selama
+    // identitas masih dimuat, pengiriman ditahan dan bukan dialihkan, karena
+    // mengalihkan saat data belum tiba akan melempar mahasiswa yang
+    // identitasnya sudah lengkap ke halaman lengkapi identitas.
+    if (identity.memuat) return
 
-    // A report with no owner cannot be filtered back to its author, so identity
-    // setup has to be completed before one can be stored.
-    if (studentNim === undefined) {
+    if (!identity.lengkap || identity.ownerKey === undefined) {
       navigate('/lengkapi-identitas')
       return
     }
+
+    const studentNim = identity.ownerKey
 
     const workflowReports = getWorkflowReports()
     const nextReportNumber =
@@ -139,7 +145,7 @@ export function CreateReportScreen() {
         size: `${Math.max(1, Math.ceil(file.size / 1024))} KB`,
       }
     })
-    const studentFaculty = getActiveStudentFaculty()
+    const studentFaculty = identity.fakultas
     const newReport: WorkflowReport = {
       id: reportId,
       studentNim,

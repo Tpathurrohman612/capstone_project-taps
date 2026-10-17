@@ -21,6 +21,10 @@ export type UserProfile = {
   nim: string
   faculty: Faculty
   displayName?: string
+  // Dua field berikut ada pada entitas pengguna di ERD Gambar 3.3 dan dipakai
+  // pada halaman Profil. Keduanya opsional karena akun lama belum mengisinya.
+  programStudi?: string
+  utDaerah?: string
 }
 
 export class ProfileNotConfiguredError extends Error {
@@ -74,6 +78,12 @@ export async function readUserProfile(uid: string): Promise<UserProfile | undefi
     nim: data.nim,
     faculty: data.faculty,
     ...(typeof data.displayName === 'string' ? { displayName: data.displayName } : {}),
+    ...(typeof data.program_studi === 'string' && data.program_studi !== ''
+      ? { programStudi: data.program_studi }
+      : {}),
+    ...(typeof data.ut_daerah === 'string' && data.ut_daerah !== ''
+      ? { utDaerah: data.ut_daerah }
+      : {}),
   }
 }
 
@@ -93,6 +103,8 @@ export async function linkNimToAccount(params: {
   nim: string
   faculty: Faculty
   displayName?: string
+  programStudi?: string
+  utDaerah?: string
 }): Promise<UserProfile> {
   if (!isFirebaseConfigured()) throw new ProfileNotConfiguredError()
 
@@ -126,6 +138,8 @@ export async function linkNimToAccount(params: {
         nim,
         faculty: params.faculty,
         ...(params.displayName ? { displayName: params.displayName } : {}),
+        ...(params.programStudi ? { program_studi: params.programStudi } : {}),
+        ...(params.utDaerah ? { ut_daerah: params.utDaerah } : {}),
         diperbaruiPada: serverTimestamp(),
       },
       { merge: true },
@@ -138,6 +152,8 @@ export async function linkNimToAccount(params: {
     nim,
     faculty: params.faculty,
     ...(params.displayName ? { displayName: params.displayName } : {}),
+    ...(params.programStudi ? { programStudi: params.programStudi } : {}),
+    ...(params.utDaerah ? { utDaerah: params.utDaerah } : {}),
   }
 }
 

@@ -43,6 +43,11 @@ export default defineConfig(({ mode }) => {
       port: parseInt(process.env.PORT || '8443'),
     },
     test: {
+      // Pengujian alur me-render komponen, sehingga memerlukan DOM. Berkas
+      // *.emulator.test.ts tetap berjalan di lingkungan ini tanpa masalah
+      // karena hanya memakai SDK Firestore.
+      environment: 'jsdom',
+      setupFiles: ['./src/test-setup.ts'],
       coverage: {
         provider: 'v8',
         // 'lcov' writes coverage/lcov.info, which is the file SonarQube Cloud

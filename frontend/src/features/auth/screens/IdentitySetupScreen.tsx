@@ -27,6 +27,8 @@ export function IdentitySetupScreen() {
   const [faculty, setFaculty] = useState<Faculty | ''>(
     mode === 'firebase' ? (profile?.faculty ?? '') : (existingEmailAccount?.faculty ?? ''),
   )
+  const [programStudi, setProgramStudi] = useState(profile?.programStudi ?? '')
+  const [utDaerah, setUtDaerah] = useState(profile?.utDaerah ?? '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -50,6 +52,8 @@ export function IdentitySetupScreen() {
         nim: normalizedNim,
         faculty: chosenFaculty,
         ...(user.displayName ? { displayName: user.displayName } : {}),
+        ...(programStudi.trim() ? { programStudi: programStudi.trim() } : {}),
+        ...(utDaerah.trim() ? { utDaerah: utDaerah.trim() } : {}),
       })
 
       await refreshProfile()
@@ -206,14 +210,32 @@ export function IdentitySetupScreen() {
             <span className="text-sm font-medium text-[#12355B]">
               Program Studi <span className="text-[#005BAC]">*</span>
             </span>
-            <input required className={fieldClass} placeholder="Masukkan program studi" />
+            <input
+              required
+              value={programStudi}
+              onChange={(event) => {
+                setProgramStudi(event.target.value)
+                if (error) setError('')
+              }}
+              className={fieldClass}
+              placeholder="Masukkan program studi"
+            />
           </label>
 
           <label className="block">
             <span className="text-sm font-medium text-[#12355B]">
               UT Daerah <span className="text-[#005BAC]">*</span>
             </span>
-            <input required className={fieldClass} placeholder="Masukkan UT Daerah" />
+            <input
+              required
+              value={utDaerah}
+              onChange={(event) => {
+                setUtDaerah(event.target.value)
+                if (error) setError('')
+              }}
+              className={fieldClass}
+              placeholder="Masukkan UT Daerah"
+            />
           </label>
 
           <div className="border border-[#D9E2EC] bg-[#F7F9FC] px-4 py-3">
