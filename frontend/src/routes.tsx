@@ -8,6 +8,7 @@ import { AdminWorkflowHistoryScreen } from './features/admin/screens/AdminWorkfl
 import { AdminWorkflowQueueScreen } from './features/admin/screens/AdminWorkflowQueueScreen'
 import { AdminDashboardScreen } from './features/admin/screens/AdminDashboardScreen'
 import { DetailReportScreen } from './features/student/screens/DetailReportScreen'
+import { CompleteReportScreen } from './features/student/screens/CompleteReportScreen'
 import { CreateReportScreen } from './features/student/screens/CreateReportScreen'
 import { DashboardScreen } from './features/student/screens/DashboardScreen'
 import { ReportHistoryScreen } from './features/student/screens/ReportHistoryScreen'
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
       { path: 'buat-laporan', Component: CreateReportScreen },
       { path: 'riwayat-laporan', Component: ReportHistoryScreen },
       { path: 'riwayat-laporan/detail-laporan', Component: DetailReportScreen },
+      { path: 'riwayat-laporan/lengkapi-laporan', Component: CompleteReportScreen },
       { path: 'profil', Component: ProfileScreen },
     ],
   },

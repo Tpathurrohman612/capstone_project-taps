@@ -125,7 +125,7 @@ export const workflowSeed: WorkflowReport[] = [
     className: '01',
     tutor: 'Dr. Rina Kusuma, M.M.',
     submitted: '12 September 2026',
-    status: 'Diproses',
+    status: 'Sedang Diproses',
     updates: [
       {
         time: '13 September 2026, 10:15',

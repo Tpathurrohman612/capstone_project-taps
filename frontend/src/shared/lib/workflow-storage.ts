@@ -1,20 +1,18 @@
-import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from '../types/workflow'
+import type { WorkflowReport, WorkflowUpdate } from '../types/workflow'
+import { isReportStatus } from '../domain/report-status'
 import { workflowSeed } from '../data/workflow-seed'
 
 const workflowStorageKey = 'lapor-tuton-admin-workflow'
 const workflowStorageVersionKey = 'lapor-tuton-admin-workflow-version'
-const workflowStorageVersion = '8'
+// Dinaikkan ke 9 karena status "Diproses" berganti nama menjadi "Sedang
+// Diproses" sesuai Tabel 4.1. Rekaman lama memakai nama lama dan akan gagal
+// validasi, sehingga versi perlu naik agar data lama dibuang terkendali
+// daripada memunculkan peringatan data rusak.
+export const WORKFLOW_STORAGE_VERSION = '9'
+const workflowStorageVersion = WORKFLOW_STORAGE_VERSION
 const workflowStorageBackupKey = 'lapor-tuton-admin-workflow-corrupt-backup'
 const workflowStorageWarningKey = 'taps-workflow-storage-warning'
 const workflowStorageWarningEvent = 'taps:workflow-storage-warning'
-
-const validStatuses: WorkflowStatus[] = [
-  'Diterima',
-  'Diverifikasi',
-  'Menunggu Validasi',
-  'Diproses',
-  'Selesai',
-]
 
 export class WorkflowStorageError extends Error {
   constructor(message: string) {
@@ -51,8 +49,7 @@ const isWorkflowReport = (value: unknown): value is WorkflowReport => {
   }
 
   if (
-    typeof value.status !== 'string' ||
-    !validStatuses.includes(value.status as WorkflowStatus) ||
+    !isReportStatus(value.status) ||
     !Array.isArray(value.updates) ||
     !value.updates.every(isWorkflowUpdate)
   ) {

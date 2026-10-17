@@ -15,7 +15,7 @@ export const getStudentHistoryReports = (): HistoryReport[] => {
     .map<HistoryReport>((report) => ({
       id: report.id,
       title: report.title,
-      status: report.status === 'Diproses' ? 'Sedang Diproses' : report.status,
+      status: report.status,
       category: report.category,
       courseType: report.courseType ?? 'Teori/Umum',
       course: report.course,

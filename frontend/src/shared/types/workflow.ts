@@ -1,9 +1,11 @@
-export type WorkflowStatus =
-  | 'Diterima'
-  | 'Diverifikasi'
-  | 'Menunggu Validasi'
-  | 'Diproses'
-  | 'Selesai'
+import type { ReportStatus } from '../domain/report-status'
+
+/**
+ * Status laporan. Definisinya tunggal, berada di shared/domain/report-status.ts
+ * sebagai penerjemahan Tabel 4.1 proposal, dan dialiaskan di sini supaya kode
+ * lama yang mengimpor WorkflowStatus tidak perlu diubah serentak.
+ */
+export type WorkflowStatus = ReportStatus
 
 export type WorkflowUpdate = {
   time: string

@@ -5,6 +5,7 @@ import { getStudentHistoryReports } from '../lib/history-reports'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
+import type { ReportStatus } from '../../../shared/domain/report-status'
 
 export function DetailReportScreen() {
   const navigate = useNavigate()
@@ -14,14 +15,21 @@ export function DetailReportScreen() {
     getStudentHistoryReports().find((item) => item.id === selectedReportId) ?? historyReports[0]
   const [courseCode, courseName] = report.course.split(' · ')
   const administratorReport = getWorkflowReports().find((item) => item.id === report.id)
-  const currentStage = {
+  // Lini masa menampilkan lima tahap alur utama. Dua status percabangan
+  // dipetakan ke tahap tempat percabangan itu terjadi: keduanya bercabang dari
+  // Diterima, sehingga keduanya berhenti di tahap 0. Record ditulis lengkap
+  // dan bertipe, agar penambahan status pada Tabel 4.1 memunculkan galat
+  // kompilasi di sini daripada diam-diam menghasilkan nilai undefined.
+  const stageByStatus: Record<ReportStatus, number> = {
     Diterima: 0,
-    'Perlu Verifikasi': 0,
+    'Perlu Informasi Tambahan': 0,
+    Ditolak: 0,
     Diverifikasi: 1,
     'Menunggu Validasi': 2,
     'Sedang Diproses': 3,
     Selesai: 4,
-  }[report.status]
+  }
+  const currentStage = stageByStatus[report.status]
   const statusUpdateTitles: Record<string, string[]> = {
     Diterima: ['Laporan diterima'],
     Diverifikasi: ['Laporan diverifikasi'],
@@ -279,7 +287,7 @@ export function DetailReportScreen() {
           </ol>
         </section>
       </div>
-      <div className="mt-8 border-t border-[#D9E2EC] pt-6">
+      <div className="mt-8 flex flex-wrap gap-3 border-t border-[#D9E2EC] pt-6">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -287,6 +295,18 @@ export function DetailReportScreen() {
         >
           ← Kembali ke Riwayat Laporan
         </button>
+
+        {/* Jalur DET --> LENG pada Gambar 3.6, hanya muncul pada status yang
+            memang dapat dilengkapi menurut Tabel 4.2. */}
+        {report.status === 'Perlu Informasi Tambahan' && (
+          <button
+            type="button"
+            onClick={() => navigate(`/riwayat-laporan/lengkapi-laporan?report=${report.id}`)}
+            className="inline-flex items-center gap-3 bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#004987]"
+          >
+            Lengkapi Laporan
+          </button>
+        )}
       </div>
     </section>
   )

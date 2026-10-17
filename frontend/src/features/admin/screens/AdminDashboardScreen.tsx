@@ -39,7 +39,7 @@ export function AdminDashboardScreen() {
     ...report,
     date: report.submitted,
     action: report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail',
-    status: report.status === 'Diproses' ? 'Sedang Diproses' : report.status,
+    status: report.status === 'Sedang Diproses' ? 'Sedang Diproses' : report.status,
   })
   const dashboardOrder = [
     'LT-2026-0008',
@@ -248,7 +248,8 @@ export function AdminDashboardScreen() {
               ],
               [
                 String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Diproses').length,
+                  dashboardWorkflowReports.filter((report) => report.status === 'Sedang Diproses')
+                    .length,
                 ).padStart(2, '0'),
                 'Sedang Diproses',
                 'Dalam tindak lanjut',

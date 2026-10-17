@@ -25,12 +25,19 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   )
 }
 
-export const workflowStatusClass = (status: WorkflowStatus) =>
-  status === 'Selesai'
-    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
-    : status === 'Diproses' || status === 'Diterima'
-      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
-      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
+// Record lengkap dan bertipe: menambah status pada Tabel 4.1 akan memunculkan
+// galat kompilasi di sini, sehingga tidak ada status yang tampil tanpa warna.
+const statusClassByStatus: Record<WorkflowStatus, string> = {
+  Diterima: 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
+  'Perlu Informasi Tambahan': 'border-[#E8B882] bg-[#FDF3E8] text-[#8A4B12]',
+  Ditolak: 'border-[#E3AFAB] bg-[#FDF0EF] text-[#B42318]',
+  Diverifikasi: 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
+  'Menunggu Validasi': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
+  'Sedang Diproses': 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
+  Selesai: 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]',
+}
+
+export const workflowStatusClass = (status: WorkflowStatus) => statusClassByStatus[status]
 
 export function AdminWorkflowShell({
   activeIndex,
@@ -277,7 +284,7 @@ export function WorkflowTable({
                 <span
                   className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                 >
-                  {context === 'queue' && report.status === 'Diproses'
+                  {context === 'queue' && report.status === 'Sedang Diproses'
                     ? 'Sedang Diproses'
                     : report.status}
                 </span>
@@ -307,7 +314,7 @@ export function WorkflowTable({
                   <span
                     className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                   >
-                    {context === 'queue' && report.status === 'Diproses'
+                    {context === 'queue' && report.status === 'Sedang Diproses'
                       ? 'Sedang Diproses'
                       : report.status}
                   </span>

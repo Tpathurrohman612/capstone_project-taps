@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { workflowSeed } from '../data/workflow-seed'
-import { getWorkflowReports, saveWorkflowReports, WorkflowStorageError } from './workflow-storage'
+import {
+  getWorkflowReports,
+  saveWorkflowReports,
+  WorkflowStorageError,
+  WORKFLOW_STORAGE_VERSION,
+} from './workflow-storage'
 
 const REPORTS_KEY = 'lapor-tuton-admin-workflow'
 const VERSION_KEY = 'lapor-tuton-admin-workflow-version'
@@ -73,7 +78,7 @@ describe('workflow-storage', () => {
   it('migrates version 6 without overwriting saved report statuses', () => {
     const existingReports = structuredClone(workflowSeed)
     existingReports.find((report) => report.id === 'LT-2026-0005')!.status = 'Diverifikasi'
-    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Diproses'
+    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Sedang Diproses'
 
     browser.values.set(REPORTS_KEY, JSON.stringify(existingReports))
     browser.values.set(VERSION_KEY, '6')
@@ -81,8 +86,8 @@ describe('workflow-storage', () => {
     const result = getWorkflowReports()
 
     expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Diverifikasi')
-    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Diproses')
-    expect(browser.values.get(VERSION_KEY)).toBe('8')
+    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Sedang Diproses')
+    expect(browser.values.get(VERSION_KEY)).toBe(WORKFLOW_STORAGE_VERSION)
   })
 
   it('preserves malformed JSON and creates a backup instead of overwriting it', () => {
