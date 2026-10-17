@@ -1,9 +1,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import type { WorkflowReport } from '../../../shared/types/workflow'
-import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
+import { submitReport } from '../../../shared/data/report-store'
 import { useStudentIdentity } from '../lib/student-identity'
 
 function Field({
@@ -51,6 +49,7 @@ export function CreateReportScreen() {
   const [files, setFiles] = useState<File[]>([])
   const [guideOpen, setGuideOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionComplete, setSubmissionComplete] = useState(false)
   const [submittedReportId, setSubmittedReportId] = useState('')
@@ -75,7 +74,7 @@ export function CreateReportScreen() {
     setFiles((current) => [...current, ...incoming].slice(0, 5))
     event.target.value = ''
   }
-  const submitReport = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (isSubmitting || submissionComplete || submissionPending.current) return
 
@@ -111,6 +110,7 @@ export function CreateReportScreen() {
     }
 
     setErrors({})
+    setSubmitError('')
 
     // Laporan tanpa pemilik tidak dapat disaring kembali kepada pembuatnya,
     // sehingga identitas wajib lengkap sebelum laporan disimpan. Selama
@@ -124,19 +124,6 @@ export function CreateReportScreen() {
       return
     }
 
-    const studentNim = identity.ownerKey
-
-    const workflowReports = getWorkflowReports()
-    const nextReportNumber =
-      Math.max(
-        0,
-        ...workflowReports.map((report) => {
-          const match = report.id.match(/^LT-2026-(\d{4})$/)
-          return match ? Number(match[1]) : 0
-        }),
-      ) + 1
-    const reportId = `LT-2026-${String(nextReportNumber).padStart(4, '0')}`
-    const createdAt = new Date()
     const attachmentDetails = files.map((file) => {
       const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
       return {
@@ -145,35 +132,37 @@ export function CreateReportScreen() {
         size: `${Math.max(1, Math.ceil(file.size / 1024))} KB`,
       }
     })
-    const studentFaculty = identity.fakultas
-    const newReport: WorkflowReport = {
-      id: reportId,
-      studentNim,
-      title: String(data.get('title')),
-      category: String(data.get('category')),
-      course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
-      className: String(data.get('className')),
-      tutor: String(data.get('tutor')),
-      submitted: formatIndonesianDate(createdAt),
-      status: 'Diterima',
-      courseType: String(data.get('courseType')),
-      ...(studentFaculty ? { studentFaculty } : {}),
-      duration: String(data.get('duration')),
-      description: String(data.get('description')),
-      attachments: attachmentDetails,
-      updates: [
-        {
-          time: formatIndonesianDateTime(createdAt),
-          title: 'Laporan diterima',
-          text: 'Laporan berhasil diterima oleh sistem Lapor Tuton.',
-        },
-      ],
-    }
+
+    // Penyimpanan melalui report-store, bukan langsung ke sessionStorage.
+    // Dengan begitu laporan masuk ke Cloud Firestore ketika Firebase
+    // terkonfigurasi, dan tetap tersimpan di peramban ketika belum.
+    let reportId: string
     try {
-      saveWorkflowReports([...workflowReports, newReport])
-    } catch {
+      reportId = await submitReport({
+        ownerKey: identity.ownerKey,
+        input: {
+          judul: String(data.get('title')),
+          kategori: String(data.get('category')),
+          course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
+          kelas: String(data.get('className')),
+          tutor: String(data.get('tutor')),
+          jenisMataKuliah: String(data.get('courseType')),
+          durasi: String(data.get('duration')),
+          deskripsi: String(data.get('description')),
+          ...(identity.fakultas ? { fakultas: identity.fakultas } : {}),
+          ...(identity.programStudi ? { prodi: identity.programStudi } : {}),
+          attachments: attachmentDetails,
+        },
+      })
+    } catch (penyebab) {
+      setSubmitError(
+        penyebab instanceof Error
+          ? penyebab.message
+          : 'Laporan gagal dikirim. Periksa koneksi lalu coba lagi.',
+      )
       return
     }
+
     setSubmittedReportId(reportId)
     submissionPending.current = true
     setIsSubmitting(true)
@@ -204,7 +193,7 @@ export function CreateReportScreen() {
           Panduan Pengisian
         </button>
       </header>
-      <form className="mt-8 space-y-8" noValidate onSubmit={submitReport}>
+      <form className="mt-8 space-y-8" noValidate onSubmit={(event) => void handleSubmit(event)}>
         <section className="border border-[#D9E2EC] bg-white" aria-labelledby="info-laporan">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
@@ -420,6 +409,14 @@ export function CreateReportScreen() {
             )}
           </div>
         </section>
+        {submitError && (
+          <p
+            role="alert"
+            className="border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+          >
+            {submitError}
+          </p>
+        )}
         <div className="flex justify-end gap-3 border-t border-[#D9E2EC] pt-6 max-[500px]:flex-col-reverse">
           <button
             type="button"

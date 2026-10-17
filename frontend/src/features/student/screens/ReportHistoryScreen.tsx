@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { getStudentHistoryReports } from '../lib/history-reports'
+import { useStudentReports } from '../lib/use-student-reports'
 import { statusBadge } from '../lib/status-badge'
-import { useStudentIdentity } from '../lib/student-identity'
 
 export function ReportHistoryScreen() {
-  const identity = useStudentIdentity()
+  const { riwayat, memuat: memuatLaporan } = useStudentReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
-  const visibleReports = getStudentHistoryReports(identity.ownerKey).filter(
+  const visibleReports = riwayat.filter(
     (report) =>
       (status === 'Semua' || report.status === status) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
@@ -112,9 +111,16 @@ export function ReportHistoryScreen() {
         </div>
         {visibleReports.length === 0 && (
           <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
-            <p className="font-slab text-xl text-[#12355B]">Laporan tidak ditemukan</p>
+            {/* Selama laporan masih diambil dari basis data, menampilkan
+                "tidak ditemukan" akan menyesatkan: datanya belum tiba, bukan
+                tidak ada. */}
+            <p className="font-slab text-xl text-[#12355B]">
+              {memuatLaporan ? 'Memuat laporan…' : 'Laporan tidak ditemukan'}
+            </p>
             <p className="mt-2 text-sm text-[#52657A]">
-              Coba ubah kata kunci atau status laporan Anda.
+              {memuatLaporan
+                ? 'Mengambil laporan Anda dari basis data.'
+                : 'Coba ubah kata kunci atau status laporan Anda.'}
             </p>
           </div>
         )}

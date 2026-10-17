@@ -2,17 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { studentNotifications, type StudentNotification } from '../data/notifications'
 import type { HistoryReport } from '../../../shared/types/history-report'
-import { getStudentHistoryReports } from '../lib/history-reports'
+import { useStudentReports } from '../lib/use-student-reports'
 import { statusBadge } from '../lib/status-badge'
-import { useStudentIdentity } from '../lib/student-identity'
 
 export function DashboardScreen() {
-  const identity = useStudentIdentity()
+  const { riwayat, memuat: memuatLaporan, identity } = useStudentReports()
   const [selectedReport, setSelectedReport] = useState<HistoryReport | null>(null)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<StudentNotification[]>(studentNotifications)
   const navigate = useNavigate()
-  const studentReports = getStudentHistoryReports(identity.ownerKey)
+  const studentReports = riwayat
   const recentReports = studentReports.slice(0, 3)
   const unreadNotifications = notifications.filter((notification) => notification.unread).length
 
@@ -131,21 +130,25 @@ export function DashboardScreen() {
         <div className="mt-8 grid grid-cols-[repeat(3,minmax(0,1fr))] border border-[#D9E2EC] max-[760px]:grid-cols-1">
           {[
             [
-              String(studentReports.length).padStart(2, '0'),
+              memuatLaporan ? '—' : String(studentReports.length).padStart(2, '0'),
               'Total Laporan',
               'Seluruh laporan Anda',
             ],
             [
-              String(
-                studentReports.filter((report) => report.status === 'Sedang Diproses').length,
-              ).padStart(2, '0'),
+              memuatLaporan
+                ? '—'
+                : String(
+                    studentReports.filter((report) => report.status === 'Sedang Diproses').length,
+                  ).padStart(2, '0'),
               'Sedang Diproses',
               'Menunggu tindak lanjut',
             ],
             [
-              String(
-                studentReports.filter((report) => report.status === 'Selesai').length,
-              ).padStart(2, '0'),
+              memuatLaporan
+                ? '—'
+                : String(
+                    studentReports.filter((report) => report.status === 'Selesai').length,
+                  ).padStart(2, '0'),
               'Selesai',
               'Telah ditangani',
             ],

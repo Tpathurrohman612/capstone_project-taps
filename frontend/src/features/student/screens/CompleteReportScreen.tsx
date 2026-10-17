@@ -1,11 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { getStudentHistoryReports } from '../lib/history-reports'
+import { useStudentReports } from '../lib/use-student-reports'
 import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { checkTransition } from '../../../shared/domain/report-status'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
-import { useStudentIdentity } from '../lib/student-identity'
 
 /**
  * Halaman Lengkapi Laporan.
@@ -16,14 +15,12 @@ import { useStudentIdentity } from '../lib/student-identity'
  * kelima Tabel 4.2 yang menetapkan Mahasiswa sebagai pemicunya.
  */
 export function CompleteReportScreen() {
-  const identity = useStudentIdentity()
+  const { riwayat } = useStudentReports()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
 
-  const report = getStudentHistoryReports(identity.ownerKey).find(
-    (item) => item.id === selectedReportId,
-  )
+  const report = riwayat.find((item) => item.id === selectedReportId)
   const [penjelasan, setPenjelasan] = useState('')
   const [error, setError] = useState('')
 
