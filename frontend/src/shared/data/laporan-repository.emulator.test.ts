@@ -465,7 +465,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
 
       const langkah: { ke: string; data?: Record<string, unknown> }[] = [
         { ke: 'Lolos Pemeriksaan' },
-        { ke: 'Diteruskan ke Fakultas', data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' } },
+        { ke: 'Diteruskan ke Fakultas', data: { unit_tujuan: 'FST', kanal_pengiriman: 'Email' } },
         {
           ke: 'Ditindaklanjuti',
           data: { hasil_validasi: 'Terbukti', unit_validator: 'FST', catatan_validasi: 'Catatan' },
@@ -499,7 +499,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       expect(hasil.size).toBe(1)
       expect(hasil.docs[0]?.data()).toMatchObject({
         unit_tujuan: 'FST',
-        kanal_pengiriman: 'Surel',
+        kanal_pengiriman: 'Email',
         uid_pengirim: UID_ADMIN,
       })
     })
@@ -641,7 +641,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       { ke: 'Lolos Pemeriksaan' as const, data: undefined },
       {
         ke: 'Diteruskan ke Fakultas' as const,
-        data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
+        data: { unit_tujuan: 'FST', kanal_pengiriman: 'Email' },
       },
       {
         ke: 'Ditindaklanjuti' as const,

@@ -249,7 +249,7 @@ describe('syarat wajib tiap perpindahan', () => {
       dari: 'Lolos Pemeriksaan',
       ke: 'Diteruskan ke Fakultas',
       oleh: 'Administrator',
-      data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
+      data: { unit_tujuan: 'FST', kanal_pengiriman: 'Email' },
     })
     expect(lengkap.diizinkan).toBe(true)
   })
@@ -305,7 +305,7 @@ describe('alur penuh sesuai Activity Diagram', () => {
       {
         ke: 'Diteruskan ke Fakultas',
         oleh: 'Administrator',
-        data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
+        data: { unit_tujuan: 'FST', kanal_pengiriman: 'Email' },
       },
       {
         ke: 'Ditindaklanjuti',

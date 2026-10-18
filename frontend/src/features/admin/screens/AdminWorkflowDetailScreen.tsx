@@ -256,7 +256,7 @@ export function AdminWorkflowDetailScreen() {
         next === 'Diteruskan ke Fakultas'
           ? {
               unit_tujuan: report.studentFaculty ?? 'Fakultas/Unit terkait',
-              kanal_pengiriman: 'Surel',
+              kanal_pengiriman: 'Email',
             }
           : next === 'Ditindaklanjuti'
             ? {
@@ -628,7 +628,7 @@ export function AdminWorkflowDetailScreen() {
                   {[
                     ['Nama Mahasiswa', pelapor.nama],
                     ['NIM', pelapor.nim],
-                    ['Surel', pelapor.email],
+                    ['Email', pelapor.email],
                     ['Fakultas', pelapor.fakultas],
                     ['Program Studi', pelapor.programStudi],
                     ['UT Daerah', pelapor.utDaerah],

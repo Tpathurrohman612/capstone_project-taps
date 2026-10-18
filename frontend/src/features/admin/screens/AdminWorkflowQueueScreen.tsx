@@ -167,7 +167,7 @@ export function AdminWorkflowQueueScreen() {
           'Data laporan dikirim Administrator melalui kanal eksternal untuk proses validasi.',
         data: {
           unit_tujuan: report.studentFaculty ?? 'Fakultas/Unit terkait',
-          kanal_pengiriman: 'Surel',
+          kanal_pengiriman: 'Email',
         },
       })
 
