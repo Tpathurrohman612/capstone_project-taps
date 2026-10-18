@@ -255,7 +255,7 @@ export function CreateReportScreen() {
                 defaultValue=""
                 onChange={() => clearError('category')}
                 aria-invalid={Boolean(errors.category)}
-                className={inputClass('category')}
+                className={`${inputClass('category')} pr-8`}
               >
                 <option value="" disabled>
                   Pilih kategori permasalahan
@@ -272,7 +272,7 @@ export function CreateReportScreen() {
                 defaultValue=""
                 onChange={() => clearError('courseType')}
                 aria-invalid={Boolean(errors.courseType)}
-                className={inputClass('courseType')}
+                className={`${inputClass('courseType')} pr-8`}
               >
                 <option value="" disabled>
                   Pilih jenis mata kuliah

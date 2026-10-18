@@ -193,7 +193,7 @@ export function IdentitySetupScreen() {
                 setFaculty(event.target.value as Faculty)
                 if (error) setError('')
               }}
-              className={fieldClass}
+              className={`${fieldClass} pr-8`}
             >
               <option value="" disabled>
                 Pilih fakultas

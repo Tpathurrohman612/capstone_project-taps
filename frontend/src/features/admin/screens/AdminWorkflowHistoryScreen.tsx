@@ -33,7 +33,7 @@ export function AdminWorkflowHistoryScreen() {
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option>Semua</option>
               <option>Selesai</option>

@@ -136,7 +136,7 @@ export function AdminWorkflowQueueScreen() {
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option>Semua</option>
               <option>Diterima</option>
@@ -152,7 +152,7 @@ export function AdminWorkflowQueueScreen() {
             <select
               value={faculty}
               onChange={(event) => setFaculty(event.target.value)}
-              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option>Semua</option>
               {FACULTIES.map((item) => (
@@ -167,7 +167,7 @@ export function AdminWorkflowQueueScreen() {
             <select
               value={courseType}
               onChange={(event) => setCourseType(event.target.value)}
-              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option value="Semua">Semua Jenis</option>
               <option>Teori/Umum</option>

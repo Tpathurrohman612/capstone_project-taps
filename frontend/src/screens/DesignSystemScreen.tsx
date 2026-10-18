@@ -189,7 +189,7 @@ export function DesignSystemScreen() {
                     <span className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
                       SELECT
                     </span>
-                    <select className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm">
+                    <select className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm">
                       <option>Semua status</option>
                     </select>
                   </label>

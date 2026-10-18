@@ -34,7 +34,7 @@ export function ReportHistoryScreen() {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+            className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
           >
             <option>Semua</option>
             <option>Diterima</option>
