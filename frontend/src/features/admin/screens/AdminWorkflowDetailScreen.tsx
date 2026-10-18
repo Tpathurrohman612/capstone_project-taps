@@ -334,6 +334,11 @@ export function AdminWorkflowDetailScreen() {
       data: {
         hasil_validasi: result,
         unit_validator: report.studentFaculty ?? 'Fakultas/Unit terkait',
+        // Catatan validasi sebelumnya hanya masuk ke keterangan riwayat,
+        // sehingga entitas validasi pada ERD menyimpan hasilnya tanpa
+        // penjelasannya, dan mahasiswa membacanya hanya sebagai satu kalimat
+        // panjang pada lini masa.
+        ...(note ? { catatan_validasi: note } : {}),
       },
     })
 
