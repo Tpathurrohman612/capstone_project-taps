@@ -198,10 +198,6 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/laporan/$(idLaporan)).data;
     }
 
-    function bolehBacaLaporan(idLaporan) {
-      return isAdmin() || (isSignedIn() && laporanInduk(idLaporan).uid_pelapor == request.auth.uid);
-    }
-
     match /riwayat_status_laporan/{id} {
       allow get, list: if isSignedIn();
       // Pencatat wajib dirinya sendiri, sehingga riwayat tidak dapat
