@@ -20,6 +20,11 @@ export function AdminWorkflowDetailScreen() {
    * wajib dipanggil tanpa syarat dan mendahului setiap return. */
   const [aksiError, setAksiError] = useState('')
 
+  /** Cabang penanganan yang sedang dikonfirmasi: ditolak atau minta kelengkapan. */
+  const [cabang, setCabang] = useState<'Ditolak' | 'Perlu Informasi Tambahan' | null>(null)
+  const [cabangAlasan, setCabangAlasan] = useState('')
+  const [cabangError, setCabangError] = useState('')
+
   /**
    * Riwayat perubahan status laporan.
    *
@@ -224,6 +229,44 @@ export function AdminWorkflowDetailScreen() {
     setAksiError('')
     setModalOpen(false)
   }
+  /**
+   * Menjalankan cabang penolakan atau permintaan kelengkapan.
+   *
+   * Tabel 4.2 menetapkan alasan wajib diisi untuk keduanya, dan lapisan data
+   * menolak perpindahannya bila kosong. Pemeriksaan di sini hanya agar
+   * pesannya muncul sebelum permintaan dikirim.
+   */
+  const jalankanCabang = async () => {
+    if (!cabang) return
+
+    const alasan = cabangAlasan.trim()
+    if (!alasan) {
+      setCabangError('Alasan wajib diisi.')
+      return
+    }
+
+    const hasil = await ubahStatus({
+      report,
+      ke: cabang,
+      keterangan:
+        cabang === 'Ditolak'
+          ? `Laporan ditolak. Alasan: ${alasan}`
+          : `Administrator meminta kelengkapan. Alasan: ${alasan}`,
+      data: { alasan },
+    })
+
+    if (!hasil.berhasil) {
+      setCabang(null)
+      setCabangError('')
+      setAksiError(hasil.alasan)
+      return
+    }
+
+    setCabang(null)
+    setCabangAlasan('')
+    setCabangError('')
+  }
+
   const recordValidation = async () => {
     const result = validationResult.trim()
     if (!result) {
@@ -399,6 +442,48 @@ export function AdminWorkflowDetailScreen() {
                   >
                     {actionLabel}
                   </button>
+                </div>
+              )}
+
+              {/* Dua cabang pada Activity Diagram Gambar 3.2 yang sebelumnya
+                    tidak memiliki tombol sama sekali. Keduanya hanya tersedia
+                    pada status Diterima, karena hanya dari situ Tabel 4.2
+                    mengizinkan perpindahannya. */}
+              {report.status === 'Diterima' && (
+                <div className="mt-5 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
+                  <div>
+                    <p className="text-sm font-semibold text-[#12355B]">
+                      Laporan belum dapat diverifikasi
+                    </p>
+                    <p className="mt-1 text-sm text-[#52657A]">
+                      Minta kelengkapan bila informasinya kurang, atau tolak bila laporan tidak
+                      memenuhi syarat. Keduanya menuntut alasan.
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-3 max-[620px]:mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAksiError('')
+                        setCabangError('')
+                        setCabang('Perlu Informasi Tambahan')
+                      }}
+                      className="border border-[#8A4B12] px-4 py-3 text-sm font-semibold text-[#8A4B12] transition hover:bg-[#8A4B12] hover:text-white"
+                    >
+                      Minta Kelengkapan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAksiError('')
+                        setCabangError('')
+                        setCabang('Ditolak')
+                      }}
+                      className="border border-[#B42318] px-4 py-3 text-sm font-semibold text-[#B42318] transition hover:bg-[#B42318] hover:text-white"
+                    >
+                      Tolak Laporan
+                    </button>
+                  </div>
                 </div>
               )}
               {/* Kegagalan tindakan ditempatkan tepat di bawah tombolnya,
@@ -764,6 +849,77 @@ export function AdminWorkflowDetailScreen() {
                 alt={pratinjau.nama}
                 className="mx-auto max-h-[70vh] w-auto max-w-full object-contain"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cabang && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-[#12355B]/30 p-5"
+        >
+          <div className="w-full max-w-lg border-2 border-[#12355B] bg-white p-6 shadow-[7px_7px_0_#12355B]">
+            <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
+              {cabang === 'Ditolak' ? 'PENOLAKAN LAPORAN' : 'PERMINTAAN KELENGKAPAN'}
+            </p>
+            <h2 className="mt-2 font-slab text-2xl text-[#12355B]">
+              {cabang === 'Ditolak' ? 'Tolak Laporan' : 'Minta Kelengkapan'}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[#52657A]">
+              {cabang === 'Ditolak'
+                ? 'Laporan yang ditolak tidak diproses lebih lanjut dan tidak dapat dikembalikan ke antrean.'
+                : 'Laporan dikembalikan kepada mahasiswa untuk dilengkapi, lalu masuk kembali ke antrean verifikasi.'}
+            </p>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-medium text-[#12355B]">
+                Alasan <span className="text-[#005BAC]">*</span>
+              </span>
+              <textarea
+                rows={4}
+                value={cabangAlasan}
+                onChange={(event) => {
+                  setCabangAlasan(event.target.value)
+                  if (cabangError) setCabangError('')
+                }}
+                className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]"
+                placeholder={
+                  cabang === 'Ditolak'
+                    ? 'Jelaskan mengapa laporan tidak memenuhi syarat'
+                    : 'Jelaskan informasi apa yang perlu dilengkapi mahasiswa'
+                }
+                aria-invalid={Boolean(cabangError)}
+              />
+            </label>
+
+            {cabangError && (
+              <p role="alert" className="mt-3 text-xs leading-5 text-[#B42318]">
+                {cabangError}
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setCabang(null)
+                  setCabangError('')
+                }}
+                className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void jalankanCabang()}
+                className={`px-4 py-2.5 text-sm font-semibold text-white ${
+                  cabang === 'Ditolak' ? 'bg-[#B42318]' : 'bg-[#8A4B12]'
+                }`}
+              >
+                {cabang === 'Ditolak' ? 'Tolak Laporan' : 'Minta Kelengkapan'}
+              </button>
             </div>
           </div>
         </div>

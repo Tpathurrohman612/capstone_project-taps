@@ -409,6 +409,100 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
     })
   })
 
+  describe('entitas penanganan pada ERD', () => {
+    async function sampaiStatus(ke: string, data?: Record<string, unknown>) {
+      const konteksMhs = sebagaiFirestore(env.authenticatedContext(UID))
+      const repoMhs = await muatRepository(konteksMhs)
+      const dibuat = await repoMhs.createLaporan({ uid: UID, data: dataLaporan })
+
+      vi.resetModules()
+      const konteksAdmin = sebagaiFirestore(env.authenticatedContext(UID_ADMIN))
+      const repoAdmin = await muatRepository(konteksAdmin)
+
+      const langkah: { ke: string; data?: Record<string, unknown> }[] = [
+        { ke: 'Diverifikasi' },
+        { ke: 'Menunggu Validasi', data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' } },
+        {
+          ke: 'Sedang Diproses',
+          data: { hasil_validasi: 'Terbukti', unit_validator: 'FST', catatan_validasi: 'Catatan' },
+        },
+        { ke: 'Selesai', data: { tindak_lanjut: 'Pembinaan tutor' } },
+      ]
+
+      for (const l of langkah) {
+        await repoAdmin.ubahStatusLaporan({
+          idLaporan: dibuat.id_laporan,
+          ke: l.ke as never,
+          oleh: 'Administrator',
+          uidPencatat: UID_ADMIN,
+          ...(l.data ? { data: l.data } : {}),
+        })
+        if (l.ke === ke) break
+      }
+
+      return { idLaporan: dibuat.id_laporan, db: konteksAdmin, data }
+    }
+
+    it('mencatat pengiriman validasi saat laporan menuju Menunggu Validasi', async () => {
+      // Riwayat mencatat bahwa statusnya berpindah; entitas inilah yang
+      // menyimpan unit tujuan dan kanal pengirimannya.
+      const { idLaporan, db } = await sampaiStatus('Menunggu Validasi')
+
+      const hasil = await getDocs(
+        query(collection(db, 'pengiriman_validasi'), where('id_laporan', '==', idLaporan)),
+      )
+
+      expect(hasil.size).toBe(1)
+      expect(hasil.docs[0]?.data()).toMatchObject({
+        unit_tujuan: 'FST',
+        kanal_pengiriman: 'Surel',
+        uid_pengirim: UID_ADMIN,
+      })
+    })
+
+    it('mencatat hasil validasi saat laporan menuju Sedang Diproses', async () => {
+      const { idLaporan, db } = await sampaiStatus('Sedang Diproses')
+
+      const hasil = await getDocs(
+        query(collection(db, 'validasi'), where('id_laporan', '==', idLaporan)),
+      )
+
+      expect(hasil.size).toBe(1)
+      expect(hasil.docs[0]?.data()).toMatchObject({
+        hasil_validasi: 'Terbukti',
+        unit_validator: 'FST',
+        keterangan: 'Catatan',
+      })
+    })
+
+    it('mencatat tindak lanjut saat laporan menuju Selesai', async () => {
+      const { idLaporan, db } = await sampaiStatus('Selesai')
+
+      const hasil = await getDocs(
+        query(collection(db, 'tindak_lanjut'), where('id_laporan', '==', idLaporan)),
+      )
+
+      expect(hasil.size).toBe(1)
+      expect(hasil.docs[0]?.data()).toMatchObject({
+        keterangan: 'Pembinaan tutor',
+        uid_pencatat: UID_ADMIN,
+      })
+    })
+
+    it('tidak mencatat entitas penanganan pada perpindahan yang tidak terkait', async () => {
+      // Verifikasi hanya memindahkan status; tidak ada pengiriman, validasi,
+      // maupun tindak lanjut yang terjadi pada langkah itu.
+      const { idLaporan, db } = await sampaiStatus('Diverifikasi')
+
+      for (const koleksi of ['pengiriman_validasi', 'validasi', 'tindak_lanjut']) {
+        const hasil = await getDocs(
+          query(collection(db, koleksi), where('id_laporan', '==', idLaporan)),
+        )
+        expect(hasil.size, `${koleksi} tidak seharusnya terisi`).toBe(0)
+      }
+    })
+  })
+
   it('menempuh alur penuh sampai Selesai', async () => {
     const konteksMhs = sebagaiFirestore(env.authenticatedContext(UID))
     const repoMhs = await muatRepository(konteksMhs)

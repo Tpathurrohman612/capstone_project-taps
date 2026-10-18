@@ -229,6 +229,9 @@ export async function getLaporan(idLaporan: string): Promise<Laporan | undefined
 }
 
 export const PENCACAH_COLLECTION = 'pencacah_laporan'
+export const PENGIRIMAN_COLLECTION = 'pengiriman_validasi'
+export const VALIDASI_COLLECTION = 'validasi'
+export const TINDAK_LANJUT_COLLECTION = 'tindak_lanjut'
 
 /**
  * Membuat laporan baru beserta catatan riwayat pertamanya.
@@ -372,6 +375,45 @@ export async function ubahStatusLaporan(params: {
       keterangan: params.keterangan ?? pemeriksaan.transisi.keterangan,
       tanggal_riwayat: serverTimestamp(),
     })
+
+    // Entitas penanganan pada ERD Gambar 3.3 ditulis bersama perpindahan
+    // statusnya, di dalam transaksi yang sama. Riwayat mencatat bahwa status
+    // berpindah; entitas inilah yang menyimpan rinciannya, dan tanpa itu
+    // keterangan penanganan hanya hidup sebagai kalimat di dalam riwayat.
+    const data = params.data ?? {}
+    const teks = (kunci: string): string =>
+      typeof data[kunci] === 'string' ? (data[kunci] as string) : ''
+
+    if (params.ke === 'Menunggu Validasi') {
+      transaction.set(doc(collection(db, PENGIRIMAN_COLLECTION)), {
+        id_laporan: params.idLaporan,
+        uid_pengirim: params.uidPencatat,
+        unit_tujuan: teks('unit_tujuan'),
+        kanal_pengiriman: teks('kanal_pengiriman'),
+        ...(teks('catatan') ? { catatan: teks('catatan') } : {}),
+        tanggal_kirim: serverTimestamp(),
+      })
+    }
+
+    if (params.ke === 'Sedang Diproses') {
+      transaction.set(doc(collection(db, VALIDASI_COLLECTION)), {
+        id_laporan: params.idLaporan,
+        uid_pencatat: params.uidPencatat,
+        unit_validator: teks('unit_validator'),
+        hasil_validasi: teks('hasil_validasi'),
+        ...(teks('catatan_validasi') ? { keterangan: teks('catatan_validasi') } : {}),
+        tanggal_validasi: serverTimestamp(),
+      })
+    }
+
+    if (params.ke === 'Selesai') {
+      transaction.set(doc(collection(db, TINDAK_LANJUT_COLLECTION)), {
+        id_laporan: params.idLaporan,
+        uid_pencatat: params.uidPencatat,
+        keterangan: teks('tindak_lanjut'),
+        tanggal_tindak_lanjut: serverTimestamp(),
+      })
+    }
   })
 
   return params.ke
