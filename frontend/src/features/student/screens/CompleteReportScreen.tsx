@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useStudentReports } from '../lib/use-student-reports'
 import { addAttachments, changeReportStatus } from '../../../shared/data/report-store'
@@ -11,6 +11,8 @@ import {
 import { formatFileSize } from '../../../shared/domain/attachment-rules'
 import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 import { useAuth } from '../../../shared/lib/auth-context'
+import { alasanStatus } from '../../../shared/lib/alasan-status'
+import { fetchReportUpdates } from '../../../shared/data/report-store'
 import { AttachmentPicker } from '../../../shared/components/AttachmentPicker'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
@@ -29,12 +31,36 @@ export function CompleteReportScreen() {
   const selectedReportId = new URLSearchParams(location.search).get('report')
 
   const report = reports.find((item) => item.id === selectedReportId)
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchReportUpdates(report)
+      .then((riwayat) => {
+        if (aktif) setAlasan(alasanStatus(riwayat, 'Perlu Informasi Tambahan'))
+      })
+      .catch(() => {
+        if (aktif) setAlasan(undefined)
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [report])
   const [penjelasan, setPenjelasan] = useState('')
   const [error, setError] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [fileError, setFileError] = useState('')
   const [mengirim, setMengirim] = useState(false)
   const { user } = useAuth()
+
+  /**
+   * Alasan Administrator meminta kelengkapan.
+   *
+   * Tanpa ini mahasiswa harus bolak-balik ke halaman detail untuk membaca apa
+   * yang sebenarnya diminta, padahal halaman inilah tempat ia menjawabnya.
+   */
+  const [alasan, setAlasan] = useState<string | undefined>(undefined)
 
   const fieldClass =
     'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]'
@@ -161,6 +187,15 @@ export function CompleteReportScreen() {
         Administrator meminta kelengkapan atas laporan ini. Setelah dikirim, status laporan kembali
         menjadi Diterima dan masuk antrean verifikasi.
       </p>
+
+      {alasan ? (
+        <div className="mt-5 border-l-2 border-[#C9A227] bg-[#FDF8EC] px-5 py-4">
+          <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
+            YANG DIMINTA ADMINISTRATOR
+          </p>
+          <p className="mt-2 text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">{alasan}</p>
+        </div>
+      ) : null}
 
       <div className="mt-7 border border-[#D9E2EC] bg-white px-6 max-[620px]:px-5">
         <ReadOnlyItem label="Nomor Laporan" value={report.id} />

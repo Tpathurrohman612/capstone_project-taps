@@ -11,6 +11,7 @@ import type { Penanganan } from '../../../shared/data/laporan-repository'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { alasanStatus } from '../../../shared/lib/alasan-status'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 import type { WorkflowReport } from '../../../shared/types/workflow'
@@ -194,6 +195,9 @@ export function DetailReportScreen() {
   // kosong, karena menampilkan berkas dan catatan milik data demo membuat
   // pengguna mengira unggahannya tersimpan padahal tidak.
   const detailFollowUps = riwayatStatus
+
+  /** Alasan Administrator untuk status laporan sekarang, bila ada. */
+  const alasanAdministrator = alasanStatus(riwayatStatus, report.status)
   const detailAttachments = attachments
   return (
     <>
@@ -312,6 +316,11 @@ export function DetailReportScreen() {
                   <p className="text-sm font-semibold text-[#12355B]">
                     Administrator meminta kelengkapan
                   </p>
+                  {alasanAdministrator ? (
+                    <p className="mt-2 border-l-2 border-[#C9A227] bg-[#FDF8EC] px-4 py-3 text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
+                      {alasanAdministrator}
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-sm leading-6 text-[#52657A]">
                     Laporan akan kembali masuk antrean verifikasi setelah kelengkapannya dikirim.
                   </p>
@@ -324,6 +333,24 @@ export function DetailReportScreen() {
                   >
                     Lengkapi Laporan
                   </button>
+                </div>
+              )}
+
+              {/* Laporan yang ditolak tidak dapat ditindaklanjuti mahasiswa,
+                    tetapi alasannya tetap harus terbaca. Tanpa ini mahasiswa
+                    hanya melihat laporannya berhenti tanpa penjelasan. */}
+              {report.status === 'Ditolak' && (
+                <div className="mt-6 border-t border-[#D9E2EC] pt-5">
+                  <p className="text-sm font-semibold text-[#12355B]">Laporan ditolak</p>
+                  {alasanAdministrator ? (
+                    <p className="mt-2 border-l-2 border-[#B42318] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
+                      {alasanAdministrator}
+                    </p>
+                  ) : null}
+                  <p className="mt-2 text-sm leading-6 text-[#52657A]">
+                    Laporan tidak diproses lebih lanjut. Bila keberatan, sampaikan melalui kanal
+                    layanan mahasiswa.
+                  </p>
                 </div>
               )}
             </div>
