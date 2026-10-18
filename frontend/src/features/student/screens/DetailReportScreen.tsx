@@ -11,10 +11,11 @@ import type { Penanganan } from '../../../shared/data/laporan-repository'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { ringkasanStatus } from '../../../shared/lib/ringkasan-status'
 import { waktuTahap } from '../../../shared/lib/waktu-tahap'
 import { alasanStatus, kelengkapanTerakhir } from '../../../shared/lib/alasan-status'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
-import type { ReportStatus } from '../../../shared/domain/report-status'
+import { STATUS_META, type ReportStatus } from '../../../shared/domain/report-status'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 
 export function DetailReportScreen() {
@@ -148,19 +149,22 @@ export function DetailReportScreen() {
 
   // Lini masa menampilkan lima tahap alur utama. Dua status percabangan
   // dipetakan ke tahap tempat percabangan itu terjadi: keduanya bercabang dari
-  // Diterima, sehingga keduanya berhenti di tahap 0. Record ditulis lengkap
+  // Menunggu Pemeriksaan, sehingga keduanya berhenti di tahap 0. Record ditulis lengkap
   // dan bertipe, agar penambahan status pada Tabel 4.1 memunculkan galat
   // kompilasi di sini daripada diam-diam menghasilkan nilai undefined.
   const stageByStatus: Record<ReportStatus, number> = {
-    Diterima: 0,
-    'Perlu Informasi Tambahan': 0,
+    'Menunggu Pemeriksaan': 0,
+    'Perlu Dilengkapi': 0,
     Ditolak: 0,
-    Diverifikasi: 1,
-    'Menunggu Validasi': 2,
-    'Sedang Diproses': 3,
+    'Lolos Pemeriksaan': 1,
+    'Diteruskan ke Fakultas': 2,
+    Ditindaklanjuti: 3,
     Selesai: 4,
   }
   const currentStage = stageByStatus[report.status]
+
+  /** Status sekarang beserta apa yang terjadi berikutnya. */
+  const ringkasan = ringkasanStatus(report.status)
   const timelineTime = (label: string, index: number) =>
     waktuTahap({
       riwayat: riwayatStatus,
@@ -171,6 +175,7 @@ export function DetailReportScreen() {
   const detailStatusStages = statusStages.map((stage, index) => ({
     ...stage,
     time: timelineTime(stage.label, index),
+    arti: STATUS_META[stage.label as ReportStatus]?.arti ?? '',
     // Laporan yang ditolak berhenti pada tahap tempatnya ditolak. Menandainya
     // sebagai tahap berjalan membuat lini status terbaca seolah laporan masih
     // diproses, padahal tidak ada lagi yang akan terjadi.
@@ -242,6 +247,24 @@ export function DetailReportScreen() {
               </h2>
             </div>
             <div className="p-6 max-[620px]:p-5">
+              {/* Lini tahap menunjukkan di mana laporan berada, tetapi tidak
+                  menjawab pertanyaan yang sebenarnya diajukan: siapa yang sedang
+                  memegang laporan saya, dan apa yang terjadi berikutnya. Penjelasan
+                  Tabel 4.1 sudah ada sejak awal, hanya tidak pernah ditampilkan. */}
+              <div className="mb-7 border border-[#B8D3E8] bg-[#EEF5FB] px-5 py-4">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-[#52657A]">
+                  STATUS SEKARANG
+                </p>
+                <p className="mt-2 font-slab text-xl text-[#12355B]">{ringkasan.status}</p>
+                <p className="mt-1 text-sm leading-6 text-[#1F2937]">{ringkasan.arti}</p>
+                {ringkasan.selanjutnya ? (
+                  <p className="mt-3 border-t border-[#B8D3E8] pt-3 text-sm leading-6 text-[#52657A]">
+                    <span className="font-semibold text-[#12355B]">Selanjutnya: </span>
+                    {ringkasan.selanjutnya}
+                  </p>
+                ) : null}
+              </div>
+
               <ol className="hidden grid-cols-5 md:grid">
                 {detailStatusStages.map((stage, index) => (
                   <li key={stage.label} className="relative pr-4 last:pr-0">
@@ -274,6 +297,7 @@ export function DetailReportScreen() {
                     >
                       {stage.label}
                     </p>
+                    <p className="mt-1 text-xs leading-5 text-[#52657A]">{stage.arti}</p>
                     <p className="mt-1 max-w-[130px] text-xs leading-5 text-[#52657A]">
                       {stage.time}
                     </p>
@@ -313,6 +337,7 @@ export function DetailReportScreen() {
                       >
                         {stage.label}
                       </p>
+                      <p className="mt-1 text-xs leading-5 text-[#52657A]">{stage.arti}</p>
                       <p className="mt-1 text-xs text-[#52657A]">{stage.time}</p>
                     </div>
                   </li>
@@ -323,7 +348,7 @@ export function DetailReportScreen() {
                     bagian status, bukan di kaki halaman, karena statusnya
                     sendiri yang menerangkan mengapa tombol ini ada; di kaki
                     halaman tombol itu terlewat tanpa pernah terbaca. */}
-              {report.status === 'Perlu Informasi Tambahan' && (
+              {report.status === 'Perlu Dilengkapi' && (
                 <div className="mt-6 border-t border-[#D9E2EC] pt-5">
                   <p className="text-sm font-semibold text-[#12355B]">
                     Administrator meminta kelengkapan

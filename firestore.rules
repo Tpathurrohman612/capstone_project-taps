@@ -151,11 +151,11 @@ service cloud.firestore {
       allow get, list: if isAdmin() || laporanMilikSendiri();
 
       // Mahasiswa membuat laporan atas namanya sendiri, dan status awal wajib
-      // Diterima sesuai baris pertama Tabel 4.2. Dengan begitu tidak ada
+      // Menunggu Pemeriksaan sesuai baris pertama Tabel 4.2. Dengan begitu tidak ada
       // laporan yang lahir langsung berstatus Selesai.
       allow create: if isSignedIn()
         && request.resource.data.uid_pelapor == request.auth.uid
-        && request.resource.data.id_status == 'Diterima'
+        && request.resource.data.id_status == 'Menunggu Pemeriksaan'
         && teksWajar(request.resource.data.nomor_laporan, 32)
         && teksWajar(request.resource.data.judul_laporan, 200)
         && teksOpsionalWajar(request.resource.data, 'deskripsi', 5000)
@@ -183,10 +183,10 @@ service cloud.firestore {
       // memindahkan kepemilikan.
       allow update: if (isAdmin() && resource.data.uid_pelapor != request.auth.uid)
         || (laporanMilikSendiri()
-            && resource.data.id_status == 'Perlu Informasi Tambahan'
+            && resource.data.id_status == 'Perlu Dilengkapi'
             && request.resource.data.uid_pelapor == resource.data.uid_pelapor
             && request.resource.data.nomor_laporan == resource.data.nomor_laporan
-            && request.resource.data.id_status == 'Diterima');
+            && request.resource.data.id_status == 'Menunggu Pemeriksaan');
 
       // Laporan tidak pernah dihapus; riwayatnya adalah bukti penanganan.
       allow delete: if false;

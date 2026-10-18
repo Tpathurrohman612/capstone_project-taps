@@ -86,7 +86,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
       await setDoc(doc(db, 'laporan', 'laporan-milik-satu'), {
         nomor_laporan: 'LT-2026-0001',
         uid_pelapor: UID_MAHASISWA,
-        id_status: 'Diterima',
+        id_status: 'Menunggu Pemeriksaan',
         judul_laporan: 'Tutor belum memberi umpan balik',
       })
 
@@ -137,7 +137,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
       await env.withSecurityRulesDisabled(async (konteks) => {
         await setDoc(doc(konteks.firestore(), 'laporan', 'laporan-rusak'), {
           nomor_laporan: 'LT-2026-9999',
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           judul_laporan: 'Dokumen tanpa pemilik',
         })
       })
@@ -156,7 +156,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
         setDoc(doc(dbMahasiswa(), 'laporan', 'laporan-baru'), {
           nomor_laporan: 'LT-2026-0002',
           uid_pelapor: UID_MAHASISWA,
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           judul_laporan: 'Diskusi tidak ditanggapi',
         }),
       )
@@ -167,15 +167,15 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
         setDoc(doc(dbMahasiswa(), 'laporan', 'laporan-palsu'), {
           nomor_laporan: 'LT-2026-0003',
           uid_pelapor: UID_MAHASISWA_LAIN,
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           judul_laporan: 'Atas nama orang lain',
         }),
       )
     })
 
-    it('menolak laporan yang lahir dengan status selain Diterima', async () => {
+    it('menolak laporan yang lahir dengan status selain Menunggu Pemeriksaan', async () => {
       // Baris pertama Tabel 4.2 menetapkan laporan baru selalu berstatus
-      // Diterima, sehingga tidak ada laporan yang melompati verifikasi.
+      // Menunggu Pemeriksaan, sehingga tidak ada laporan yang melompati verifikasi.
       await assertFails(
         setDoc(doc(dbMahasiswa(), 'laporan', 'laporan-lompat'), {
           nomor_laporan: 'LT-2026-0004',
@@ -191,7 +191,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('mengizinkan Administrator mengubah status laporan', async () => {
       await assertSucceeds(
         updateDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Diverifikasi',
+          id_status: 'Lolos Pemeriksaan',
         }),
       )
     })
@@ -199,7 +199,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('menolak mahasiswa memverifikasi laporannya sendiri', async () => {
       await assertFails(
         updateDoc(doc(dbMahasiswa(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Diverifikasi',
+          id_status: 'Lolos Pemeriksaan',
         }),
       )
     })
@@ -207,13 +207,13 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('mengizinkan mahasiswa melengkapi laporan yang diminta kelengkapannya', async () => {
       await env.withSecurityRulesDisabled(async (konteks) => {
         await updateDoc(doc(konteks.firestore(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Perlu Informasi Tambahan',
+          id_status: 'Perlu Dilengkapi',
         })
       })
 
       await assertSucceeds(
         updateDoc(doc(dbMahasiswa(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           nomor_laporan: 'LT-2026-0001',
           uid_pelapor: UID_MAHASISWA,
         }),
@@ -223,13 +223,13 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('menolak mahasiswa memindahkan kepemilikan laporannya', async () => {
       await env.withSecurityRulesDisabled(async (konteks) => {
         await updateDoc(doc(konteks.firestore(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Perlu Informasi Tambahan',
+          id_status: 'Perlu Dilengkapi',
         })
       })
 
       await assertFails(
         updateDoc(doc(dbMahasiswa(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           nomor_laporan: 'LT-2026-0001',
           uid_pelapor: UID_MAHASISWA_LAIN,
         }),
@@ -250,7 +250,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
         await setDoc(doc(konteks.firestore(), 'laporan', 'laporan-milik-admin'), {
           nomor_laporan: 'LT-2026-0500',
           uid_pelapor: UID_ADMIN,
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           judul_laporan: 'Laporan yang dibuat sebelum diangkat',
         })
       })
@@ -259,7 +259,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('menolak Administrator memverifikasi laporannya sendiri', async () => {
       await assertFails(
         updateDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-admin'), {
-          id_status: 'Diverifikasi',
+          id_status: 'Lolos Pemeriksaan',
         }),
       )
     })
@@ -267,7 +267,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     it('tetap mengizinkan Administrator memverifikasi laporan orang lain', async () => {
       await assertSucceeds(
         updateDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-satu'), {
-          id_status: 'Diverifikasi',
+          id_status: 'Lolos Pemeriksaan',
         }),
       )
     })
@@ -304,7 +304,7 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     const laporanDasar = {
       nomor_laporan: 'LT-2026-0600',
       uid_pelapor: UID_MAHASISWA,
-      id_status: 'Diterima',
+      id_status: 'Menunggu Pemeriksaan',
       judul_laporan: 'Judul wajar',
     }
 

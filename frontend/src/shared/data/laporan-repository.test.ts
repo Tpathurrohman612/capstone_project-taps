@@ -17,7 +17,7 @@ const dokumenLengkap = {
   nomor_laporan: 'LT-2026-0007',
   uid_pelapor: 'uid-mahasiswa',
   id_kategori: 'umpan-balik',
-  id_status: 'Diterima',
+  id_status: 'Menunggu Pemeriksaan',
   nama_tutor: 'Budi Santoso',
   judul_laporan: 'Tutor belum memberi umpan balik',
   deskripsi: 'Tugas 1 belum dinilai sampai minggu keenam.',
@@ -40,7 +40,7 @@ describe('toLaporan', () => {
       id_laporan: 'abc123',
       nomor_laporan: 'LT-2026-0007',
       uid_pelapor: 'uid-mahasiswa',
-      id_status: 'Diterima',
+      id_status: 'Menunggu Pemeriksaan',
       judul_laporan: 'Tutor belum memberi umpan balik',
       kode_mata_kuliah: 'MSIM4301',
       fakultas_pelapor: 'Fakultas Sains dan Teknologi',
@@ -53,7 +53,7 @@ describe('toLaporan', () => {
     const hasil = toLaporan('minimal', {
       nomor_laporan: 'LT-2026-0001',
       uid_pelapor: 'uid',
-      id_status: 'Diterima',
+      id_status: 'Menunggu Pemeriksaan',
       judul_laporan: 'Judul',
       tanggal_laporan: tanggal,
     })

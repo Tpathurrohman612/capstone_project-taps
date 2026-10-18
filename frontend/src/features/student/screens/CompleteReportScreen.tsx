@@ -25,7 +25,7 @@ import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
  *
  * Mewujudkan langkah "Melengkapi laporan" pada Activity Diagram dan halaman
  * dengan nama sama pada Gambar 3.6. Halaman ini satu-satunya cara laporan
- * berstatus Perlu Informasi Tambahan kembali menjadi Diterima, sesuai baris
+ * berstatus Perlu Dilengkapi kembali menjadi Menunggu Pemeriksaan, sesuai baris
  * kelima Tabel 4.2 yang menetapkan Mahasiswa sebagai pemicunya.
  */
 export function CompleteReportScreen() {
@@ -43,7 +43,7 @@ export function CompleteReportScreen() {
       .then((riwayat) => {
         if (!aktif) return
 
-        setAlasan(alasanStatus(riwayat, 'Perlu Informasi Tambahan'))
+        setAlasan(alasanStatus(riwayat, 'Perlu Dilengkapi'))
 
         // Isian diisi lebih dahulu dengan keterangan terakhir mahasiswa,
         // sehingga permintaan kelengkapan berikutnya menyunting keterangan
@@ -96,10 +96,14 @@ export function CompleteReportScreen() {
     )
   }
 
-  // Laporan yang tidak berstatus Perlu Informasi Tambahan tidak boleh
+  // Laporan yang tidak berstatus Perlu Dilengkapi tidak boleh
   // dilengkapi. Pemeriksaan memakai aturan Tabel 4.2, bukan perbandingan
   // status yang ditulis ulang di layar ini.
-  const izin = checkTransition({ dari: report.status, ke: 'Diterima', oleh: 'Mahasiswa' })
+  const izin = checkTransition({
+    dari: report.status,
+    ke: 'Menunggu Pemeriksaan',
+    oleh: 'Mahasiswa',
+  })
 
   if (!izin.diizinkan) {
     return (
@@ -137,7 +141,7 @@ export function CompleteReportScreen() {
     // aturan keamanan memeriksanya lagi di server.
     const pemeriksaan = checkTransition({
       dari: report.status,
-      ke: 'Diterima',
+      ke: 'Menunggu Pemeriksaan',
       oleh: 'Mahasiswa',
     })
 
@@ -177,7 +181,7 @@ export function CompleteReportScreen() {
       await changeReportStatus({
         docId: report.docId,
         reportNumber: report.id,
-        ke: 'Diterima',
+        ke: 'Menunggu Pemeriksaan',
         oleh: 'Mahasiswa',
         uidPencatat: user.uid,
         keterangan: `${PREFIKS_KELENGKAPAN} ${penjelasan.trim()}`,
@@ -198,7 +202,7 @@ export function CompleteReportScreen() {
       <h1 className="mt-3 font-slab text-3xl leading-none text-[#12355B]">{report.title}</h1>
       <p className="mt-3 text-sm leading-6 text-[#52657A]">
         Administrator meminta kelengkapan atas laporan ini. Setelah dikirim, status laporan kembali
-        menjadi Diterima dan masuk antrean verifikasi.
+        menjadi Menunggu Pemeriksaan dan masuk antrean verifikasi.
       </p>
 
       {alasan ? (

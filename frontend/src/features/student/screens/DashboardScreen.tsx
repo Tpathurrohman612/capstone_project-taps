@@ -146,9 +146,9 @@ export function DashboardScreen() {
               memuatLaporan
                 ? '—'
                 : String(
-                    studentReports.filter((report) => report.status === 'Sedang Diproses').length,
+                    studentReports.filter((report) => report.status === 'Ditindaklanjuti').length,
                   ).padStart(2, '0'),
-              'Sedang Diproses',
+              'Ditindaklanjuti',
               'Menunggu tindak lanjut',
             ],
             [

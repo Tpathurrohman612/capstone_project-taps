@@ -13,12 +13,12 @@
  */
 
 export const REPORT_STATUSES = [
-  'Diterima',
-  'Perlu Informasi Tambahan',
+  'Menunggu Pemeriksaan',
+  'Perlu Dilengkapi',
   'Ditolak',
-  'Diverifikasi',
-  'Menunggu Validasi',
-  'Sedang Diproses',
+  'Lolos Pemeriksaan',
+  'Diteruskan ke Fakultas',
+  'Ditindaklanjuti',
   'Selesai',
 ] as const
 
@@ -37,12 +37,12 @@ export type StatusMeta = {
 
 /** Tabel 4.1 Daftar Status Laporan. */
 export const STATUS_META: Readonly<Record<ReportStatus, StatusMeta>> = {
-  Diterima: {
+  'Menunggu Pemeriksaan': {
     urutan: 1,
-    arti: 'Laporan masuk dan menunggu verifikasi Administrator',
+    arti: 'Laporan sudah masuk dan menunggu diperiksa Administrator',
     terminal: false,
   },
-  'Perlu Informasi Tambahan': {
+  'Perlu Dilengkapi': {
     urutan: 2,
     arti: 'Laporan dikembalikan kepada Mahasiswa untuk dilengkapi',
     terminal: false,
@@ -52,24 +52,24 @@ export const STATUS_META: Readonly<Record<ReportStatus, StatusMeta>> = {
     arti: 'Laporan tidak memenuhi syarat dan tidak diproses lebih lanjut',
     terminal: true,
   },
-  Diverifikasi: {
+  'Lolos Pemeriksaan': {
     urutan: 4,
-    arti: 'Laporan lolos verifikasi dan siap dikirim untuk validasi',
+    arti: 'Laporan lolos pemeriksaan Administrator dan siap diteruskan',
     terminal: false,
   },
-  'Menunggu Validasi': {
+  'Diteruskan ke Fakultas': {
     urutan: 5,
-    arti: 'Data laporan telah dikirim ke Fakultas/Unit terkait',
+    arti: 'Laporan sudah diteruskan ke Fakultas/Unit terkait dan menunggu tanggapan',
     terminal: false,
   },
-  'Sedang Diproses': {
+  Ditindaklanjuti: {
     urutan: 6,
-    arti: 'Hasil validasi telah dicatat dan laporan ditindaklanjuti',
+    arti: 'Tanggapan Fakultas/Unit sudah diterima dan laporan sedang ditindaklanjuti',
     terminal: false,
   },
   Selesai: {
     urutan: 7,
-    arti: 'Laporan selesai ditangani dan tindak lanjut telah dicatat',
+    arti: 'Laporan selesai ditangani dan tindak lanjutnya sudah dicatat',
     terminal: true,
   },
 }
@@ -91,55 +91,55 @@ export type StatusTransition = {
 export const STATUS_TRANSITIONS: readonly StatusTransition[] = [
   {
     dari: null,
-    ke: 'Diterima',
+    ke: 'Menunggu Pemeriksaan',
     dipicuOleh: 'Mahasiswa',
     keterangan: 'Mahasiswa mengirim laporan',
     syaratWajib: [],
   },
   {
-    dari: 'Diterima',
-    ke: 'Diverifikasi',
+    dari: 'Menunggu Pemeriksaan',
+    ke: 'Lolos Pemeriksaan',
     dipicuOleh: 'Administrator',
-    keterangan: 'Administrator memverifikasi',
+    keterangan: 'Administrator memeriksa dan meloloskan laporan',
     syaratWajib: [],
   },
   {
-    dari: 'Diterima',
-    ke: 'Perlu Informasi Tambahan',
+    dari: 'Menunggu Pemeriksaan',
+    ke: 'Perlu Dilengkapi',
     dipicuOleh: 'Administrator',
     keterangan: 'Administrator meminta kelengkapan',
     syaratWajib: ['alasan'],
   },
   {
-    dari: 'Diterima',
+    dari: 'Menunggu Pemeriksaan',
     ke: 'Ditolak',
     dipicuOleh: 'Administrator',
     keterangan: 'Administrator menolak',
     syaratWajib: ['alasan'],
   },
   {
-    dari: 'Perlu Informasi Tambahan',
-    ke: 'Diterima',
+    dari: 'Perlu Dilengkapi',
+    ke: 'Menunggu Pemeriksaan',
     dipicuOleh: 'Mahasiswa',
     keterangan: 'Mahasiswa melengkapi laporan',
     syaratWajib: [],
   },
   {
-    dari: 'Diverifikasi',
-    ke: 'Menunggu Validasi',
+    dari: 'Lolos Pemeriksaan',
+    ke: 'Diteruskan ke Fakultas',
     dipicuOleh: 'Administrator',
-    keterangan: 'Administrator mengirim hasil ekspor dan mencatat pengiriman',
+    keterangan: 'Administrator meneruskan laporan ke Fakultas/Unit terkait',
     syaratWajib: ['unit_tujuan', 'kanal_pengiriman'],
   },
   {
-    dari: 'Menunggu Validasi',
-    ke: 'Sedang Diproses',
+    dari: 'Diteruskan ke Fakultas',
+    ke: 'Ditindaklanjuti',
     dipicuOleh: 'Administrator',
     keterangan: 'Administrator mencatat hasil validasi',
     syaratWajib: ['hasil_validasi', 'unit_validator'],
   },
   {
-    dari: 'Sedang Diproses',
+    dari: 'Ditindaklanjuti',
     ke: 'Selesai',
     dipicuOleh: 'Administrator',
     keterangan: 'Administrator mencatat tindak lanjut',

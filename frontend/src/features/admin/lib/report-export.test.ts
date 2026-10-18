@@ -21,7 +21,7 @@ const laporan = (ubah: Partial<WorkflowReport> = {}): WorkflowReport => ({
   className: '01',
   tutor: 'Budi Santoso',
   submitted: '18 Oktober 2026',
-  status: 'Diverifikasi',
+  status: 'Lolos Pemeriksaan',
   updates: [],
   courseType: 'Teori/Umum',
   studentFaculty: 'Fakultas Sains dan Teknologi',

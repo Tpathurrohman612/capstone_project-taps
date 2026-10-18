@@ -12,7 +12,7 @@ import { notificationMessage, type ReportNotification } from './notification-rep
 const notifikasi = (ubah: Partial<ReportNotification> = {}): ReportNotification => ({
   id: 'riwayat-1',
   idLaporan: 'dok-laporan-1',
-  status: 'Diverifikasi',
+  status: 'Lolos Pemeriksaan',
   keterangan: '',
   waktu: new Date('2026-10-18T03:00:00Z'),
   dibacaPada: undefined,
@@ -54,10 +54,10 @@ describe('notificationMessage', () => {
 
   it('menyusun kalimat untuk setiap status tanpa menyisakan nilai kosong', () => {
     for (const status of [
-      'Perlu Informasi Tambahan',
+      'Perlu Dilengkapi',
       'Ditolak',
-      'Menunggu Validasi',
-      'Sedang Diproses',
+      'Diteruskan ke Fakultas',
+      'Ditindaklanjuti',
     ] as const) {
       const pesan = notificationMessage(notifikasi({ status }), 'LT-2026-0001')
       expect(pesan).toContain(status)

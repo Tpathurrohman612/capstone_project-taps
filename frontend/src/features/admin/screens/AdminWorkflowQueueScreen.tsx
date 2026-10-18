@@ -30,7 +30,7 @@ export function AdminWorkflowQueueScreen() {
   const exportReports = allReports.filter(
     (report) =>
       faculty !== 'Semua' &&
-      report.status === 'Diverifikasi' &&
+      report.status === 'Lolos Pemeriksaan' &&
       report.studentFaculty === faculty &&
       (courseType === 'Semua' || report.courseType === courseType),
   )
@@ -52,7 +52,7 @@ export function AdminWorkflowQueueScreen() {
       // mengira ekspornya rusak, padahal memang tidak ada yang cocok.
       setKirimError(
         'Tidak ada laporan yang dapat diekspor. Ekspor hanya mencakup laporan ' +
-          'berstatus Diverifikasi pada fakultas yang dipilih.',
+          'berstatus Lolos Pemeriksaan pada fakultas yang dipilih.',
       )
       return
     }
@@ -64,7 +64,7 @@ export function AdminWorkflowQueueScreen() {
   /**
    * Mencatat pengiriman data ke Fakultas/Unit terkait.
    *
-   * Perpindahan ke Menunggu Validasi menuntut unit tujuan dan kanal
+   * Perpindahan ke Diteruskan ke Fakultas menuntut unit tujuan dan kanal
    * pengiriman menurut Tabel 4.2, sehingga keduanya disertakan. Laporan
    * diproses satu per satu karena masing-masing melewati pemeriksaan
    * kelayakannya sendiri; laporan yang tidak sah dilewati dan disebutkan,
@@ -77,7 +77,7 @@ export function AdminWorkflowQueueScreen() {
     for (const report of exportReports) {
       const hasil = await ubahStatus({
         report,
-        ke: 'Menunggu Validasi',
+        ke: 'Diteruskan ke Fakultas',
         keterangan:
           'Data laporan dikirim Administrator melalui kanal eksternal untuk proses validasi.',
         data: {
@@ -122,10 +122,10 @@ export function AdminWorkflowQueueScreen() {
               className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option>Semua</option>
-              <option>Diterima</option>
-              <option>Diverifikasi</option>
-              <option value="Diproses">Sedang Diproses</option>
-              <option>Menunggu Validasi</option>
+              <option>Menunggu Pemeriksaan</option>
+              <option>Lolos Pemeriksaan</option>
+              <option value="Diproses">Ditindaklanjuti</option>
+              <option>Diteruskan ke Fakultas</option>
             </select>
           </label>
           <label>
@@ -293,9 +293,9 @@ export function AdminWorkflowQueueScreen() {
               </div>
             </dl>
             <p className="mt-4 text-sm leading-6 text-[#52657A]">
-              Data yang diekspor mencakup laporan berstatus Diverifikasi dari Fakultas yang dipilih,
-              sesuai dengan filter jenis mata kuliah yang aktif, termasuk laporan dari satu atau
-              beberapa Program Studi.
+              Data yang diekspor mencakup laporan berstatus Lolos Pemeriksaan dari Fakultas yang
+              dipilih, sesuai dengan filter jenis mata kuliah yang aktif, termasuk laporan dari satu
+              atau beberapa Program Studi.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button

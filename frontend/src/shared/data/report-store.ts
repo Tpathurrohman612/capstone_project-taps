@@ -120,7 +120,7 @@ export async function submitReport(params: {
       month: 'long',
       year: 'numeric',
     }).format(new Date()),
-    status: 'Diterima',
+    status: 'Menunggu Pemeriksaan',
     updates: [],
     ...(params.input.jenisMataKuliah ? { courseType: params.input.jenisMataKuliah } : {}),
     ...(params.input.fakultas ? { studentFaculty: params.input.fakultas } : {}),

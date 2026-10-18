@@ -23,7 +23,7 @@ export function AdminWorkflowDetailScreen() {
   const [aksiError, setAksiError] = useState('')
 
   /** Cabang penanganan yang sedang dikonfirmasi: ditolak atau minta kelengkapan. */
-  const [cabang, setCabang] = useState<'Ditolak' | 'Perlu Informasi Tambahan' | null>(null)
+  const [cabang, setCabang] = useState<'Ditolak' | 'Perlu Dilengkapi' | null>(null)
   const [cabangAlasan, setCabangAlasan] = useState('')
   const [cabangError, setCabangError] = useState('')
 
@@ -138,26 +138,26 @@ export function AdminWorkflowDetailScreen() {
    * Sebelumnya diperiksa dengan mencocokkan judul catatan riwayat terhadap
    * kalimat yang hanya ada pada data contoh, sehingga pada data sungguhan
    * nilainya selalu salah. Pencatatan hasil validasi memindahkan laporan ke
-   * Sedang Diproses, dan status itulah penandanya.
+   * Ditindaklanjuti, dan status itulah penandanya.
    */
   const validationRecorded = riwayatStatus.some(
-    (update) => update.title === judulRiwayat('Sedang Diproses'),
+    (update) => update.title === judulRiwayat('Ditindaklanjuti'),
   )
 
   /** Kelengkapan terakhir yang dikirim mahasiswa. */
   const kelengkapan = kelengkapanTerakhir(riwayatStatus)
-  // Status akhir tidak dapat dipindahkan lagi, dan Perlu Informasi Tambahan
+  // Status akhir tidak dapat dipindahkan lagi, dan Perlu Dilengkapi
   // menunggu mahasiswa, bukan Administrator. Sebelumnya keduanya jatuh ke
   // cabang terakhir dan tetap menawarkan Perbarui Status, padahal lapisan data
   // dan aturan keamanan akan menolaknya.
   const actionLabel =
-    isTerminal(report.status) || report.status === 'Perlu Informasi Tambahan'
+    isTerminal(report.status) || report.status === 'Perlu Dilengkapi'
       ? null
-      : report.status === 'Diterima'
+      : report.status === 'Menunggu Pemeriksaan'
         ? 'Verifikasi Laporan'
-        : report.status === 'Diverifikasi'
+        : report.status === 'Lolos Pemeriksaan'
           ? 'Siapkan Validasi'
-          : report.status === 'Menunggu Validasi'
+          : report.status === 'Diteruskan ke Fakultas'
             ? validationRecorded
               ? 'Perbarui Status'
               : 'Catat Hasil Validasi'
@@ -171,10 +171,10 @@ export function AdminWorkflowDetailScreen() {
     if (report.status === 'Ditolak') return index === 0 ? 'rejected' : 'upcoming'
 
     const level = [
-      'Diterima',
-      'Diverifikasi',
-      'Menunggu Validasi',
-      'Sedang Diproses',
+      'Menunggu Pemeriksaan',
+      'Lolos Pemeriksaan',
+      'Diteruskan ke Fakultas',
+      'Ditindaklanjuti',
       'Selesai',
     ].indexOf(report.status)
     return index === 0
@@ -201,39 +201,39 @@ export function AdminWorkflowDetailScreen() {
     const next = mainFlowNext(report.status)
     if (!next) return
     const title =
-      next === 'Diverifikasi'
+      next === 'Lolos Pemeriksaan'
         ? 'Laporan diverifikasi'
-        : next === 'Menunggu Validasi'
+        : next === 'Diteruskan ke Fakultas'
           ? 'Validasi disiapkan'
-          : next === 'Sedang Diproses' && report.status === 'Menunggu Validasi'
+          : next === 'Ditindaklanjuti' && report.status === 'Diteruskan ke Fakultas'
             ? 'Laporan memasuki proses tindak lanjut'
-            : next === 'Sedang Diproses'
+            : next === 'Ditindaklanjuti'
               ? 'Laporan diproses'
               : 'Laporan selesai'
     const text =
-      next === 'Diverifikasi'
+      next === 'Lolos Pemeriksaan'
         ? 'Informasi laporan dan bukti pendukung telah diperiksa oleh pengelola.'
-        : next === 'Menunggu Validasi'
+        : next === 'Diteruskan ke Fakultas'
           ? 'Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait.'
-          : next === 'Sedang Diproses' && report.status === 'Menunggu Validasi'
+          : next === 'Ditindaklanjuti' && report.status === 'Diteruskan ke Fakultas'
             ? 'Hasil validasi telah diterima dan dicatat. Laporan memasuki proses tindak lanjut.'
-            : next === 'Sedang Diproses'
+            : next === 'Ditindaklanjuti'
               ? 'Laporan diteruskan kepada pengelola Tutorial Online untuk tindak lanjut.'
               : 'Tindak lanjut telah dilakukan dan laporan dinyatakan selesai.'
     // Syarat wajib tiap perpindahan diambil dari Tabel 4.2. Unit tujuan dan
-    // kanal pengiriman hanya relevan pada perpindahan ke Menunggu Validasi,
+    // kanal pengiriman hanya relevan pada perpindahan ke Diteruskan ke Fakultas,
     // sehingga disertakan bersyarat daripada selalu dikirim.
     const hasil = await ubahStatus({
       report,
       ke: next,
       keterangan: `${title}. ${text}`,
       data:
-        next === 'Menunggu Validasi'
+        next === 'Diteruskan ke Fakultas'
           ? {
               unit_tujuan: report.studentFaculty ?? 'Fakultas/Unit terkait',
               kanal_pengiriman: 'Surel',
             }
-          : next === 'Sedang Diproses'
+          : next === 'Ditindaklanjuti'
             ? {
                 hasil_validasi: 'Terbukti',
                 unit_validator: report.studentFaculty ?? 'Fakultas/Unit terkait',
@@ -302,7 +302,7 @@ export function AdminWorkflowDetailScreen() {
     const note = validationNote.trim()
     const hasil = await ubahStatus({
       report,
-      ke: 'Sedang Diproses',
+      ke: 'Ditindaklanjuti',
       keterangan:
         `Hasil validasi dari Fakultas/Unit terkait telah dicatat. Hasil validasi: ${result}` +
         (note ? `. Catatan validasi: ${note}` : ''),
@@ -354,13 +354,13 @@ export function AdminWorkflowDetailScreen() {
     setCompletionError('')
   }
   const openPrimaryAction = () => {
-    if (report.status === 'Sedang Diproses') {
+    if (report.status === 'Ditindaklanjuti') {
       setCompletionError('')
       setAksiError('')
       setCompletionModalOpen(true)
       return
     }
-    if (report.status === 'Menunggu Validasi' && !validationRecorded) {
+    if (report.status === 'Diteruskan ke Fakultas' && !validationRecorded) {
       setValidationError('')
       setAksiError('')
       setValidationModalOpen(true)
@@ -370,8 +370,14 @@ export function AdminWorkflowDetailScreen() {
   }
   const [code, courseName = report.course] = report.course.split(' · ')
   const displayStatus = (status: WorkflowStatus) =>
-    status === 'Sedang Diproses' ? 'Sedang Diproses' : status
-  const labels = ['Diterima', 'Diverifikasi', 'Menunggu Validasi', 'Sedang Diproses', 'Selesai']
+    status === 'Ditindaklanjuti' ? 'Ditindaklanjuti' : status
+  const labels = [
+    'Menunggu Pemeriksaan',
+    'Lolos Pemeriksaan',
+    'Diteruskan ke Fakultas',
+    'Ditindaklanjuti',
+    'Selesai',
+  ]
   const back =
     context === 'history' ? '/administrator/riwayat-laporan' : '/administrator/antrean-laporan'
   // Selama laporan belum tiba, layar jangan menampilkan laporan contoh dari
@@ -471,7 +477,7 @@ export function AdminWorkflowDetailScreen() {
                 </div>
               )}
 
-              {report.status === 'Perlu Informasi Tambahan' && (
+              {report.status === 'Perlu Dilengkapi' && (
                 <div className="mt-7 border-t border-[#D9E2EC] pt-5">
                   <p className="text-sm font-semibold text-[#12355B]">
                     Menunggu kelengkapan dari mahasiswa
@@ -488,13 +494,13 @@ export function AdminWorkflowDetailScreen() {
                   <div>
                     <p className="text-sm font-semibold text-[#12355B]">Tindakan Administrator</p>
                     <p className="mt-1 text-sm text-[#52657A]">
-                      {report.status === 'Diterima'
+                      {report.status === 'Menunggu Pemeriksaan'
                         ? 'Periksa informasi dan bukti pendukung sebelum melakukan verifikasi.'
-                        : report.status === 'Diverifikasi'
+                        : report.status === 'Lolos Pemeriksaan'
                           ? 'Laporan siap masuk ke proses validasi oleh Fakultas/Unit terkait.'
-                          : report.status === 'Menunggu Validasi'
+                          : report.status === 'Diteruskan ke Fakultas'
                             ? validationRecorded
-                              ? 'Hasil validasi telah dicatat dan laporan siap diperbarui ke status Sedang Diproses.'
+                              ? 'Hasil validasi telah dicatat dan laporan siap diperbarui ke status Ditindaklanjuti.'
                               : 'Hasil validasi dari Fakultas/Unit terkait telah diterima dan siap dicatat.'
                             : `Laporan siap diperbarui ke status ${displayStatus(mainFlowNext(report.status) ?? 'Selesai')}.`}
                     </p>
@@ -510,9 +516,9 @@ export function AdminWorkflowDetailScreen() {
 
               {/* Dua cabang pada Activity Diagram Gambar 3.2 yang sebelumnya
                     tidak memiliki tombol sama sekali. Keduanya hanya tersedia
-                    pada status Diterima, karena hanya dari situ Tabel 4.2
+                    pada status Menunggu Pemeriksaan, karena hanya dari situ Tabel 4.2
                     mengizinkan perpindahannya. */}
-              {report.status === 'Diterima' && (
+              {report.status === 'Menunggu Pemeriksaan' && (
                 <div className="mt-5 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
                   <div>
                     <p className="text-sm font-semibold text-[#12355B]">
@@ -529,7 +535,7 @@ export function AdminWorkflowDetailScreen() {
                       onClick={() => {
                         setAksiError('')
                         setCabangError('')
-                        setCabang('Perlu Informasi Tambahan')
+                        setCabang('Perlu Dilengkapi')
                       }}
                       className="border border-[#8A4B12] px-4 py-3 text-sm font-semibold text-[#8A4B12] transition hover:bg-[#8A4B12] hover:text-white"
                     >
@@ -747,10 +753,10 @@ export function AdminWorkflowDetailScreen() {
             </p>
             <h2 className="mt-3 font-slab text-2xl text-[#12355B]">{actionLabel}</h2>
             <p className="mt-3 text-sm leading-6 text-[#52657A]">
-              {report.status === 'Diterima'
+              {report.status === 'Menunggu Pemeriksaan'
                 ? 'Pastikan informasi dan bukti pendukung laporan telah diperiksa sebelum melakukan verifikasi.'
-                : report.status === 'Menunggu Validasi' && validationRecorded
-                  ? 'Status laporan akan diubah menjadi Sedang Diproses. Hasil validasi telah diterima dan dicatat. Laporan dapat dilanjutkan ke proses tindak lanjut.'
+                : report.status === 'Diteruskan ke Fakultas' && validationRecorded
+                  ? 'Status laporan akan diubah menjadi Ditindaklanjuti. Hasil validasi telah diterima dan dicatat. Laporan dapat dilanjutkan ke proses tindak lanjut.'
                   : `Lanjutkan perubahan status laporan menjadi ${displayStatus(mainFlowNext(report.status) ?? 'Selesai')}?`}
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
@@ -764,7 +770,7 @@ export function AdminWorkflowDetailScreen() {
                 onClick={() => void advance()}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
-                {report.status === 'Menunggu Validasi' && validationRecorded
+                {report.status === 'Diteruskan ke Fakultas' && validationRecorded
                   ? 'Simpan'
                   : actionLabel}
               </button>

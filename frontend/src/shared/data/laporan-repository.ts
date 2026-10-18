@@ -237,7 +237,7 @@ export const TINDAK_LANJUT_COLLECTION = 'tindak_lanjut'
 /**
  * Membuat laporan baru beserta catatan riwayat pertamanya.
  *
- * Status awal selalu Diterima sesuai baris pertama Tabel 4.2, dan hal itu
+ * Status awal selalu Menunggu Pemeriksaan sesuai baris pertama Tabel 4.2, dan hal itu
  * ditegakkan pula oleh firestore.rules sehingga tidak bergantung pada kode di
  * peramban. Penomoran dan penulisan dijalankan dalam satu transaksi agar dua
  * pengiriman bersamaan tidak memperoleh nomor yang sama.
@@ -277,14 +277,14 @@ export async function createLaporan(params: {
       ...params.data,
       nomor_laporan: nomor,
       uid_pelapor: params.uid,
-      id_status: 'Diterima' satisfies ReportStatus,
+      id_status: 'Menunggu Pemeriksaan' satisfies ReportStatus,
       tanggal_laporan: serverTimestamp(),
       tanggal_diperbarui: serverTimestamp(),
     })
 
     transaction.set(riwayatRef, {
       id_laporan: laporanRef.id,
-      id_status: 'Diterima' satisfies ReportStatus,
+      id_status: 'Menunggu Pemeriksaan' satisfies ReportStatus,
       uid_pencatat: params.uid,
       keterangan: 'Laporan dikirim mahasiswa',
       tanggal_riwayat: serverTimestamp(),
@@ -310,7 +310,7 @@ export async function createLaporan(params: {
     id_laporan: laporanRef.id,
     nomor_laporan: nomor,
     uid_pelapor: params.uid,
-    id_status: 'Diterima',
+    id_status: 'Menunggu Pemeriksaan',
     tanggal_laporan: sekarang,
   }
 }
@@ -385,7 +385,7 @@ export async function ubahStatusLaporan(params: {
     const teks = (kunci: string): string =>
       typeof data[kunci] === 'string' ? (data[kunci] as string) : ''
 
-    if (params.ke === 'Menunggu Validasi') {
+    if (params.ke === 'Diteruskan ke Fakultas') {
       transaction.set(doc(collection(db, PENGIRIMAN_COLLECTION)), {
         id_laporan: params.idLaporan,
         uid_pengirim: params.uidPencatat,
@@ -396,7 +396,7 @@ export async function ubahStatusLaporan(params: {
       })
     }
 
-    if (params.ke === 'Sedang Diproses') {
+    if (params.ke === 'Ditindaklanjuti') {
       transaction.set(doc(collection(db, VALIDASI_COLLECTION)), {
         id_laporan: params.idLaporan,
         uid_pencatat: params.uidPencatat,

@@ -29,7 +29,7 @@ function buatLaporan(pemilik: string, nomor: string): WorkflowReport {
     className: '01',
     tutor: 'Budi Santoso',
     submitted: '17 Oktober 2026',
-    status: 'Diterima',
+    status: 'Menunggu Pemeriksaan',
     updates: [],
   }
 }
@@ -119,7 +119,7 @@ describe('getStudentHistoryReports', () => {
       category: 'Aktivitas tutor',
       course: 'MSIM4301 · Rekayasa Perangkat Lunak',
       tutor: 'Budi Santoso',
-      status: 'Diterima',
+      status: 'Menunggu Pemeriksaan',
     })
   })
 
@@ -134,9 +134,9 @@ describe('getStudentHistoryReports', () => {
 
   it('meneruskan status apa pun tanpa mengubahnya', () => {
     const laporan = buatLaporan(UID, 'LT-2026-0001')
-    laporan.status = 'Perlu Informasi Tambahan'
+    laporan.status = 'Perlu Dilengkapi'
     mockGetWorkflowReports.mockReturnValue([laporan])
 
-    expect(getStudentHistoryReports(UID)[0]?.status).toBe('Perlu Informasi Tambahan')
+    expect(getStudentHistoryReports(UID)[0]?.status).toBe('Perlu Dilengkapi')
   })
 })

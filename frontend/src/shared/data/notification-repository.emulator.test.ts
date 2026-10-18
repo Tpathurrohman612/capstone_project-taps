@@ -85,14 +85,14 @@ describe.skipIf(!aktif)('notification-repository pada emulator', () => {
       await setDoc(doc(db, 'laporan', idLaporan), {
         nomor_laporan: 'LT-2026-0001',
         uid_pelapor: pemilik,
-        id_status: 'Diverifikasi',
+        id_status: 'Lolos Pemeriksaan',
         judul_laporan: 'Laporan uji',
         tanggal_laporan: new Date('2026-10-18T01:00:00Z'),
       })
 
       await setDoc(doc(db, 'riwayat_status_laporan', 'riwayat-kirim'), {
         id_laporan: idLaporan,
-        id_status: 'Diterima',
+        id_status: 'Menunggu Pemeriksaan',
         uid_pencatat: pemilik,
         keterangan: '',
         tanggal_riwayat: new Date('2026-10-18T01:00:00Z'),
@@ -100,7 +100,7 @@ describe.skipIf(!aktif)('notification-repository pada emulator', () => {
 
       await setDoc(doc(db, 'riwayat_status_laporan', 'riwayat-verifikasi'), {
         id_laporan: idLaporan,
-        id_status: 'Diverifikasi',
+        id_status: 'Lolos Pemeriksaan',
         uid_pencatat: 'administrator',
         keterangan: 'Laporan telah diverifikasi',
         tanggal_riwayat: new Date('2026-10-18T02:00:00Z'),
@@ -183,7 +183,7 @@ describe.skipIf(!aktif)('notification-repository pada emulator', () => {
     })
 
     expect(isi?.keterangan).toBe('Laporan telah diverifikasi')
-    expect(isi?.id_status).toBe('Diverifikasi')
+    expect(isi?.id_status).toBe('Lolos Pemeriksaan')
   })
 
   it('mengembalikan daftar kosong ketika pengguna belum punya laporan', async () => {
@@ -209,7 +209,7 @@ describe.skipIf(!aktif)('notification-repository pada emulator', () => {
       for (const id of idLaporan) {
         await setDoc(doc(db, 'riwayat_status_laporan', `riwayat-${id}`), {
           id_laporan: id,
-          id_status: 'Diverifikasi',
+          id_status: 'Lolos Pemeriksaan',
           uid_pencatat: 'administrator',
           keterangan: `Pembaruan ${id}`,
           tanggal_riwayat: new Date('2026-10-18T02:00:00Z'),

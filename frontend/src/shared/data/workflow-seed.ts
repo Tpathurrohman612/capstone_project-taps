@@ -50,7 +50,7 @@ export const workflowSeed: WorkflowReport[] = [
     className: '03',
     tutor: 'Hendra Wijaya, S.E., M.M.',
     submitted: '14 September 2026',
-    status: 'Menunggu Validasi',
+    status: 'Diteruskan ke Fakultas',
     updates: [
       {
         time: '14 September 2026, 14:30',
@@ -74,7 +74,7 @@ export const workflowSeed: WorkflowReport[] = [
     className: '02',
     tutor: 'Dewi Lestari, S.E., M.Ak.',
     submitted: '18 September 2026',
-    status: 'Diverifikasi',
+    status: 'Lolos Pemeriksaan',
     courseType: 'Teori/Umum',
     duration: '3–6 hari',
     description:
@@ -101,7 +101,7 @@ export const workflowSeed: WorkflowReport[] = [
     className: '02',
     tutor: 'Dewi Lestari, S.E., M.Ak.',
     submitted: '19 September 2026',
-    status: 'Diverifikasi',
+    status: 'Lolos Pemeriksaan',
     courseType: 'Teori/Umum',
     duration: '1 minggu atau lebih',
     description:
@@ -125,7 +125,7 @@ export const workflowSeed: WorkflowReport[] = [
     className: '01',
     tutor: 'Dr. Rina Kusuma, M.M.',
     submitted: '12 September 2026',
-    status: 'Sedang Diproses',
+    status: 'Ditindaklanjuti',
     updates: [
       {
         time: '13 September 2026, 10:15',

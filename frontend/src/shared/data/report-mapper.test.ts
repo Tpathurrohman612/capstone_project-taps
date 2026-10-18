@@ -12,7 +12,7 @@ const laporan: Laporan = {
   nomor_laporan: 'LT-2026-0007',
   uid_pelapor: 'uid-mahasiswa',
   id_kategori: 'Tutor tidak memberikan umpan balik',
-  id_status: 'Diterima',
+  id_status: 'Menunggu Pemeriksaan',
   nama_tutor: 'Budi Santoso',
   judul_laporan: 'Tugas 1 belum dinilai',
   deskripsi: 'Sudah minggu keenam dan nilai belum keluar.',
@@ -100,7 +100,7 @@ describe('laporanToWorkflowReport', () => {
       category: 'Tutor tidak memberikan umpan balik',
       className: '01',
       tutor: 'Budi Santoso',
-      status: 'Diterima',
+      status: 'Menunggu Pemeriksaan',
     })
   })
 
@@ -118,7 +118,7 @@ describe('laporanToWorkflowReport', () => {
       nomor_laporan: 'LT-2026-0001',
       uid_pelapor: 'uid',
       id_kategori: '',
-      id_status: 'Diterima',
+      id_status: 'Menunggu Pemeriksaan',
       nama_tutor: '',
       judul_laporan: 'Judul',
       tanggal_laporan: new Date('2026-01-01T00:00:00Z'),
@@ -197,7 +197,7 @@ describe('formToLaporanBaru', () => {
       id_laporan: 'dok',
       nomor_laporan: 'LT-2026-0010',
       uid_pelapor: 'uid',
-      id_status: 'Diterima',
+      id_status: 'Menunggu Pemeriksaan',
       tanggal_laporan: new Date('2026-10-17T08:00:00Z'),
     }
 

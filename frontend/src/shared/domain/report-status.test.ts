@@ -18,19 +18,19 @@ describe('daftar status (Tabel 4.1)', () => {
   it('memuat tepat tujuh status sesuai proposal', () => {
     expect(REPORT_STATUSES).toHaveLength(7)
     expect([...REPORT_STATUSES]).toEqual([
-      'Diterima',
-      'Perlu Informasi Tambahan',
+      'Menunggu Pemeriksaan',
+      'Perlu Dilengkapi',
       'Ditolak',
-      'Diverifikasi',
-      'Menunggu Validasi',
-      'Sedang Diproses',
+      'Lolos Pemeriksaan',
+      'Diteruskan ke Fakultas',
+      'Ditindaklanjuti',
       'Selesai',
     ])
   })
 
-  it('memakai nama "Sedang Diproses", bukan "Diproses"', () => {
+  it('memakai nama "Ditindaklanjuti", bukan "Diproses"', () => {
     // Prototipe awal memakai "Diproses" sehingga tidak cocok dengan Tabel 4.1.
-    expect(REPORT_STATUSES).toContain('Sedang Diproses')
+    expect(REPORT_STATUSES).toContain('Ditindaklanjuti')
     expect(REPORT_STATUSES as readonly string[]).not.toContain('Diproses')
   })
 
@@ -46,14 +46,14 @@ describe('daftar status (Tabel 4.1)', () => {
   })
 
   it('mengurutkan status sesuai kolom urutan', () => {
-    expect(statusesInOrder()[0]).toBe('Diterima')
+    expect(statusesInOrder()[0]).toBe('Menunggu Pemeriksaan')
     expect(statusesInOrder().at(-1)).toBe('Selesai')
   })
 })
 
 describe('pengenal nilai', () => {
   it('menerima status yang sah dan menolak selainnya', () => {
-    expect(isReportStatus('Menunggu Validasi')).toBe(true)
+    expect(isReportStatus('Diteruskan ke Fakultas')).toBe(true)
     expect(isReportStatus('Diproses')).toBe(false)
     expect(isReportStatus('')).toBe(false)
     expect(isReportStatus(undefined)).toBe(false)
@@ -74,7 +74,7 @@ describe('aturan perpindahan status (Tabel 4.2)', () => {
   it('hanya mengenal satu aturan pembuatan laporan baru', () => {
     const baru = STATUS_TRANSITIONS.filter((transition) => transition.dari === null)
     expect(baru).toHaveLength(1)
-    expect(baru[0]).toMatchObject({ ke: 'Diterima', dipicuOleh: 'Mahasiswa' })
+    expect(baru[0]).toMatchObject({ ke: 'Menunggu Pemeriksaan', dipicuOleh: 'Mahasiswa' })
   })
 
   it('tidak memuat aturan duplikat untuk pasangan dari-ke yang sama', () => {
@@ -112,10 +112,14 @@ describe('aturan perpindahan status (Tabel 4.2)', () => {
 })
 
 describe('cacat alur yang disoroti dosen', () => {
-  it('tidak mengizinkan laporan Ditolak kembali menjadi Diterima', () => {
+  it('tidak mengizinkan laporan Ditolak kembali menjadi Menunggu Pemeriksaan', () => {
     // Activity Diagram lama memungkinkan laporan yang ditolak masuk kembali ke
-    // alur verifikasi. Hanya Perlu Informasi Tambahan yang boleh kembali.
-    const hasil = checkTransition({ dari: 'Ditolak', ke: 'Diterima', oleh: 'Mahasiswa' })
+    // alur verifikasi. Hanya Perlu Dilengkapi yang boleh kembali.
+    const hasil = checkTransition({
+      dari: 'Ditolak',
+      ke: 'Menunggu Pemeriksaan',
+      oleh: 'Mahasiswa',
+    })
     expect(hasil.diizinkan).toBe(false)
     expect(nextStatuses('Ditolak')).toEqual([])
   })
@@ -127,21 +131,21 @@ describe('cacat alur yang disoroti dosen', () => {
     }
   })
 
-  it('mengizinkan Perlu Informasi Tambahan kembali menjadi Diterima oleh Mahasiswa', () => {
+  it('mengizinkan Perlu Dilengkapi kembali menjadi Menunggu Pemeriksaan oleh Mahasiswa', () => {
     const hasil = checkTransition({
-      dari: 'Perlu Informasi Tambahan',
-      ke: 'Diterima',
+      dari: 'Perlu Dilengkapi',
+      ke: 'Menunggu Pemeriksaan',
       oleh: 'Mahasiswa',
     })
     expect(hasil.diizinkan).toBe(true)
   })
 
   it('menyediakan jalur Tidak Ada Tanggapan tanpa status tambahan', () => {
-    // Fakultas yang tidak menjawab tetap berakhir di Sedang Diproses, dengan
+    // Fakultas yang tidak menjawab tetap berakhir di Ditindaklanjuti, dengan
     // ketiadaan tanggapan dicatat pada hasil_validasi.
     const hasil = checkTransition({
-      dari: 'Menunggu Validasi',
-      ke: 'Sedang Diproses',
+      dari: 'Diteruskan ke Fakultas',
+      ke: 'Ditindaklanjuti',
       oleh: 'Administrator',
       data: { hasil_validasi: 'Tidak Ada Tanggapan', unit_validator: 'FST' },
     })
@@ -151,24 +155,32 @@ describe('cacat alur yang disoroti dosen', () => {
 
 describe('pemeriksaan peran pemicu', () => {
   it('menolak Mahasiswa memverifikasi laporannya sendiri', () => {
-    const hasil = checkTransition({ dari: 'Diterima', ke: 'Diverifikasi', oleh: 'Mahasiswa' })
+    const hasil = checkTransition({
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Lolos Pemeriksaan',
+      oleh: 'Mahasiswa',
+    })
     expect(hasil).toEqual({
       diizinkan: false,
-      alasan: 'Perpindahan ke Diverifikasi hanya dapat dilakukan oleh Administrator.',
+      alasan: 'Perpindahan ke Lolos Pemeriksaan hanya dapat dilakukan oleh Administrator.',
     })
   })
 
   it('menolak Administrator melengkapi laporan menggantikan Mahasiswa', () => {
     const hasil = checkTransition({
-      dari: 'Perlu Informasi Tambahan',
-      ke: 'Diterima',
+      dari: 'Perlu Dilengkapi',
+      ke: 'Menunggu Pemeriksaan',
       oleh: 'Administrator',
     })
     expect(hasil.diizinkan).toBe(false)
   })
 
   it('menolak perpindahan yang tidak ada di tabel', () => {
-    const hasil = checkTransition({ dari: 'Diterima', ke: 'Selesai', oleh: 'Administrator' })
+    const hasil = checkTransition({
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Selesai',
+      oleh: 'Administrator',
+    })
     expect(hasil.diizinkan).toBe(false)
     if (!hasil.diizinkan) expect(hasil.alasan).toContain('tidak diizinkan')
   })
@@ -176,12 +188,16 @@ describe('pemeriksaan peran pemicu', () => {
 
 describe('syarat wajib tiap perpindahan', () => {
   it('menolak penolakan tanpa alasan', () => {
-    const tanpa = checkTransition({ dari: 'Diterima', ke: 'Ditolak', oleh: 'Administrator' })
+    const tanpa = checkTransition({
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Ditolak',
+      oleh: 'Administrator',
+    })
     expect(tanpa.diizinkan).toBe(false)
     if (!tanpa.diizinkan) expect(tanpa.alasan).toContain('alasan')
 
     const dengan = checkTransition({
-      dari: 'Diterima',
+      dari: 'Menunggu Pemeriksaan',
       ke: 'Ditolak',
       oleh: 'Administrator',
       data: { alasan: 'Bukti tidak relevan' },
@@ -191,8 +207,8 @@ describe('syarat wajib tiap perpindahan', () => {
 
   it('menolak permintaan kelengkapan tanpa alasan', () => {
     const hasil = checkTransition({
-      dari: 'Diterima',
-      ke: 'Perlu Informasi Tambahan',
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Perlu Dilengkapi',
       oleh: 'Administrator',
       data: {},
     })
@@ -201,7 +217,7 @@ describe('syarat wajib tiap perpindahan', () => {
 
   it('memperlakukan teks berisi spasi saja sebagai kosong', () => {
     const hasil = checkTransition({
-      dari: 'Diterima',
+      dari: 'Menunggu Pemeriksaan',
       ke: 'Ditolak',
       oleh: 'Administrator',
       data: { alasan: '   ' },
@@ -211,7 +227,7 @@ describe('syarat wajib tiap perpindahan', () => {
 
   it('memperlakukan null sebagai kosong', () => {
     const hasil = checkTransition({
-      dari: 'Diterima',
+      dari: 'Menunggu Pemeriksaan',
       ke: 'Ditolak',
       oleh: 'Administrator',
       data: { alasan: null },
@@ -219,10 +235,10 @@ describe('syarat wajib tiap perpindahan', () => {
     expect(hasil.diizinkan).toBe(false)
   })
 
-  it('menuntut unit tujuan dan kanal pengiriman sebelum Menunggu Validasi', () => {
+  it('menuntut unit tujuan dan kanal pengiriman sebelum Diteruskan ke Fakultas', () => {
     const kurang = checkTransition({
-      dari: 'Diverifikasi',
-      ke: 'Menunggu Validasi',
+      dari: 'Lolos Pemeriksaan',
+      ke: 'Diteruskan ke Fakultas',
       oleh: 'Administrator',
       data: { unit_tujuan: 'FST' },
     })
@@ -230,18 +246,18 @@ describe('syarat wajib tiap perpindahan', () => {
     if (!kurang.diizinkan) expect(kurang.alasan).toContain('kanal_pengiriman')
 
     const lengkap = checkTransition({
-      dari: 'Diverifikasi',
-      ke: 'Menunggu Validasi',
+      dari: 'Lolos Pemeriksaan',
+      ke: 'Diteruskan ke Fakultas',
       oleh: 'Administrator',
       data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
     })
     expect(lengkap.diizinkan).toBe(true)
   })
 
-  it('menuntut hasil validasi dan unit validator sebelum Sedang Diproses', () => {
+  it('menuntut hasil validasi dan unit validator sebelum Ditindaklanjuti', () => {
     const kurang = checkTransition({
-      dari: 'Menunggu Validasi',
-      ke: 'Sedang Diproses',
+      dari: 'Diteruskan ke Fakultas',
+      ke: 'Ditindaklanjuti',
       oleh: 'Administrator',
       data: { hasil_validasi: 'Terbukti' },
     })
@@ -251,7 +267,7 @@ describe('syarat wajib tiap perpindahan', () => {
 
   it('menuntut tindak lanjut sebelum Selesai', () => {
     const kurang = checkTransition({
-      dari: 'Sedang Diproses',
+      dari: 'Ditindaklanjuti',
       ke: 'Selesai',
       oleh: 'Administrator',
       data: {},
@@ -259,7 +275,7 @@ describe('syarat wajib tiap perpindahan', () => {
     expect(kurang.diizinkan).toBe(false)
 
     const lengkap = checkTransition({
-      dari: 'Sedang Diproses',
+      dari: 'Ditindaklanjuti',
       ke: 'Selesai',
       oleh: 'Administrator',
       data: { tindak_lanjut: 'Teguran tertulis kepada tutor' },
@@ -268,7 +284,11 @@ describe('syarat wajib tiap perpindahan', () => {
   })
 
   it('tidak menuntut syarat tambahan pada verifikasi', () => {
-    const hasil = checkTransition({ dari: 'Diterima', ke: 'Diverifikasi', oleh: 'Administrator' })
+    const hasil = checkTransition({
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Lolos Pemeriksaan',
+      oleh: 'Administrator',
+    })
     expect(hasil.diizinkan).toBe(true)
   })
 })
@@ -280,15 +300,15 @@ describe('alur penuh sesuai Activity Diagram', () => {
       oleh: 'Mahasiswa' | 'Administrator'
       data?: Record<string, unknown>
     }[] = [
-      { ke: 'Diterima', oleh: 'Mahasiswa' },
-      { ke: 'Diverifikasi', oleh: 'Administrator' },
+      { ke: 'Menunggu Pemeriksaan', oleh: 'Mahasiswa' },
+      { ke: 'Lolos Pemeriksaan', oleh: 'Administrator' },
       {
-        ke: 'Menunggu Validasi',
+        ke: 'Diteruskan ke Fakultas',
         oleh: 'Administrator',
         data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
       },
       {
-        ke: 'Sedang Diproses',
+        ke: 'Ditindaklanjuti',
         oleh: 'Administrator',
         data: { hasil_validasi: 'Terbukti', unit_validator: 'FST' },
       },
@@ -309,23 +329,23 @@ describe('alur penuh sesuai Activity Diagram', () => {
 
   it('menempuh jalur kelengkapan lalu kembali ke alur utama', () => {
     const minta = checkTransition({
-      dari: 'Diterima',
-      ke: 'Perlu Informasi Tambahan',
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Perlu Dilengkapi',
       oleh: 'Administrator',
       data: { alasan: 'Tangkapan layar tidak terbaca' },
     })
     expect(minta.diizinkan).toBe(true)
 
     const lengkapi = checkTransition({
-      dari: 'Perlu Informasi Tambahan',
-      ke: 'Diterima',
+      dari: 'Perlu Dilengkapi',
+      ke: 'Menunggu Pemeriksaan',
       oleh: 'Mahasiswa',
     })
     expect(lengkapi.diizinkan).toBe(true)
 
     const verifikasi = checkTransition({
-      dari: 'Diterima',
-      ke: 'Diverifikasi',
+      dari: 'Menunggu Pemeriksaan',
+      ke: 'Lolos Pemeriksaan',
       oleh: 'Administrator',
     })
     expect(verifikasi.diizinkan).toBe(true)
@@ -333,7 +353,7 @@ describe('alur penuh sesuai Activity Diagram', () => {
 
   it('mengakhiri alur pada penolakan', () => {
     const tolak = checkTransition({
-      dari: 'Diterima',
+      dari: 'Menunggu Pemeriksaan',
       ke: 'Ditolak',
       oleh: 'Administrator',
       data: { alasan: 'Bukan permasalahan layanan tutor' },

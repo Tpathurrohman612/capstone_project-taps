@@ -110,18 +110,18 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
   }
 
   describe('createLaporan', () => {
-    it('menyimpan laporan dengan status awal Diterima', async () => {
+    it('menyimpan laporan dengan status awal Menunggu Pemeriksaan', async () => {
       const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
 
       const hasil = await repo.createLaporan({ uid: UID, data: dataLaporan })
 
-      expect(hasil.id_status).toBe('Diterima')
+      expect(hasil.id_status).toBe('Menunggu Pemeriksaan')
       expect(hasil.uid_pelapor).toBe(UID)
       expect(hasil.nomor_laporan).toBe('LT-2026-0001')
 
       const tersimpan = await repo.getLaporan(hasil.id_laporan)
       expect(tersimpan?.judul_laporan).toBe('Tugas 1 belum dinilai')
-      expect(tersimpan?.id_status).toBe('Diterima')
+      expect(tersimpan?.id_status).toBe('Menunggu Pemeriksaan')
     })
 
     it('menomori laporan berikutnya secara berurutan', async () => {
@@ -164,7 +164,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
 
       expect(riwayat.size).toBe(1)
       expect(riwayat.docs[0]?.data()).toMatchObject({
-        id_status: 'Diterima',
+        id_status: 'Menunggu Pemeriksaan',
         uid_pencatat: UID,
       })
     })
@@ -275,7 +275,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
         await setDoc(doc(sebagaiFirestore(konteks), 'laporan', 'punya-orang-lain'), {
           nomor_laporan: 'LT-2026-9001',
           uid_pelapor: 'mahasiswa-lain',
-          id_status: 'Diterima',
+          id_status: 'Menunggu Pemeriksaan',
           judul_laporan: 'Laporan orang lain',
           tanggal_laporan: new Date(),
         })
@@ -305,13 +305,13 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
 
       await repoAdmin.ubahStatusLaporan({
         idLaporan: dibuat.id_laporan,
-        ke: 'Diverifikasi',
+        ke: 'Lolos Pemeriksaan',
         oleh: 'Administrator',
         uidPencatat: UID_ADMIN,
       })
 
       const setelah = await repoAdmin.getLaporan(dibuat.id_laporan)
-      expect(setelah?.id_status).toBe('Diverifikasi')
+      expect(setelah?.id_status).toBe('Lolos Pemeriksaan')
 
       const riwayat = await getDocs(
         query(
@@ -330,7 +330,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       vi.resetModules()
       const repoAdmin = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
 
-      // Diterima tidak dapat langsung menjadi Selesai.
+      // Menunggu Pemeriksaan tidak dapat langsung menjadi Selesai.
       await expect(
         repoAdmin.ubahStatusLaporan({
           idLaporan: dibuat.id_laporan,
@@ -341,7 +341,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       ).rejects.toThrow(/tidak diizinkan/)
 
       const tetap = await repoAdmin.getLaporan(dibuat.id_laporan)
-      expect(tetap?.id_status).toBe('Diterima')
+      expect(tetap?.id_status).toBe('Menunggu Pemeriksaan')
     })
 
     it('menolak perpindahan yang syarat wajibnya belum terpenuhi', async () => {
@@ -389,7 +389,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       await expect(
         repo.ubahStatusLaporan({
           idLaporan: dibuat.id_laporan,
-          ke: 'Diverifikasi',
+          ke: 'Lolos Pemeriksaan',
           oleh: 'Mahasiswa',
           uidPencatat: UID,
         }),
@@ -402,7 +402,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       await expect(
         repo.ubahStatusLaporan({
           idLaporan: 'tidak-ada',
-          ke: 'Diverifikasi',
+          ke: 'Lolos Pemeriksaan',
           oleh: 'Administrator',
           uidPencatat: UID_ADMIN,
         }),
@@ -421,10 +421,10 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       const repoAdmin = await muatRepository(konteksAdmin)
 
       const langkah: { ke: string; data?: Record<string, unknown> }[] = [
-        { ke: 'Diverifikasi' },
-        { ke: 'Menunggu Validasi', data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' } },
+        { ke: 'Lolos Pemeriksaan' },
+        { ke: 'Diteruskan ke Fakultas', data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' } },
         {
-          ke: 'Sedang Diproses',
+          ke: 'Ditindaklanjuti',
           data: { hasil_validasi: 'Terbukti', unit_validator: 'FST', catatan_validasi: 'Catatan' },
         },
         { ke: 'Selesai', data: { tindak_lanjut: 'Pembinaan tutor' } },
@@ -444,10 +444,10 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       return { idLaporan: dibuat.id_laporan, db: konteksAdmin, data }
     }
 
-    it('mencatat pengiriman validasi saat laporan menuju Menunggu Validasi', async () => {
+    it('mencatat pengiriman validasi saat laporan menuju Diteruskan ke Fakultas', async () => {
       // Riwayat mencatat bahwa statusnya berpindah; entitas inilah yang
       // menyimpan unit tujuan dan kanal pengirimannya.
-      const { idLaporan, db } = await sampaiStatus('Menunggu Validasi')
+      const { idLaporan, db } = await sampaiStatus('Diteruskan ke Fakultas')
 
       const hasil = await getDocs(
         query(collection(db, 'pengiriman_validasi'), where('id_laporan', '==', idLaporan)),
@@ -461,8 +461,8 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       })
     })
 
-    it('mencatat hasil validasi saat laporan menuju Sedang Diproses', async () => {
-      const { idLaporan, db } = await sampaiStatus('Sedang Diproses')
+    it('mencatat hasil validasi saat laporan menuju Ditindaklanjuti', async () => {
+      const { idLaporan, db } = await sampaiStatus('Ditindaklanjuti')
 
       const hasil = await getDocs(
         query(collection(db, 'validasi'), where('id_laporan', '==', idLaporan)),
@@ -530,7 +530,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       const repoAdmin = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
       await repoAdmin.ubahStatusLaporan({
         idLaporan: dibuat.id_laporan,
-        ke: 'Perlu Informasi Tambahan',
+        ke: 'Perlu Dilengkapi',
         oleh: 'Administrator',
         uidPencatat: UID_ADMIN,
         data: { alasan: 'Bukti belum terbaca' },
@@ -543,7 +543,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       ])
       await lagi.ubahStatusLaporan({
         idLaporan: dibuat.id_laporan,
-        ke: 'Diterima',
+        ke: 'Menunggu Pemeriksaan',
         oleh: 'Mahasiswa',
         uidPencatat: UID,
         keterangan: 'Mahasiswa melengkapi laporan. Bukti baru dilampirkan.',
@@ -553,7 +553,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       expect(lampiran.map((berkas) => berkas.nama_file)).toContain('bukti-baru.jpg')
 
       const laporan = await lagi.getLaporan(dibuat.id_laporan)
-      expect(laporan?.id_status).toBe('Diterima')
+      expect(laporan?.id_status).toBe('Menunggu Pemeriksaan')
     })
 
     it('menolak lampiran yang ditambahkan pada laporan milik orang lain', async () => {
@@ -575,7 +575,7 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
     it('tidak mencatat entitas penanganan pada perpindahan yang tidak terkait', async () => {
       // Verifikasi hanya memindahkan status; tidak ada pengiriman, validasi,
       // maupun tindak lanjut yang terjadi pada langkah itu.
-      const { idLaporan, db } = await sampaiStatus('Diverifikasi')
+      const { idLaporan, db } = await sampaiStatus('Lolos Pemeriksaan')
 
       for (const koleksi of ['pengiriman_validasi', 'validasi', 'tindak_lanjut']) {
         const hasil = await getDocs(
@@ -595,13 +595,13 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
     const repoAdmin = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
 
     const langkah = [
-      { ke: 'Diverifikasi' as const, data: undefined },
+      { ke: 'Lolos Pemeriksaan' as const, data: undefined },
       {
-        ke: 'Menunggu Validasi' as const,
+        ke: 'Diteruskan ke Fakultas' as const,
         data: { unit_tujuan: 'FST', kanal_pengiriman: 'Surel' },
       },
       {
-        ke: 'Sedang Diproses' as const,
+        ke: 'Ditindaklanjuti' as const,
         data: { hasil_validasi: 'Terbukti', unit_validator: 'FST' },
       },
       { ke: 'Selesai' as const, data: { tindak_lanjut: 'Pembinaan tutor' } },

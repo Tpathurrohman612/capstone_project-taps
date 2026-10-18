@@ -20,12 +20,12 @@ describe('alasanStatus', () => {
   it('mengambil alasan permintaan kelengkapan', () => {
     const riwayat = [
       catatan(
-        'Status menjadi Perlu Informasi Tambahan',
+        'Status menjadi Perlu Dilengkapi',
         'Administrator meminta kelengkapan. Alasan: Bukti belum terbaca',
       ),
     ]
 
-    expect(alasanStatus(riwayat, 'Perlu Informasi Tambahan')).toBe('Bukti belum terbaca')
+    expect(alasanStatus(riwayat, 'Perlu Dilengkapi')).toBe('Bukti belum terbaca')
   })
 
   it('mengambil alasan penolakan', () => {
@@ -39,23 +39,26 @@ describe('alasanStatus', () => {
     // terakhir, bukan yang pertama.
     const riwayat = [
       catatan(
-        'Status menjadi Perlu Informasi Tambahan',
+        'Status menjadi Perlu Dilengkapi',
         'Administrator meminta kelengkapan. Alasan: Permintaan kedua',
       ),
-      catatan('Status menjadi Diterima', 'Mahasiswa melengkapi laporan. Sudah saya tambahkan.'),
       catatan(
-        'Status menjadi Perlu Informasi Tambahan',
+        'Status menjadi Menunggu Pemeriksaan',
+        'Mahasiswa melengkapi laporan. Sudah saya tambahkan.',
+      ),
+      catatan(
+        'Status menjadi Perlu Dilengkapi',
         'Administrator meminta kelengkapan. Alasan: Permintaan pertama',
       ),
     ]
 
-    expect(alasanStatus(riwayat, 'Perlu Informasi Tambahan')).toBe('Permintaan kedua')
+    expect(alasanStatus(riwayat, 'Perlu Dilengkapi')).toBe('Permintaan kedua')
   })
 
   it('tidak mengambil alasan dari status yang berbeda', () => {
     const riwayat = [catatan('Status menjadi Ditolak', 'Laporan ditolak. Alasan: Di luar lingkup')]
 
-    expect(alasanStatus(riwayat, 'Perlu Informasi Tambahan')).toBeUndefined()
+    expect(alasanStatus(riwayat, 'Perlu Dilengkapi')).toBeUndefined()
   })
 
   it('mengembalikan keterangan apa adanya bila tidak berpola Alasan', () => {
@@ -90,7 +93,7 @@ describe('catatanKelengkapan', () => {
   it('mengambil kelengkapan yang dikirim mahasiswa', () => {
     const riwayat = [
       catatan(
-        'Status menjadi Diterima',
+        'Status menjadi Menunggu Pemeriksaan',
         'Mahasiswa melengkapi laporan. Tangkapan layar sudah saya lampirkan.',
       ),
     ]
@@ -105,11 +108,11 @@ describe('catatanKelengkapan', () => {
     // alasan penolakan akan ikut terbaca sebagai kelengkapan mahasiswa.
     const riwayat = [
       catatan(
-        'Status menjadi Perlu Informasi Tambahan',
+        'Status menjadi Perlu Dilengkapi',
         'Administrator meminta kelengkapan. Alasan: Kurang bukti',
       ),
-      catatan('Status menjadi Diterima', 'Mahasiswa melengkapi laporan. Ini buktinya.'),
-      catatan('Status menjadi Diverifikasi', 'Laporan diverifikasi.'),
+      catatan('Status menjadi Menunggu Pemeriksaan', 'Mahasiswa melengkapi laporan. Ini buktinya.'),
+      catatan('Status menjadi Lolos Pemeriksaan', 'Laporan diverifikasi.'),
     ]
 
     expect(catatanKelengkapan(riwayat)).toEqual([
@@ -120,12 +123,12 @@ describe('catatanKelengkapan', () => {
   it('mengembalikan seluruh kelengkapan ketika laporan dua kali dilengkapi', () => {
     const riwayat = [
       catatan(
-        'Status menjadi Diterima',
+        'Status menjadi Menunggu Pemeriksaan',
         'Mahasiswa melengkapi laporan. Kedua',
         '18 Oktober 2026, 11:00',
       ),
       catatan(
-        'Status menjadi Diterima',
+        'Status menjadi Menunggu Pemeriksaan',
         'Mahasiswa melengkapi laporan. Pertama',
         '18 Oktober 2026, 09:00',
       ),
@@ -135,7 +138,9 @@ describe('catatanKelengkapan', () => {
   })
 
   it('mengabaikan kelengkapan yang penjelasannya kosong', () => {
-    const riwayat = [catatan('Status menjadi Diterima', 'Mahasiswa melengkapi laporan.   ')]
+    const riwayat = [
+      catatan('Status menjadi Menunggu Pemeriksaan', 'Mahasiswa melengkapi laporan.   '),
+    ]
 
     expect(catatanKelengkapan(riwayat)).toEqual([])
   })
@@ -152,12 +157,12 @@ describe('kelengkapanTerakhir', () => {
     // Menampilkan setiap pengiriman akan mengulang isi yang sama.
     const riwayat = [
       catatan(
-        'Status menjadi Diterima',
+        'Status menjadi Menunggu Pemeriksaan',
         'Mahasiswa melengkapi laporan. Pertama\n\nKedua',
         '18 Oktober 2026, 11:00',
       ),
       catatan(
-        'Status menjadi Diterima',
+        'Status menjadi Menunggu Pemeriksaan',
         'Mahasiswa melengkapi laporan. Pertama',
         '18 Oktober 2026, 09:00',
       ),

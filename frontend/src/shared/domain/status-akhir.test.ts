@@ -19,10 +19,10 @@ describe('status akhir', () => {
 
   it('tidak menyatakan status jalur utama sebagai akhir', () => {
     for (const status of [
-      'Diterima',
-      'Diverifikasi',
-      'Menunggu Validasi',
-      'Sedang Diproses',
+      'Menunggu Pemeriksaan',
+      'Lolos Pemeriksaan',
+      'Diteruskan ke Fakultas',
+      'Ditindaklanjuti',
     ] as const) {
       expect(isTerminal(status), `${status} bukan status akhir`).toBe(false)
     }
@@ -38,15 +38,15 @@ describe('status akhir', () => {
   })
 
   it('tidak mengizinkan Administrator memindahkan laporan yang menunggu mahasiswa', () => {
-    // Perlu Informasi Tambahan hanya dapat dipindahkan mahasiswa yang
+    // Perlu Dilengkapi hanya dapat dipindahkan mahasiswa yang
     // melengkapinya, sehingga Administrator tidak boleh ditawari tindakan.
-    expect(nextStatuses('Perlu Informasi Tambahan', 'Administrator')).toEqual([])
-    expect(nextStatuses('Perlu Informasi Tambahan', 'Mahasiswa').length).toBeGreaterThan(0)
+    expect(nextStatuses('Perlu Dilengkapi', 'Administrator')).toEqual([])
+    expect(nextStatuses('Perlu Dilengkapi', 'Mahasiswa').length).toBeGreaterThan(0)
   })
 
   it('menyediakan lanjutan bagi setiap status yang bukan akhir dan bukan menunggu mahasiswa', () => {
     for (const status of REPORT_STATUSES) {
-      if (isTerminal(status) || status === 'Perlu Informasi Tambahan') continue
+      if (isTerminal(status) || status === 'Perlu Dilengkapi') continue
       expect(
         nextStatuses(status, 'Administrator').length,
         `${status} harus memiliki lanjutan bagi Administrator`,

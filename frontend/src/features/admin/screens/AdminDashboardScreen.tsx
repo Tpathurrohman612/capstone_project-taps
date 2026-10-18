@@ -28,7 +28,7 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
 const adminStatusClass = (status: string) =>
   status === 'Selesai'
     ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
-    : status === 'Sedang Diproses'
+    : status === 'Ditindaklanjuti'
       ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
       : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
 
@@ -39,8 +39,8 @@ export function AdminDashboardScreen() {
   const dashboardReport = (report: WorkflowReport) => ({
     ...report,
     date: report.submitted,
-    action: report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail',
-    status: report.status === 'Sedang Diproses' ? 'Sedang Diproses' : report.status,
+    action: report.status === 'Menunggu Pemeriksaan' ? 'Verifikasi' : 'Lihat Detail',
+    status: report.status === 'Ditindaklanjuti' ? 'Ditindaklanjuti' : report.status,
   })
   const dashboardOrder = [
     'LT-2026-0008',
@@ -236,8 +236,9 @@ export function AdminDashboardScreen() {
                 memuatLaporan
                   ? '—'
                   : String(
-                      dashboardWorkflowReports.filter((report) => report.status === 'Diterima')
-                        .length,
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Menunggu Pemeriksaan',
+                      ).length,
                     ).padStart(2, '0'),
                 'Perlu Verifikasi',
                 'Menunggu verifikasi',
@@ -247,10 +248,10 @@ export function AdminDashboardScreen() {
                   ? '—'
                   : String(
                       dashboardWorkflowReports.filter(
-                        (report) => report.status === 'Menunggu Validasi',
+                        (report) => report.status === 'Diteruskan ke Fakultas',
                       ).length,
                     ).padStart(2, '0'),
-                'Menunggu Validasi',
+                'Diteruskan ke Fakultas',
                 'Menunggu hasil validasi',
               ],
               [
@@ -258,10 +259,10 @@ export function AdminDashboardScreen() {
                   ? '—'
                   : String(
                       dashboardWorkflowReports.filter(
-                        (report) => report.status === 'Sedang Diproses',
+                        (report) => report.status === 'Ditindaklanjuti',
                       ).length,
                     ).padStart(2, '0'),
-                'Sedang Diproses',
+                'Ditindaklanjuti',
                 'Dalam tindak lanjut',
               ],
               [

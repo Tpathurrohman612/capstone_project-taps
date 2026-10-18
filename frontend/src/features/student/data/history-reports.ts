@@ -4,7 +4,7 @@ export const historyReports: HistoryReport[] = [
   {
     id: 'LT-2026-0001',
     title: 'Belum ada umpan balik diskusi minggu ke-3',
-    status: 'Sedang Diproses',
+    status: 'Ditindaklanjuti',
     course: 'EKMA4111 · Pengantar Bisnis',
     className: '01',
     tutor: 'Dr. Rina Kusuma, M.M.',
@@ -13,7 +13,7 @@ export const historyReports: HistoryReport[] = [
   {
     id: 'LT-2026-0002',
     title: 'Materi tutorial minggu ke-5 belum tersedia',
-    status: 'Diverifikasi',
+    status: 'Lolos Pemeriksaan',
     course: 'MKDU4109 · Pendidikan Kewarganegaraan',
     className: '02',
     tutor: 'Agus Prasetyo, S.Pd., M.Pd.',
@@ -31,7 +31,7 @@ export const historyReports: HistoryReport[] = [
   {
     id: 'LT-2026-0004',
     title: 'Belum ada tanggapan pada forum inisiasi',
-    status: 'Diterima',
+    status: 'Menunggu Pemeriksaan',
     course: 'ESPA4123 · Statistika Ekonomi',
     className: '01',
     tutor: 'M. Arief Nugroho, M.Si.',

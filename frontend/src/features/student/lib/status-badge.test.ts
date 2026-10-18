@@ -22,8 +22,8 @@ describe('statusBadge', () => {
     expect(statusBadge('Ditolak')).toContain('#B42318')
   })
 
-  it('membedakan Perlu Informasi Tambahan dengan warna oranye', () => {
-    expect(statusBadge('Perlu Informasi Tambahan')).toContain('#8A4B12')
+  it('membedakan Perlu Dilengkapi dengan warna oranye', () => {
+    expect(statusBadge('Perlu Dilengkapi')).toContain('#8A4B12')
   })
 
   it('memberi Ditolak dan Selesai warna yang berbeda', () => {
@@ -31,7 +31,7 @@ describe('statusBadge', () => {
     expect(statusBadge('Ditolak')).not.toBe(statusBadge('Selesai'))
   })
 
-  it('tidak memakai warna yang sama untuk Ditolak dan Diterima', () => {
-    expect(statusBadge('Ditolak')).not.toBe(statusBadge('Diterima'))
+  it('tidak memakai warna yang sama untuk Ditolak dan Menunggu Pemeriksaan', () => {
+    expect(statusBadge('Ditolak')).not.toBe(statusBadge('Menunggu Pemeriksaan'))
   })
 })

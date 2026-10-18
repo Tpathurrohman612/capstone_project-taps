@@ -77,16 +77,16 @@ describe('workflow-storage', () => {
 
   it('migrates version 6 without overwriting saved report statuses', () => {
     const existingReports = structuredClone(workflowSeed)
-    existingReports.find((report) => report.id === 'LT-2026-0005')!.status = 'Diverifikasi'
-    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Sedang Diproses'
+    existingReports.find((report) => report.id === 'LT-2026-0005')!.status = 'Lolos Pemeriksaan'
+    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Ditindaklanjuti'
 
     browser.values.set(REPORTS_KEY, JSON.stringify(existingReports))
     browser.values.set(VERSION_KEY, '6')
 
     const result = getWorkflowReports()
 
-    expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Diverifikasi')
-    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Sedang Diproses')
+    expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Lolos Pemeriksaan')
+    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Ditindaklanjuti')
     expect(browser.values.get(VERSION_KEY)).toBe(WORKFLOW_STORAGE_VERSION)
   })
 

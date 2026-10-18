@@ -97,7 +97,10 @@ export async function listNotifications(
       .filter((notifikasi): notifikasi is ReportNotification => notifikasi !== undefined)
       // Catatan pertama setiap laporan adalah pengirimannya sendiri, dan
       // memberitahu mahasiswa tentang tindakannya sendiri tidak berguna.
-      .filter((notifikasi) => notifikasi.status !== 'Diterima' || notifikasi.keterangan !== '')
+      .filter(
+        (notifikasi) =>
+          notifikasi.status !== 'Menunggu Pemeriksaan' || notifikasi.keterangan !== '',
+      )
       .sort((kiri, kanan) => (kanan.waktu?.getTime() ?? 0) - (kiri.waktu?.getTime() ?? 0))
   )
 }

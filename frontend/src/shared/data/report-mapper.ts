@@ -83,7 +83,7 @@ export function laporanToWorkflowReport(laporan: Laporan): WorkflowReport {
  * Nomor laporan, pemilik, status awal, dan tanggal tidak termasuk di sini:
  * keempatnya ditentukan lapisan data di dalam transaksi, bukan oleh layar,
  * supaya tidak ada nomor kembar dan tidak ada laporan yang lahir dengan status
- * selain Diterima.
+ * selain Menunggu Pemeriksaan.
  */
 export function formToLaporanBaru(input: {
   judul: string

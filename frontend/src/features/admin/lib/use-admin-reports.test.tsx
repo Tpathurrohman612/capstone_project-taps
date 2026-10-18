@@ -39,7 +39,7 @@ const laporan = (id: string, docId = `dok-${id}`): WorkflowReport => ({
   className: '01',
   tutor: 'Budi Santoso',
   submitted: '18 Oktober 2026',
-  status: 'Diterima',
+  status: 'Menunggu Pemeriksaan',
   updates: [],
 })
 
@@ -56,9 +56,11 @@ function Penampil() {
       <button
         type="button"
         onClick={() => {
-          void ubahStatus({ report: laporan('LT-2026-0001'), ke: 'Diverifikasi' }).then((hasil) => {
-            hasilUbah = hasil
-          })
+          void ubahStatus({ report: laporan('LT-2026-0001'), ke: 'Lolos Pemeriksaan' }).then(
+            (hasil) => {
+              hasilUbah = hasil
+            },
+          )
         }}
       >
         ubah

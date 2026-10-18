@@ -37,9 +37,9 @@ export function ReportHistoryScreen() {
             className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
           >
             <option>Semua</option>
-            <option>Diterima</option>
-            <option>Diverifikasi</option>
-            <option>Sedang Diproses</option>
+            <option>Menunggu Pemeriksaan</option>
+            <option>Lolos Pemeriksaan</option>
+            <option>Ditindaklanjuti</option>
             <option>Selesai</option>
           </select>
         </label>
@@ -97,7 +97,9 @@ export function ReportHistoryScreen() {
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">TUTOR</p>
                   <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.tutor}</p>
-                  <p className="mt-1 text-xs text-[#52657A]">Diterima {report.submitted}</p>
+                  <p className="mt-1 text-xs text-[#52657A]">
+                    Menunggu Pemeriksaan {report.submitted}
+                  </p>
                 </div>
                 <Link
                   to={`/riwayat-laporan/detail-laporan?report=${report.id}`}

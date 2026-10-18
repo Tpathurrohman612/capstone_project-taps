@@ -37,10 +37,10 @@ function DesignSystemSection({
 
 export function DesignSystemScreen() {
   const statusSamples = [
-    ['Diterima', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
-    ['Diverifikasi', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
-    ['Menunggu Validasi', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
-    ['Sedang Diproses', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
+    ['Menunggu Pemeriksaan', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
+    ['Lolos Pemeriksaan', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
+    ['Diteruskan ke Fakultas', 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'],
+    ['Ditindaklanjuti', 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'],
     ['Selesai', 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'],
   ]
   return (
