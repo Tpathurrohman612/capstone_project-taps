@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useAdminReports } from '../lib/use-admin-reports'
+import { barisLaporan, buatBukuKerja, namaBerkasEkspor, unduhBukuKerja } from '../lib/report-export'
 import {
   AdminWorkflowShell,
   FACULTIES,
   WorkflowTable,
-  exportFilePart,
   reportProgramStudy,
 } from '../components/workflow-ui'
 
@@ -36,55 +36,30 @@ export function AdminWorkflowQueueScreen() {
   )
   const includedPrograms = Array.from(new Set(exportReports.map(reportProgramStudy)))
   const exportFaculty = faculty
+  const fileName = namaBerkasEkspor(faculty)
   const exportProgram =
     includedPrograms.length > 1 ? 'Beberapa Program Studi' : (includedPrograms[0] ?? '—')
-  const fileName = `Data_Laporan_Tutor_${exportFilePart(exportFaculty)}_2026.csv`
+  /**
+   * Mengunduh data laporan sebagai berkas Excel.
+   *
+   * Format Excel dipilih karena penerimanya membukanya sebagai lembar kerja.
+   * Berkas CSV sering terbuka berantakan pada Excel berpengaturan Indonesia
+   * yang memakai titik koma sebagai pemisah kolom.
+   */
   const downloadExport = () => {
-    const headers = [
-      'ID Laporan',
-      'Kategori',
-      'Program Studi',
-      'Fakultas',
-      'Jenis Mata Kuliah',
-      'Kode Mata Kuliah',
-      'Nama Mata Kuliah',
-      'Kelas Mata Kuliah',
-      'Nama Tutor',
-      'Perkiraan Durasi Tidak Ada Aktivitas/Respons',
-      'Judul Laporan',
-      'Tanggal Laporan',
-      'Status',
-    ]
-    const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`
-    const rows = exportReports.map((report) => {
-      const [courseCode, courseName] = report.course.split(' · ')
-      return [
-        report.id,
-        report.category,
-        reportProgramStudy(report),
-        report.studentFaculty ?? '—',
-        report.courseType ?? '—',
-        courseCode,
-        courseName,
-        report.className,
-        report.tutor,
-        report.duration ?? '1 minggu atau lebih',
-        report.title,
-        report.submitted,
-        report.status,
-      ]
-    })
-    const csv = [headers, ...rows].map((row) => row.map(escapeCell).join(',')).join('\r\n')
-    const downloadUrl = URL.createObjectURL(
-      new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }),
-    )
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.download = fileName
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0)
+    if (exportReports.length === 0) {
+      // Mengunduh berkas kosong tanpa penjelasan membuat Administrator
+      // mengira ekspornya rusak, padahal memang tidak ada yang cocok.
+      setKirimError(
+        'Tidak ada laporan yang dapat diekspor. Ekspor hanya mencakup laporan ' +
+          'berstatus Diverifikasi pada fakultas yang dipilih.',
+      )
+      return
+    }
+
+    setKirimError('')
+    const baris = exportReports.map((report) => barisLaporan(report, reportProgramStudy(report)))
+    unduhBukuKerja(buatBukuKerja(baris), namaBerkasEkspor(exportFaculty))
   }
   /**
    * Mencatat pengiriman data ke Fakultas/Unit terkait.

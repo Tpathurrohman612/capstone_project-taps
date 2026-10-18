@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { WorkflowStatus } from '../../../shared/types/workflow'
 import { nextStatuses } from '../../../shared/domain/report-status'
-import { workflowSeed } from '../../../shared/data/workflow-seed'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
@@ -25,7 +24,47 @@ export function AdminWorkflowDetailScreen() {
   // Laporan diambil dari daftar bersama, bukan disalin ke state tersendiri.
   // Menyalinnya membuat tampilan tertinggal setiap kali statusnya berubah,
   // karena salinannya tidak ikut diperbarui saat daftar dibaca ulang.
-  const report = semuaLaporan.find((item) => item.id === id) ?? workflowSeed[0]
+  // Jangan pernah jatuh ke laporan contoh. Menggantinya dengan workflowSeed[0]
+  // membuat layar menampilkan laporan milik data demo lengkap dengan statusnya,
+  // dan setiap tindakan yang dilakukan di sana mengenai laporan yang keliru.
+  const report = semuaLaporan.find((item) => item.id === id)
+
+  if (!memuatLaporan && !report) {
+    return (
+      <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
+        <section className="px-8 py-10 max-[620px]:px-5">
+          <h1 className="font-slab text-2xl text-[#12355B]">Laporan tidak ditemukan</h1>
+          <p className="mt-3 text-sm leading-6 text-[#52657A]">
+            Laporan {id} tidak ada pada basis data.
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                context === 'history'
+                  ? '/administrator/riwayat-laporan'
+                  : '/administrator/antrean-laporan',
+              )
+            }
+            className="mt-7 border border-[#12355B] px-5 py-3 text-sm font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
+          >
+            Kembali
+          </button>
+        </section>
+      </AdminWorkflowShell>
+    )
+  }
+
+  if (memuatLaporan || !report) {
+    return (
+      <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
+        <section className="px-8 py-10 max-[620px]:px-5">
+          <p className="text-sm text-[#52657A]">Memuat laporan dari basis data…</p>
+        </section>
+      </AdminWorkflowShell>
+    )
+  }
+
   const [aksiError, setAksiError] = useState('')
   // Status berikutnya diturunkan dari Tabel 4.2, bukan dari peta yang ditulis
   // ulang di layar ini. Aturan pertama untuk setiap status adalah jalur utama,
@@ -201,16 +240,6 @@ export function AdminWorkflowDetailScreen() {
     context === 'history' ? '/administrator/riwayat-laporan' : '/administrator/antrean-laporan'
   // Selama laporan belum tiba, layar jangan menampilkan laporan contoh dari
   // workflowSeed seolah itu laporan yang diminta.
-  if (memuatLaporan) {
-    return (
-      <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
-        <section className="px-8 py-10 max-[620px]:px-5">
-          <p className="text-sm text-[#52657A]">Memuat laporan dari basis data…</p>
-        </section>
-      </AdminWorkflowShell>
-    )
-  }
-
   return (
     <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
       <section className="px-8 py-7 max-[620px]:px-5">
