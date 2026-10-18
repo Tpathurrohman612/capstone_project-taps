@@ -262,14 +262,6 @@ export function AdminWorkflowDetailScreen() {
         {/* Kegagalan tindakan ditempatkan di bagian paling atas halaman.
             Sebelumnya pesannya berada jauh di tengah daftar, sehingga
             Administrator harus menggulir untuk mengetahui apa yang salah. */}
-        {aksiError && (
-          <p
-            role="alert"
-            className="mb-6 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
-          >
-            {aksiError}
-          </p>
-        )}
 
         <header className="border-b border-[#D9E2EC] pb-8">
           <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
@@ -357,6 +349,17 @@ export function AdminWorkflowDetailScreen() {
                     {actionLabel}
                   </button>
                 </div>
+              )}
+              {/* Kegagalan tindakan ditempatkan tepat di bawah tombolnya,
+                    bukan di bagian paling atas halaman, supaya terbaca pada
+                    tempat Administrator sedang memusatkan perhatian. */}
+              {aksiError && (
+                <p
+                  role="alert"
+                  className="mt-5 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+                >
+                  {aksiError}
+                </p>
               )}
             </div>
           </section>
@@ -450,14 +453,6 @@ export function AdminWorkflowDetailScreen() {
           >
             Kembali ke {context === 'history' ? 'Riwayat Laporan' : 'Antrean Laporan'}
           </button>
-          {actionLabel && (report.status !== 'Menunggu Validasi' || validationRecorded) && (
-            <button
-              onClick={openPrimaryAction}
-              className="bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white"
-            >
-              {actionLabel}
-            </button>
-          )}
         </div>
       </section>
       {modalOpen && (
