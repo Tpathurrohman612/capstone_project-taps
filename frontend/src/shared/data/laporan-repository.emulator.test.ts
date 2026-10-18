@@ -489,6 +489,35 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       })
     })
 
+    it('membaca kembali catatan penanganan untuk ditampilkan kepada mahasiswa', async () => {
+      // Inilah yang dibaca halaman detail laporan. Tanpa pembacaan ini,
+      // mahasiswa hanya dapat melihat hasil penanganan pada panel notifikasi.
+      const { idLaporan } = await sampaiStatus('Selesai')
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+
+      const penanganan = await repo.listPenanganan(idLaporan)
+
+      expect(penanganan.validasi).toHaveLength(1)
+      expect(penanganan.validasi[0]).toMatchObject({
+        hasil_validasi: 'Terbukti',
+        unit_validator: 'FST',
+        keterangan: 'Catatan',
+      })
+      expect(penanganan.tindakLanjut[0]?.keterangan).toBe('Pembinaan tutor')
+      expect(penanganan.pengiriman[0]?.unit_tujuan).toBe('FST')
+    })
+
+    it('mengembalikan catatan kosong untuk laporan yang belum ditangani', async () => {
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      const dibuat = await repo.createLaporan({ uid: UID, data: dataLaporan })
+
+      const penanganan = await repo.listPenanganan(dibuat.id_laporan)
+
+      expect(penanganan.validasi).toEqual([])
+      expect(penanganan.tindakLanjut).toEqual([])
+      expect(penanganan.pengiriman).toEqual([])
+    })
+
     it('tidak mencatat entitas penanganan pada perpindahan yang tidak terkait', async () => {
       // Verifikasi hanya memindahkan status; tidak ada pengiriman, validasi,
       // maupun tindak lanjut yang terjadi pada langkah itu.

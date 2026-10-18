@@ -6,9 +6,11 @@ import { getWorkflowReports, saveWorkflowReports } from '../lib/workflow-storage
 import { formToLaporanBaru, laporanToWorkflowReport } from './report-mapper'
 import { listNotifications } from './notification-repository'
 import { formatIndonesianDateTime } from '../lib/date-time'
+import type { Penanganan } from './laporan-repository'
 import {
   createLaporan,
   listLampiran,
+  listPenanganan,
   listLaporanMilik,
   listSemuaLaporan,
   ubahStatusLaporan,
@@ -170,6 +172,15 @@ export async function changeReportStatus(params: {
 
   target.status = params.ke
   saveWorkflowReports(tersimpan)
+}
+
+/** Catatan penanganan satu laporan, kosong pada mode prototipe. */
+export async function fetchPenanganan(report: WorkflowReport | undefined): Promise<Penanganan> {
+  const kosong: Penanganan = { pengiriman: [], validasi: [], tindakLanjut: [] }
+
+  if (!report || !usingFirestore() || !report.docId) return kosong
+
+  return await listPenanganan(report.docId)
 }
 
 /**

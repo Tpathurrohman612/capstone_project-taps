@@ -449,5 +449,69 @@ export async function listLampiran(idLaporan: string): Promise<Lampiran[]> {
     .filter((berkas): berkas is Lampiran => berkas !== undefined)
 }
 
+/** Catatan penanganan satu laporan, sesuai entitas pada ERD Gambar 3.3. */
+export type Penanganan = {
+  pengiriman: { unit_tujuan: string; kanal_pengiriman: string; tanggal?: Date }[]
+  validasi: {
+    hasil_validasi: string
+    unit_validator: string
+    keterangan?: string
+    tanggal?: Date
+  }[]
+  tindakLanjut: { keterangan: string; tanggal?: Date }[]
+}
+
+/**
+ * Membaca catatan penanganan satu laporan.
+ *
+ * Riwayat status menjawab kapan laporan berpindah; entitas inilah yang
+ * menjawab apa hasilnya. Keduanya dibaca terpisah karena hanya halaman detail
+ * yang memerlukannya.
+ */
+export async function listPenanganan(idLaporan: string): Promise<Penanganan> {
+  pastikanSiap()
+
+  const ambil = async (koleksi: string) =>
+    (await getDocs(query(collection(db, koleksi), where('id_laporan', '==', idLaporan)))).docs
+
+  const [kirim, nilai, tindak] = await Promise.all([
+    ambil(PENGIRIMAN_COLLECTION),
+    ambil(VALIDASI_COLLECTION),
+    ambil(TINDAK_LANJUT_COLLECTION),
+  ])
+
+  const teks = (nilai: unknown): string => (typeof nilai === 'string' ? nilai : '')
+
+  return {
+    pengiriman: kirim.map((d) => {
+      const data = d.data()
+      const tanggal = keDate(data.tanggal_kirim)
+      return {
+        unit_tujuan: teks(data.unit_tujuan),
+        kanal_pengiriman: teks(data.kanal_pengiriman),
+        ...(tanggal ? { tanggal } : {}),
+      }
+    }),
+    validasi: nilai.map((d) => {
+      const data = d.data()
+      const tanggal = keDate(data.tanggal_validasi)
+      return {
+        hasil_validasi: teks(data.hasil_validasi),
+        unit_validator: teks(data.unit_validator),
+        ...(teks(data.keterangan) ? { keterangan: teks(data.keterangan) } : {}),
+        ...(tanggal ? { tanggal } : {}),
+      }
+    }),
+    tindakLanjut: tindak.map((d) => {
+      const data = d.data()
+      const tanggal = keDate(data.tanggal_tindak_lanjut)
+      return {
+        keterangan: teks(data.keterangan),
+        ...(tanggal ? { tanggal } : {}),
+      }
+    }),
+  }
+}
+
 /** Tahun pada satu nomor laporan, untuk pengelompokan dan pelaporan. */
 export const tahunLaporan = (nomor: string): number | undefined => parseReportNumber(nomor)?.tahun

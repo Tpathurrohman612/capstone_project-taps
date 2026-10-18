@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { statusStages } from '../data/detail-report'
 import { useStudentReports } from '../lib/use-student-reports'
-import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
+import {
+  fetchAttachments,
+  fetchPenanganan,
+  fetchReportUpdates,
+} from '../../../shared/data/report-store'
+import type { Penanganan } from '../../../shared/data/laporan-repository'
+import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
@@ -43,6 +49,20 @@ export function DetailReportScreen() {
    */
   const [riwayatStatus, setRiwayatStatus] = useState<WorkflowReport['updates']>([])
 
+  /**
+   * Catatan penanganan dari Administrator.
+   *
+   * Riwayat status menjawab kapan laporan berpindah; catatan inilah yang
+   * menjawab apa hasilnya. Mahasiswa sebelumnya hanya dapat membacanya pada
+   * panel notifikasi, padahal halaman detail laporannya sendiri yang dibuka
+   * ketika ingin mengetahui perkembangan.
+   */
+  const [penanganan, setPenanganan] = useState<Penanganan>({
+    pengiriman: [],
+    validasi: [],
+    tindakLanjut: [],
+  })
+
   useEffect(() => {
     let aktif = true
 
@@ -70,6 +90,22 @@ export function DetailReportScreen() {
       .catch(() => {
         // Gagal membaca riwayat tidak boleh mengosongkan seluruh halaman.
         if (aktif) setRiwayatStatus([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [administratorReport])
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchPenanganan(administratorReport)
+      .then((hasil) => {
+        if (aktif) setPenanganan(hasil)
+      })
+      .catch(() => {
+        if (aktif) setPenanganan({ pengiriman: [], validasi: [], tindakLanjut: [] })
       })
 
     return () => {
@@ -390,6 +426,61 @@ export function DetailReportScreen() {
               </p>
             )}
           </section>
+
+          {/* Hasil penanganan dari Administrator. Sebelumnya mahasiswa hanya
+              dapat membacanya pada panel notifikasi, padahal halaman inilah yang
+              dibuka ketika ingin mengetahui perkembangan laporannya. */}
+          {(penanganan.validasi.length > 0 || penanganan.tindakLanjut.length > 0) && (
+            <section
+              className="border border-[#D9E2EC] bg-white"
+              aria-labelledby="hasil-penanganan"
+            >
+              <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
+                  05 / HASIL PENANGANAN
+                </p>
+                <h2 id="hasil-penanganan" className="mt-1 font-slab text-2xl text-[#12355B]">
+                  Hasil Validasi dan Tindak Lanjut
+                </h2>
+              </div>
+              <div className="divide-y divide-[#D9E2EC]">
+                {penanganan.validasi.map((item, index) => (
+                  <div key={`validasi-${index}`} className="px-6 py-5 max-[620px]:px-5">
+                    <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
+                      HASIL VALIDASI
+                    </p>
+                    <p className="mt-2 text-sm font-medium leading-6 text-[#1F2937]">
+                      {item.hasil_validasi}
+                    </p>
+                    {item.keterangan ? (
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#52657A]">
+                        {item.keterangan}
+                      </p>
+                    ) : null}
+                    <p className="mt-2 text-xs text-[#52657A]">
+                      Dicatat oleh {item.unit_validator || 'Fakultas/Unit terkait'}
+                      {item.tanggal ? ` · ${formatIndonesianDateTime(item.tanggal)}` : ''}
+                    </p>
+                  </div>
+                ))}
+                {penanganan.tindakLanjut.map((item, index) => (
+                  <div key={`tindak-${index}`} className="px-6 py-5 max-[620px]:px-5">
+                    <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
+                      TINDAK LANJUT
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#1F2937]">
+                      {item.keterangan}
+                    </p>
+                    {item.tanggal ? (
+                      <p className="mt-2 text-xs text-[#52657A]">
+                        {formatIndonesianDateTime(item.tanggal)}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="border border-[#D9E2EC] bg-white" aria-labelledby="tindak-lanjut">
             <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
