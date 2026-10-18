@@ -5,6 +5,7 @@ import type { WorkflowReport } from '../../../shared/types/workflow'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
+import { workflowStatusClass } from '../components/workflow-ui'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -25,13 +26,6 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   )
 }
 
-const adminStatusClass = (status: string) =>
-  status === 'Selesai'
-    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
-    : status === 'Ditindaklanjuti'
-      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
-      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
-
 export function AdminDashboardScreen() {
   const { reports: semuaLaporan, memuat: memuatLaporan } = useAdminReports()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -40,7 +34,6 @@ export function AdminDashboardScreen() {
     ...report,
     date: report.submitted,
     action: report.status === 'Menunggu Pemeriksaan' ? 'Verifikasi' : 'Lihat Detail',
-    status: report.status === 'Ditindaklanjuti' ? 'Ditindaklanjuti' : report.status,
   })
   const dashboardOrder = [
     'LT-2026-0008',
@@ -319,7 +312,7 @@ export function AdminDashboardScreen() {
                     </div>
                     <p className="text-sm font-medium text-[#1F2937]">{report.title}</p>
                     <span
-                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                     >
                       {report.status}
                     </span>
@@ -339,7 +332,7 @@ export function AdminDashboardScreen() {
                     <div className="flex items-start justify-between gap-4">
                       <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
-                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                       >
                         {report.status}
                       </span>
@@ -398,7 +391,7 @@ export function AdminDashboardScreen() {
                     <p className="text-sm">{report.className}</p>
                     <p className="text-sm">{report.tutor}</p>
                     <span
-                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                     >
                       {report.status}
                     </span>
@@ -414,7 +407,7 @@ export function AdminDashboardScreen() {
                     <div className="flex items-start justify-between gap-4">
                       <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
-                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                       >
                         {report.status}
                       </span>
