@@ -15,6 +15,9 @@ export function AdminWorkflowDetailScreen() {
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
   const [completionResult, setCompletionResult] = useState('')
   const [completionError, setCompletionError] = useState('')
+  /** Pesan kegagalan tindakan. Dideklarasikan bersama hook lain, karena hook
+   * wajib dipanggil tanpa syarat dan mendahului setiap return. */
+  const [aksiError, setAksiError] = useState('')
   const navigate = useNavigate()
   const context =
     window.sessionStorage.getItem('adminDetailContext') === 'history' ? 'history' : 'queue'
@@ -65,7 +68,6 @@ export function AdminWorkflowDetailScreen() {
     )
   }
 
-  const [aksiError, setAksiError] = useState('')
   // Status berikutnya diturunkan dari Tabel 4.2, bukan dari peta yang ditulis
   // ulang di layar ini. Aturan pertama untuk setiap status adalah jalur utama,
   // sehingga tombol aksi mengikuti alur normal; cabang Perlu Informasi
