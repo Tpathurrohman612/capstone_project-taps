@@ -34,6 +34,14 @@ export type WorkflowReport = {
   updates: WorkflowUpdate[]
   courseType?: string
   studentFaculty?: string
+  /**
+   * Program studi pelapor, sebagaimana tercatat pada laporannya.
+   *
+   * Tersimpan sejak laporan dibuat, tetapi sebelumnya tidak pernah dipetakan
+   * kembali, sehingga layar Administrator menurunkannya dari kode mata kuliah
+   * dan menampilkan tanda hubung untuk kode yang tidak dikenali.
+   */
+  studentProgram?: string
   duration?: string
   description?: string
   attachments?: { name: string; type: string; size: string }[]

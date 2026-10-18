@@ -66,6 +66,7 @@ export function laporanToWorkflowReport(laporan: Laporan): WorkflowReport {
   const opsional: [keyof WorkflowReport, string | undefined][] = [
     ['courseType', laporan.jenis_mata_kuliah],
     ['studentFaculty', laporan.fakultas_pelapor],
+    ['studentProgram', laporan.prodi_pelapor],
     ['duration', laporan.perkiraan_durasi],
     ['description', laporan.deskripsi],
   ]

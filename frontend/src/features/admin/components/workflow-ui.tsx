@@ -211,8 +211,16 @@ export { FACULTIES, type Faculty } from '../../../shared/data/faculties'
 // folded into an unrelated program study, and no faculty is derived here: the
 // faculty shown and exported is report.studentFaculty, so a course code can no
 // longer contradict it.
+/**
+ * Program studi pelapor.
+ *
+ * Yang dipakai lebih dahulu adalah program studi yang tercatat pada
+ * laporannya sendiri. Penurunan dari kode mata kuliah hanya cadangan untuk
+ * laporan lama yang belum mencatatnya, dan selalu meleset untuk kode mata
+ * kuliah yang tidak ada pada daftar bawaan.
+ */
 export const reportProgramStudy = (report: WorkflowReport) =>
-  courseProgram(report.course)?.programStudy ?? '—'
+  report.studentProgram?.trim() || courseProgram(report.course)?.programStudy || '—'
 
 export const exportFilePart = (value: string) => value.replace(/[^A-Za-z0-9]+/g, '_')
 

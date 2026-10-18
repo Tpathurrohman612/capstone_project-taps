@@ -206,4 +206,21 @@ describe('formToLaporanBaru', () => {
     expect(tampilan.title).toBe(isian.judul)
     expect(tampilan.tutor).toBe(isian.tutor)
   })
+
+  it('memetakan program studi pelapor dari laporannya', () => {
+    // Program studi tersimpan sejak laporan dibuat, tetapi sempat tidak pernah
+    // dipetakan kembali. Layar Administrator karena itu menurunkannya dari
+    // kode mata kuliah, dan menampilkan tanda hubung untuk kode yang tidak ada
+    // pada daftar bawaan, padahal datanya tersedia.
+    const hasil = laporanToWorkflowReport({
+      ...laporan,
+      prodi_pelapor: 'Sistem Informasi',
+    })
+
+    expect(hasil.studentProgram).toBe('Sistem Informasi')
+  })
+
+  it('tidak membuat field program studi ketika laporannya tidak mencatatnya', () => {
+    expect(laporanToWorkflowReport(laporan).studentProgram).toBeUndefined()
+  })
 })
