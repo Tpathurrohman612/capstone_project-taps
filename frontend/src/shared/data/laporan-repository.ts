@@ -230,6 +230,7 @@ export async function getLaporan(idLaporan: string): Promise<Laporan | undefined
 }
 
 export const PENCACAH_COLLECTION = 'pencacah_laporan'
+export const PENGGUNA_COLLECTION = 'pengguna'
 export const PENGIRIMAN_COLLECTION = 'pengiriman_validasi'
 export const VALIDASI_COLLECTION = 'validasi'
 export const TINDAK_LANJUT_COLLECTION = 'tindak_lanjut'
@@ -472,6 +473,41 @@ export async function tambahLampiran(idLaporan: string, lampiran: LampiranBaru[]
   }
 
   await tulis.commit()
+}
+
+/** Identitas pelapor sebagaimana dibutuhkan berkas ekspor. */
+export type IdentitasPelapor = { nama: string; nim: string }
+
+/**
+ * Membaca nama dan NIM beberapa pelapor sekaligus.
+ *
+ * Dokumen laporan hanya menyimpan uid_pelapor, sehingga identitasnya harus
+ * dibaca dari koleksi pengguna. Pembacaannya dikelompokkan agar satu ekspor
+ * tidak menerbitkan satu permintaan untuk setiap laporan.
+ */
+export async function listIdentitasPelapor(
+  uidList: string[],
+): Promise<Map<string, IdentitasPelapor>> {
+  pastikanSiap()
+
+  const unik = Array.from(new Set(uidList.filter((uid) => uid !== '')))
+  const hasil = new Map<string, IdentitasPelapor>()
+
+  const dokumen = await Promise.all(
+    unik.map(async (uid) => ({ uid, snapshot: await getDoc(doc(db, PENGGUNA_COLLECTION, uid)) })),
+  )
+
+  for (const { uid, snapshot } of dokumen) {
+    if (!snapshot.exists()) continue
+
+    const data = snapshot.data()
+    hasil.set(uid, {
+      nama: typeof data.nama === 'string' ? data.nama : '',
+      nim: typeof data.nim === 'string' ? data.nim : '',
+    })
+  }
+
+  return hasil
 }
 
 /** Catatan penanganan satu laporan, sesuai entitas pada ERD Gambar 3.3. */

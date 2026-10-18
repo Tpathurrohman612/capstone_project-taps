@@ -6,11 +6,12 @@ import { getWorkflowReports, saveWorkflowReports } from '../lib/workflow-storage
 import { formToLaporanBaru, laporanToWorkflowReport } from './report-mapper'
 import { listNotifications } from './notification-repository'
 import { formatIndonesianDateTime } from '../lib/date-time'
-import type { Penanganan } from './laporan-repository'
+import type { IdentitasPelapor, Penanganan } from './laporan-repository'
 import { judulRiwayat } from '../lib/waktu-tahap'
 import {
   createLaporan,
   listLampiran,
+  listIdentitasPelapor,
   listPenanganan,
   tambahLampiran,
   listLaporanMilik,
@@ -213,6 +214,15 @@ export async function addAttachments(params: {
 
   target.attachments = [...(target.attachments ?? []), ...params.attachments]
   saveWorkflowReports(tersimpan)
+}
+
+/** Nama dan NIM pelapor beberapa laporan sekaligus, untuk berkas ekspor. */
+export async function fetchIdentitasPelapor(
+  reports: WorkflowReport[],
+): Promise<Map<string, IdentitasPelapor>> {
+  if (!usingFirestore()) return new Map()
+
+  return await listIdentitasPelapor(reports.map((report) => report.studentNim))
 }
 
 /** Catatan penanganan satu laporan, kosong pada mode prototipe. */

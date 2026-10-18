@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { splitCourse } from '../../../shared/data/report-mapper'
+import { jalurFolderBukti } from './berkas-ekspor'
 
 /**
  * Ekspor data laporan untuk dikirim ke Fakultas/Unit terkait.
@@ -17,6 +18,8 @@ import { splitCourse } from '../../../shared/data/report-mapper'
 
 export const EXPORT_HEADERS = [
   'Nomor Laporan',
+  'Nama Mahasiswa',
+  'NIM',
   'Kategori',
   'Program Studi',
   'Fakultas',
@@ -30,19 +33,26 @@ export const EXPORT_HEADERS = [
   'Uraian Permasalahan',
   'Tanggal Laporan',
   'Status',
+  'Folder Bukti',
 ] as const
 
 /** Lebar kolom lembar kerja, dalam satuan karakter. */
-const LEBAR_KOLOM = [16, 22, 22, 28, 18, 16, 28, 10, 22, 30, 32, 40, 18, 18]
+const LEBAR_KOLOM = [16, 28, 16, 22, 22, 28, 18, 16, 28, 10, 22, 30, 32, 40, 18, 18, 40]
 
 export type BarisEkspor = (string | number)[]
 
 /** Menyusun satu baris data dari sebuah laporan. */
-export function barisLaporan(report: WorkflowReport, programStudi: string): BarisEkspor {
+export function barisLaporan(
+  report: WorkflowReport,
+  programStudi: string,
+  pelapor: { nama: string; nim: string } = { nama: '', nim: '' },
+): BarisEkspor {
   const { kode, nama } = splitCourse(report.course)
 
   return [
     report.id,
+    pelapor.nama || '—',
+    pelapor.nim || '—',
     report.category || '—',
     programStudi || '—',
     report.studentFaculty ?? '—',
@@ -56,6 +66,9 @@ export function barisLaporan(report: WorkflowReport, programStudi: string): Bari
     report.description ?? '—',
     report.submitted,
     report.status,
+    // Menunjuk folder bukti di dalam ZIP yang sama, supaya pembacanya dapat
+    // berpindah dari satu baris ke berkas buktinya tanpa menebak.
+    jalurFolderBukti({ nomor: report.id, namaPelapor: pelapor.nama }),
   ]
 }
 
@@ -97,4 +110,29 @@ export function buatBukuKerja(baris: readonly BarisEkspor[]): XLSX.WorkBook {
 /** Mengunduh buku kerja sebagai berkas Excel. */
 export function unduhBukuKerja(buku: XLSX.WorkBook, namaBerkas: string): void {
   XLSX.writeFile(buku, namaBerkas, { bookType: 'xlsx', compression: true })
+}
+
+/** Buku kerja sebagai bait, untuk dimasukkan ke dalam ZIP alih-alih diunduh. */
+export function bukuKerjaKeArrayBuffer(buku: XLSX.WorkBook): ArrayBuffer {
+  return XLSX.write(buku, { bookType: 'xlsx', type: 'array', compression: true }) as ArrayBuffer
+}
+
+/**
+ * Mengunduh berkas apa pun melalui tautan sementara.
+ *
+ * Objek URL-nya dilepas setelah unduhan dimulai; tanpa itu seluruh isi
+ * berkasnya tertahan di memori sampai halaman ditutup, dan berkas ekspor
+ * dapat berukuran puluhan megabait.
+ */
+export function unduhBlob(isi: Blob, namaBerkas: string): void {
+  const url = URL.createObjectURL(isi)
+  const tautan = document.createElement('a')
+
+  tautan.href = url
+  tautan.download = namaBerkas
+  document.body.append(tautan)
+  tautan.click()
+  tautan.remove()
+
+  URL.revokeObjectURL(url)
 }

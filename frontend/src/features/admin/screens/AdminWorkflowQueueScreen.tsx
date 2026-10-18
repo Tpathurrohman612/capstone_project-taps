@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useAdminReports } from '../lib/use-admin-reports'
-import { barisLaporan, buatBukuKerja, namaBerkasEkspor, unduhBukuKerja } from '../lib/report-export'
+import {
+  barisLaporan,
+  buatBukuKerja,
+  bukuKerjaKeArrayBuffer,
+  namaBerkasEkspor,
+  unduhBlob,
+} from '../lib/report-export'
+import { susunZipEkspor } from '../lib/berkas-ekspor'
+import { fetchAttachments, fetchIdentitasPelapor } from '../../../shared/data/report-store'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 import {
   AdminWorkflowShell,
   FACULTIES,
@@ -15,6 +24,8 @@ export function AdminWorkflowQueueScreen() {
   const [query, setQuery] = useState('')
   const [faculty, setFaculty] = useState('Semua')
   const [courseType, setCourseType] = useState('Semua')
+  /** Penyusunan ZIP membaca lampiran seluruh laporan, sehingga perlu waktu. */
+  const [menyusun, setMenyusun] = useState(false)
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
@@ -29,12 +40,15 @@ export function AdminWorkflowQueueScreen() {
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase())
     )
   })
+  // Ekspor ditujukan ke satu unit, sehingga penyaringnya hanya fakultas.
+  // Menyertakan jenis mata kuliah akan membuat sebagian laporan fakultas yang
+  // sama tertinggal tanpa disadari, padahal seluruhnya ditujukan ke unit yang
+  // sama dan diperiksa dalam satu kesempatan.
   const exportReports = allReports.filter(
     (report) =>
       faculty !== 'Semua' &&
       report.status === 'Lolos Pemeriksaan' &&
-      report.studentFaculty === faculty &&
-      (courseType === 'Semua' || report.courseType === courseType),
+      report.studentFaculty === faculty,
   )
   /** Mengapa ekspor belum dapat dijalankan, bila memang belum. */
   const alasanEkspor = alasanEksporTertutup({ fakultas: faculty, jumlahSiap: exportReports.length })
@@ -50,7 +64,7 @@ export function AdminWorkflowQueueScreen() {
    * Berkas CSV sering terbuka berantakan pada Excel berpengaturan Indonesia
    * yang memakai titik koma sebagai pemisah kolom.
    */
-  const downloadExport = () => {
+  const downloadExport = async (): Promise<boolean> => {
     if (exportReports.length === 0) {
       // Mengunduh berkas kosong tanpa penjelasan membuat Administrator
       // mengira ekspornya rusak, padahal memang tidak ada yang cocok.
@@ -58,12 +72,50 @@ export function AdminWorkflowQueueScreen() {
         'Tidak ada laporan yang dapat diekspor. Ekspor hanya mencakup laporan ' +
           'berstatus Lolos Pemeriksaan pada fakultas yang dipilih.',
       )
-      return
+      return false
     }
 
     setKirimError('')
-    const baris = exportReports.map((report) => barisLaporan(report, reportProgramStudy(report)))
-    unduhBukuKerja(buatBukuKerja(baris), namaBerkasEkspor(exportFaculty))
+    setMenyusun(true)
+
+    try {
+      // Identitas dan lampiran dibaca sekali untuk seluruh laporan, bukan satu
+      // permintaan per laporan.
+      const identitas = await fetchIdentitasPelapor(exportReports)
+      const lampiran = await Promise.all(
+        exportReports.map(async (report) => ({
+          nomor: report.id,
+          namaPelapor: identitas.get(report.studentNim)?.nama ?? '',
+          lampiran: (await fetchAttachments(report)).map((berkas) => ({
+            nama: berkas.name,
+            ...(berkas.url ? { isiBase64: berkas.url } : {}),
+          })),
+        })),
+      )
+
+      const baris = exportReports.map((report) =>
+        barisLaporan(
+          report,
+          reportProgramStudy(report),
+          identitas.get(report.studentNim) ?? { nama: '', nim: '' },
+        ),
+      )
+
+      const namaExcel = namaBerkasEkspor(exportFaculty)
+      const zip = await susunZipEkspor({
+        excel: bukuKerjaKeArrayBuffer(buatBukuKerja(baris)),
+        namaExcel,
+        laporan: lampiran,
+      })
+
+      unduhBlob(zip, namaExcel.replace(/\.xlsx$/, '.zip'))
+      return true
+    } catch (penyebab) {
+      setKirimError(jelaskanGalatFirestore(penyebab, 'daftar-laporan-administrator'))
+      return false
+    } finally {
+      setMenyusun(false)
+    }
   }
   /**
    * Mencatat pengiriman data ke Fakultas/Unit terkait.
@@ -307,9 +359,10 @@ export function AdminWorkflowQueueScreen() {
               </div>
             </dl>
             <p className="mt-4 text-sm leading-6 text-[#52657A]">
-              Data yang diekspor mencakup laporan berstatus Lolos Pemeriksaan dari Fakultas yang
-              dipilih, sesuai dengan filter jenis mata kuliah yang aktif, termasuk laporan dari satu
-              atau beberapa Program Studi.
+              Berkas diunduh sebagai ZIP berisi satu berkas Excel dan satu folder bukti untuk setiap
+              laporan. Yang diekspor adalah seluruh laporan berstatus Lolos Pemeriksaan pada
+              Fakultas yang dipilih, dari Program Studi dan jenis mata kuliah mana pun, karena
+              seluruhnya ditujukan ke unit yang sama.
             </p>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
@@ -320,13 +373,19 @@ export function AdminWorkflowQueueScreen() {
               </button>
               <button
                 onClick={() => {
-                  downloadExport()
-                  setExportModalOpen(false)
-                  setExportReady(true)
+                  // Modal ditahan sampai berkasnya selesai disusun. Menutupnya
+                  // lebih dahulu membuat Administrator mengira ekspornya gagal,
+                  // karena membaca lampiran seluruh laporan memakan waktu.
+                  void downloadExport().then((berhasil) => {
+                    if (!berhasil) return
+                    setExportModalOpen(false)
+                    setExportReady(true)
+                  })
                 }}
-                className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
+                disabled={menyusun}
+                className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
               >
-                Export Data Laporan
+                {menyusun ? 'Menyusun berkas…' : 'Export Data Laporan'}
               </button>
             </div>
           </div>
