@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { statusStages } from '../data/detail-report'
 import { useStudentReports } from '../lib/use-student-reports'
-import { fetchAttachments } from '../../../shared/data/report-store'
+import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
+import type { WorkflowReport } from '../../../shared/types/workflow'
 
 export function DetailReportScreen() {
   const { riwayat, reports, memuat: memuatLaporan } = useStudentReports()
@@ -33,6 +34,15 @@ export function DetailReportScreen() {
   /** Gambar yang sedang dibuka besar. Null berarti tidak ada yang dibuka. */
   const [pratinjau, setPratinjau] = useState<{ nama: string; url: string } | null>(null)
 
+  /**
+   * Riwayat perubahan status laporan.
+   *
+   * Daftar laporan tidak membawa riwayatnya, karena menariknya pada setiap
+   * pembacaan daftar akan menggandakan biaya tanpa ada yang memakainya. Di
+   * layar ini riwayatnya justru yang ditampilkan, sehingga dibaca terpisah.
+   */
+  const [riwayatStatus, setRiwayatStatus] = useState<WorkflowReport['updates']>([])
+
   useEffect(() => {
     let aktif = true
 
@@ -43,6 +53,23 @@ export function DetailReportScreen() {
       .catch(() => {
         // Gagal membaca bukti pendukung tidak boleh mengosongkan laporannya.
         if (aktif) setAttachments([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [administratorReport])
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchReportUpdates(administratorReport)
+      .then((hasil) => {
+        if (aktif) setRiwayatStatus(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca riwayat tidak boleh mengosongkan seluruh halaman.
+        if (aktif) setRiwayatStatus([])
       })
 
     return () => {
@@ -130,7 +157,7 @@ export function DetailReportScreen() {
   // memiliki tindak lanjut atau bukti pendukung ditampilkan apa adanya sebagai
   // kosong, karena menampilkan berkas dan catatan milik data demo membuat
   // pengguna mengira unggahannya tersimpan padahal tidak.
-  const detailFollowUps = administratorReport?.updates ?? []
+  const detailFollowUps = riwayatStatus
   const detailAttachments = attachments
   return (
     <>
@@ -373,27 +400,37 @@ export function DetailReportScreen() {
                 Tindak Lanjut
               </h2>
             </div>
-            <ol className="p-6 max-[620px]:p-5">
-              {detailFollowUps.map((update, index) => (
-                <li key={update.time} className="relative flex gap-4 pb-7 last:pb-0">
-                  <div
-                    className={`absolute left-3 top-6 h-[calc(100%-24px)] w-px ${
-                      index === detailFollowUps.length - 1 ? 'hidden' : 'bg-[#B8D3E8]'
-                    }`}
-                  />
-                  <span className="relative z-1 flex h-6 w-6 shrink-0 items-center justify-center border border-[#005BAC] bg-white text-[10px] text-[#005BAC]">
-                    ●
-                  </span>
-                  <div>
-                    <p className="font-mono text-[10px] tracking-[0.08em] text-[#52657A]">
-                      {update.time}
-                    </p>
-                    <h3 className="mt-1 text-sm font-semibold text-[#12355B]">{update.title}</h3>
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-[#52657A]">{update.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            {/* Laporan yang belum ditangani ditandai demikian. Kotak kosong
+                tanpa keterangan terbaca seperti tampilan yang gagal dimuat. */}
+            {detailFollowUps.length === 0 ? (
+              <p className="text-sm leading-6 text-[#52657A]">
+                Belum ada tindak lanjut dari pengelola.
+              </p>
+            ) : (
+              <ol className="p-6 max-[620px]:p-5">
+                {detailFollowUps.map((update, index) => (
+                  <li key={update.time} className="relative flex gap-4 pb-7 last:pb-0">
+                    <div
+                      className={`absolute left-3 top-6 h-[calc(100%-24px)] w-px ${
+                        index === detailFollowUps.length - 1 ? 'hidden' : 'bg-[#B8D3E8]'
+                      }`}
+                    />
+                    <span className="relative z-1 flex h-6 w-6 shrink-0 items-center justify-center border border-[#005BAC] bg-white text-[10px] text-[#005BAC]">
+                      ●
+                    </span>
+                    <div>
+                      <p className="font-mono text-[10px] tracking-[0.08em] text-[#52657A]">
+                        {update.time}
+                      </p>
+                      <h3 className="mt-1 text-sm font-semibold text-[#12355B]">{update.title}</h3>
+                      <p className="mt-1 max-w-2xl text-sm leading-6 text-[#52657A]">
+                        {update.text}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
           </section>
         </div>
         <div className="mt-8 flex flex-wrap gap-3 border-t border-[#D9E2EC] pt-6">
