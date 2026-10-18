@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import type { WorkflowStatus } from '../../../shared/types/workflow'
-import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
+import { useAdminReports } from '../lib/use-admin-reports'
 import {
   AdminWorkflowShell,
   FACULTIES,
@@ -18,7 +16,8 @@ export function AdminWorkflowQueueScreen() {
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
-  const allReports = getWorkflowReports()
+  const { reports: allReports, memuat: memuatLaporan, ubahStatus } = useAdminReports()
+  const [kirimError, setKirimError] = useState('')
   const reports = allReports.filter((report) => {
     return (
       report.status !== 'Selesai' &&
@@ -87,30 +86,39 @@ export function AdminWorkflowQueueScreen() {
     link.remove()
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0)
   }
-  const confirmSend = () => {
-    const sentAt = formatIndonesianDateTime(new Date())
-    const selected = new Set(exportReports.map((report) => report.id))
-    const updated = allReports.map((report) =>
-      selected.has(report.id)
-        ? {
-            ...report,
-            status: 'Menunggu Validasi' as WorkflowStatus,
-            updates: [
-              ...report.updates,
-              {
-                time: sentAt,
-                title: 'Data laporan dikirim ke Fakultas/Unit terkait',
-                text: 'Data laporan telah dikirim oleh Administrator melalui kanal eksternal untuk proses validasi.',
-              },
-            ],
-          }
-        : report,
-    )
-    try {
-      saveWorkflowReports(updated)
-    } catch {
+  /**
+   * Mencatat pengiriman data ke Fakultas/Unit terkait.
+   *
+   * Perpindahan ke Menunggu Validasi menuntut unit tujuan dan kanal
+   * pengiriman menurut Tabel 4.2, sehingga keduanya disertakan. Laporan
+   * diproses satu per satu karena masing-masing melewati pemeriksaan
+   * kelayakannya sendiri; laporan yang tidak sah dilewati dan disebutkan,
+   * bukan membatalkan seluruh pengiriman.
+   */
+  const confirmSend = async () => {
+    setKirimError('')
+    const gagal: string[] = []
+
+    for (const report of exportReports) {
+      const hasil = await ubahStatus({
+        report,
+        ke: 'Menunggu Validasi',
+        keterangan:
+          'Data laporan dikirim Administrator melalui kanal eksternal untuk proses validasi.',
+        data: {
+          unit_tujuan: report.studentFaculty ?? 'Fakultas/Unit terkait',
+          kanal_pengiriman: 'Surel',
+        },
+      })
+
+      if (!hasil.berhasil) gagal.push(`${report.id}: ${hasil.alasan}`)
+    }
+
+    if (gagal.length > 0) {
+      setKirimError(gagal.join(' · '))
       return
     }
+
     setExportReady(false)
     setSendModalOpen(false)
   }
@@ -209,7 +217,15 @@ export function AdminWorkflowQueueScreen() {
               </button>
             </div>
           </div>
-          <WorkflowTable reports={reports} context="queue" showProgramStudy />
+          {/* Tabel kosong saat memuat akan terbaca sebagai antrean kosong,
+              padahal laporannya belum tiba dari basis data. */}
+          {memuatLaporan ? (
+            <p className="px-6 py-8 text-center text-sm text-[#52657A]">
+              Memuat antrean laporan dari basis data…
+            </p>
+          ) : (
+            <WorkflowTable reports={reports} context="queue" showProgramStudy />
+          )}
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
               <p className="font-slab text-xl text-[#12355B]">Belum ada laporan pada status ini.</p>
@@ -332,6 +348,14 @@ export function AdminWorkflowQueueScreen() {
               Pastikan data laporan telah dikirim kepada Fakultas/Unit terkait melalui kanal
               eksternal sebelum melanjutkan.
             </p>
+            {kirimError && (
+              <p
+                role="alert"
+                className="mb-4 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-xs leading-5 text-[#B42318]"
+              >
+                {kirimError}
+              </p>
+            )}
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
                 onClick={() => setSendModalOpen(false)}
@@ -340,7 +364,7 @@ export function AdminWorkflowQueueScreen() {
                 Batal
               </button>
               <button
-                onClick={confirmSend}
+                onClick={() => void confirmSend()}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
                 Konfirmasi Pengiriman

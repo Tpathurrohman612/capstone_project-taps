@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
 import type { WorkflowReport } from '../../../shared/types/workflow'
-import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { useAdminReports } from '../lib/use-admin-reports'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
 
@@ -33,8 +33,9 @@ const adminStatusClass = (status: string) =>
       : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
 
 export function AdminDashboardScreen() {
+  const { reports: semuaLaporan, memuat: memuatLaporan } = useAdminReports()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const dashboardWorkflowReports = getWorkflowReports()
+  const dashboardWorkflowReports = semuaLaporan
   const dashboardReport = (report: WorkflowReport) => ({
     ...report,
     date: report.submitted,
@@ -227,37 +228,49 @@ export function AdminDashboardScreen() {
           <div className="mt-8 grid grid-cols-5 border border-[#D9E2EC] max-[1100px]:grid-cols-3 max-[760px]:grid-cols-2 max-[620px]:grid-cols-1">
             {[
               [
-                String(dashboardWorkflowReports.length).padStart(2, '0'),
+                memuatLaporan ? '—' : String(dashboardWorkflowReports.length).padStart(2, '0'),
                 'Total Laporan',
                 'Seluruh laporan masuk',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Diterima').length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter((report) => report.status === 'Diterima')
+                        .length,
+                    ).padStart(2, '0'),
                 'Perlu Verifikasi',
                 'Menunggu verifikasi',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Menunggu Validasi')
-                    .length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Menunggu Validasi',
+                      ).length,
+                    ).padStart(2, '0'),
                 'Menunggu Validasi',
                 'Menunggu hasil validasi',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Sedang Diproses')
-                    .length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Sedang Diproses',
+                      ).length,
+                    ).padStart(2, '0'),
                 'Sedang Diproses',
                 'Dalam tindak lanjut',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Selesai').length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter((report) => report.status === 'Selesai')
+                        .length,
+                    ).padStart(2, '0'),
                 'Selesai',
                 'Telah diselesaikan',
               ],

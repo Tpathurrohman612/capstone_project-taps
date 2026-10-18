@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowStatus } from '../../../shared/types/workflow'
 import { nextStatuses } from '../../../shared/domain/report-status'
 import { workflowSeed } from '../../../shared/data/workflow-seed'
-import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
+import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
@@ -21,9 +20,13 @@ export function AdminWorkflowDetailScreen() {
   const context =
     window.sessionStorage.getItem('adminDetailContext') === 'history' ? 'history' : 'queue'
   const id = window.sessionStorage.getItem('adminDetailId') ?? 'LT-2026-0008'
-  const [report, setReport] = useState(
-    () => getWorkflowReports().find((item) => item.id === id) ?? workflowSeed[0],
-  )
+  const { reports: semuaLaporan, memuat: memuatLaporan, ubahStatus } = useAdminReports()
+
+  // Laporan diambil dari daftar bersama, bukan disalin ke state tersendiri.
+  // Menyalinnya membuat tampilan tertinggal setiap kali statusnya berubah,
+  // karena salinannya tidak ikut diperbarui saat daftar dibaca ulang.
+  const report = semuaLaporan.find((item) => item.id === id) ?? workflowSeed[0]
+  const [aksiError, setAksiError] = useState('')
   // Status berikutnya diturunkan dari Tabel 4.2, bukan dari peta yang ditulis
   // ulang di layar ini. Aturan pertama untuk setiap status adalah jalur utama,
   // sehingga tombol aksi mengikuti alur normal; cabang Perlu Informasi
@@ -71,7 +74,7 @@ export function AdminWorkflowDetailScreen() {
         : state === 'next'
           ? 'border-[#005BAC] bg-white text-[#005BAC]'
           : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
-  const advance = () => {
+  const advance = async () => {
     const next = mainFlowNext(report.status)
     if (!next) return
     const title =
@@ -94,78 +97,85 @@ export function AdminWorkflowDetailScreen() {
             : next === 'Sedang Diproses'
               ? 'Laporan diteruskan kepada pengelola Tutorial Online untuk tindak lanjut.'
               : 'Tindak lanjut telah dilakukan dan laporan dinyatakan selesai.'
-    const time = formatIndonesianDateTime(new Date())
-    const updated = {
-      ...report,
-      status: next,
-      updates: [...report.updates, { time, title, text }],
-    }
-    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    try {
-      saveWorkflowReports(all)
-    } catch {
+    // Syarat wajib tiap perpindahan diambil dari Tabel 4.2. Unit tujuan dan
+    // kanal pengiriman hanya relevan pada perpindahan ke Menunggu Validasi,
+    // sehingga disertakan bersyarat daripada selalu dikirim.
+    const hasil = await ubahStatus({
+      report,
+      ke: next,
+      keterangan: `${title}. ${text}`,
+      data:
+        next === 'Menunggu Validasi'
+          ? {
+              unit_tujuan: report.studentFaculty ?? 'Fakultas/Unit terkait',
+              kanal_pengiriman: 'Surel',
+            }
+          : next === 'Sedang Diproses'
+            ? {
+                hasil_validasi: 'Terbukti',
+                unit_validator: report.studentFaculty ?? 'Fakultas/Unit terkait',
+              }
+            : next === 'Selesai'
+              ? { tindak_lanjut: text }
+              : {},
+    })
+
+    if (!hasil.berhasil) {
+      setAksiError(hasil.alasan)
       return
     }
-    setReport(updated)
+
+    setAksiError('')
     setModalOpen(false)
   }
-  const recordValidation = () => {
+  const recordValidation = async () => {
     const result = validationResult.trim()
     if (!result) {
       setValidationError('Hasil Validasi wajib diisi.')
       return
     }
     const note = validationNote.trim()
-    const updated = {
-      ...report,
-      updates: [
-        ...report.updates,
-        {
-          time: formatIndonesianDateTime(new Date()),
-          title: 'Hasil validasi diterima dan dicatat',
-          text: `Hasil validasi dari Fakultas/Unit terkait telah diterima dan dicatat oleh Administrator. Hasil validasi: ${result}${
-            note ? `. Catatan validasi: ${note}` : ''
-          }`,
-        },
-      ],
-    }
-    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    try {
-      saveWorkflowReports(all)
-    } catch {
+    const hasil = await ubahStatus({
+      report,
+      ke: 'Sedang Diproses',
+      keterangan:
+        `Hasil validasi dari Fakultas/Unit terkait telah dicatat. Hasil validasi: ${result}` +
+        (note ? `. Catatan validasi: ${note}` : ''),
+      data: {
+        hasil_validasi: result,
+        unit_validator: report.studentFaculty ?? 'Fakultas/Unit terkait',
+      },
+    })
+
+    if (!hasil.berhasil) {
+      setValidationError(hasil.alasan)
       return
     }
-    setReport(updated)
+
     setValidationModalOpen(false)
     setValidationResult('')
     setValidationNote('')
     setValidationError('')
   }
-  const completeReport = () => {
+  const completeReport = async () => {
     const result = completionResult.trim()
     if (!result) {
       setCompletionError('Tindak Lanjut / Hasil Penanganan wajib diisi.')
       return
     }
-    const updated = {
-      ...report,
-      status: 'Selesai' as WorkflowStatus,
-      updates: [
-        ...report.updates,
-        {
-          time: formatIndonesianDateTime(new Date()),
-          title: 'Laporan selesai',
-          text: `Laporan telah selesai ditangani. Tindak lanjut / hasil penanganan: ${result}`,
-        },
-      ],
-    }
-    const all = getWorkflowReports().map((item) => (item.id === updated.id ? updated : item))
-    try {
-      saveWorkflowReports(all)
-    } catch {
+    // Perpindahan ke Selesai menuntut tindak lanjut terisi menurut Tabel 4.2,
+    // dan isian itulah yang dicatat sebagai keterangannya.
+    const hasil = await ubahStatus({
+      report,
+      ke: 'Selesai',
+      keterangan: `Laporan telah selesai ditangani. Tindak lanjut: ${result}`,
+      data: { tindak_lanjut: result },
+    })
+
+    if (!hasil.berhasil) {
+      setCompletionError(hasil.alasan)
       return
     }
-    setReport(updated)
     setCompletionModalOpen(false)
     setCompletionResult('')
     setCompletionError('')
@@ -189,6 +199,18 @@ export function AdminWorkflowDetailScreen() {
   const labels = ['Diterima', 'Diverifikasi', 'Menunggu Validasi', 'Sedang Diproses', 'Selesai']
   const back =
     context === 'history' ? '/administrator/riwayat-laporan' : '/administrator/antrean-laporan'
+  // Selama laporan belum tiba, layar jangan menampilkan laporan contoh dari
+  // workflowSeed seolah itu laporan yang diminta.
+  if (memuatLaporan) {
+    return (
+      <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
+        <section className="px-8 py-10 max-[620px]:px-5">
+          <p className="text-sm text-[#52657A]">Memuat laporan dari basis data…</p>
+        </section>
+      </AdminWorkflowShell>
+    )
+  }
+
   return (
     <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
       <section className="px-8 py-7 max-[620px]:px-5">
@@ -255,6 +277,14 @@ export function AdminWorkflowDetailScreen() {
                   </li>
                 ))}
               </ol>
+              {aksiError && (
+                <p
+                  role="alert"
+                  className="mb-4 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-xs leading-5 text-[#B42318]"
+                >
+                  {aksiError}
+                </p>
+              )}
               {actionLabel && (
                 <div className="mt-7 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
                   <div>
@@ -408,7 +438,7 @@ export function AdminWorkflowDetailScreen() {
                 Batal
               </button>
               <button
-                onClick={advance}
+                onClick={() => void advance()}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
                 {report.status === 'Menunggu Validasi' && validationRecorded
@@ -473,7 +503,7 @@ export function AdminWorkflowDetailScreen() {
               </button>
               <button
                 type="button"
-                onClick={recordValidation}
+                onClick={() => void recordValidation()}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
                 Simpan
@@ -529,7 +559,7 @@ export function AdminWorkflowDetailScreen() {
               </button>
               <button
                 type="button"
-                onClick={completeReport}
+                onClick={() => void completeReport()}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
                 Selesaikan Laporan

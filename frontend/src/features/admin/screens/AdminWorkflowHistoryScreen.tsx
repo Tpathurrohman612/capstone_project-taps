@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, WorkflowTable } from '../components/workflow-ui'
 
 export function AdminWorkflowHistoryScreen() {
+  const { reports: semuaLaporan, memuat: memuatLaporan } = useAdminReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
-  const reports = getWorkflowReports().filter(
+  const reports = semuaLaporan.filter(
     (report) =>
       report.status === 'Selesai' &&
       (status === 'Semua' || report.status === status) &&
@@ -63,7 +64,15 @@ export function AdminWorkflowHistoryScreen() {
               {String(reports.length).padStart(2, '0')} LAPORAN
             </span>
           </div>
-          <WorkflowTable reports={reports} context="history" />
+          {/* Selama laporan masih diambil, tabel kosong akan terbaca sebagai
+              "belum ada laporan selesai" padahal datanya belum tiba. */}
+          {memuatLaporan ? (
+            <p className="px-6 py-8 text-center text-sm text-[#52657A]">
+              Memuat laporan dari basis data…
+            </p>
+          ) : (
+            <WorkflowTable reports={reports} context="history" />
+          )}
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
               <p className="font-slab text-xl text-[#12355B]">Belum ada laporan selesai.</p>
