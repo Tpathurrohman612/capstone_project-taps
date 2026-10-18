@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
-import { nextStatuses } from '../../../shared/domain/report-status'
+import { isTerminal, nextStatuses } from '../../../shared/domain/report-status'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
@@ -137,19 +137,30 @@ export function AdminWorkflowDetailScreen() {
 
   /** Kelengkapan terakhir yang dikirim mahasiswa. */
   const kelengkapan = kelengkapanTerakhir(riwayatStatus)
+  // Status akhir tidak dapat dipindahkan lagi, dan Perlu Informasi Tambahan
+  // menunggu mahasiswa, bukan Administrator. Sebelumnya keduanya jatuh ke
+  // cabang terakhir dan tetap menawarkan Perbarui Status, padahal lapisan data
+  // dan aturan keamanan akan menolaknya.
   const actionLabel =
-    report.status === 'Diterima'
-      ? 'Verifikasi Laporan'
-      : report.status === 'Diverifikasi'
-        ? 'Siapkan Validasi'
-        : report.status === 'Menunggu Validasi'
-          ? validationRecorded
-            ? 'Perbarui Status'
-            : 'Catat Hasil Validasi'
-          : report.status === 'Selesai'
-            ? null
-            : 'Perbarui Status'
+    isTerminal(report.status) || report.status === 'Perlu Informasi Tambahan'
+      ? null
+      : report.status === 'Diterima'
+        ? 'Verifikasi Laporan'
+        : report.status === 'Diverifikasi'
+          ? 'Siapkan Validasi'
+          : report.status === 'Menunggu Validasi'
+            ? validationRecorded
+              ? 'Perbarui Status'
+              : 'Catat Hasil Validasi'
+            : report.status === 'Selesai'
+              ? null
+              : 'Perbarui Status'
   const stageState = (index: number) => {
+    // Ditolak bukan bagian dari lima tahap jalur utama, sehingga indexOf
+    // mengembalikan -1 dan seluruh lini terbaca seolah laporan masih berjalan.
+    // Laporan yang ditolak berhenti pada tahap pertama dan ditandai di situ.
+    if (report.status === 'Ditolak') return index === 0 ? 'rejected' : 'upcoming'
+
     const level = [
       'Diterima',
       'Diverifikasi',
@@ -168,13 +179,15 @@ export function AdminWorkflowDetailScreen() {
           : 'upcoming'
   }
   const stageClass = (state: string) =>
-    state === 'done'
-      ? 'border-[#005BAC] bg-[#005BAC] text-white'
-      : state === 'current'
-        ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
-        : state === 'next'
-          ? 'border-[#005BAC] bg-white text-[#005BAC]'
-          : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
+    state === 'rejected'
+      ? 'border-[#B42318] bg-[#B42318] text-white'
+      : state === 'done'
+        ? 'border-[#005BAC] bg-[#005BAC] text-white'
+        : state === 'current'
+          ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
+          : state === 'next'
+            ? 'border-[#005BAC] bg-white text-[#005BAC]'
+            : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
   const advance = async () => {
     const next = mainFlowNext(report.status)
     if (!next) return
@@ -406,7 +419,11 @@ export function AdminWorkflowDetailScreen() {
                     <span
                       className={`relative z-1 flex h-6 w-6 items-center justify-center border-2 text-[10px] font-bold ${stageClass(stageState(index))}`}
                     >
-                      {stageState(index) === 'done' ? '✓' : index + 1}
+                      {stageState(index) === 'rejected'
+                        ? '✕'
+                        : stageState(index) === 'done'
+                          ? '✓'
+                          : index + 1}
                     </span>
                     <p className="mt-4 text-sm font-semibold text-[#12355B]">{label}</p>
                   </li>
@@ -418,12 +435,45 @@ export function AdminWorkflowDetailScreen() {
                     <span
                       className={`flex h-6 w-6 shrink-0 items-center justify-center border-2 text-[10px] font-bold ${stageClass(stageState(index))}`}
                     >
-                      {stageState(index) === 'done' ? '✓' : index + 1}
+                      {stageState(index) === 'rejected'
+                        ? '✕'
+                        : stageState(index) === 'done'
+                          ? '✓'
+                          : index + 1}
                     </span>
                     <p className="text-sm font-semibold text-[#12355B]">{label}</p>
                   </li>
                 ))}
               </ol>
+              {/* Status akhir tidak menawarkan tindakan, tetapi tetap perlu
+                  menyatakan mengapa tidak ada yang dapat dilakukan. Tanpa ini
+                  bagian tindakan hilang begitu saja dan terbaca seperti
+                  tampilan yang belum selesai dimuat. */}
+              {isTerminal(report.status) && (
+                <div className="mt-7 border-t border-[#D9E2EC] pt-5">
+                  <p className="text-sm font-semibold text-[#12355B]">
+                    {report.status === 'Ditolak' ? 'Laporan ditolak' : 'Laporan selesai'}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#52657A]">
+                    {report.status === 'Ditolak'
+                      ? 'Laporan tidak diproses lebih lanjut dan statusnya tidak dapat diubah kembali.'
+                      : 'Seluruh tahap penanganan telah dilalui dan statusnya tidak dapat diubah kembali.'}
+                  </p>
+                </div>
+              )}
+
+              {report.status === 'Perlu Informasi Tambahan' && (
+                <div className="mt-7 border-t border-[#D9E2EC] pt-5">
+                  <p className="text-sm font-semibold text-[#12355B]">
+                    Menunggu kelengkapan dari mahasiswa
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#52657A]">
+                    Laporan akan kembali masuk antrean verifikasi setelah mahasiswa mengirimkan
+                    kelengkapannya.
+                  </p>
+                </div>
+              )}
+
               {actionLabel && (
                 <div className="mt-7 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
                   <div>

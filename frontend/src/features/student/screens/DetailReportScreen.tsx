@@ -178,7 +178,19 @@ export function DetailReportScreen() {
   const detailStatusStages = statusStages.map((stage, index) => ({
     ...stage,
     time: timelineTime(stage.label, index),
-    state: index < currentStage ? 'done' : index === currentStage ? 'current' : 'upcoming',
+    // Laporan yang ditolak berhenti pada tahap tempatnya ditolak. Menandainya
+    // sebagai tahap berjalan membuat lini status terbaca seolah laporan masih
+    // diproses, padahal tidak ada lagi yang akan terjadi.
+    state:
+      report.status === 'Ditolak'
+        ? index === currentStage
+          ? 'rejected'
+          : 'upcoming'
+        : index < currentStage
+          ? 'done'
+          : index === currentStage
+            ? 'current'
+            : 'upcoming',
   }))
   const detailReportInformation = [
     ['Kategori Permasalahan', report.category ?? 'Tutor tidak memberikan umpan balik'],
@@ -251,14 +263,16 @@ export function DetailReportScreen() {
                     />
                     <span
                       className={`relative z-1 flex h-6 w-6 items-center justify-center border-2 text-[10px] font-bold ${
-                        stage.state === 'done'
-                          ? 'border-[#005BAC] bg-[#005BAC] text-white'
-                          : stage.state === 'current'
-                            ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
-                            : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
+                        stage.state === 'rejected'
+                          ? 'border-[#B42318] bg-[#B42318] text-white'
+                          : stage.state === 'done'
+                            ? 'border-[#005BAC] bg-[#005BAC] text-white'
+                            : stage.state === 'current'
+                              ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
+                              : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
                       }`}
                     >
-                      {stage.state === 'done' ? '✓' : index + 1}
+                      {stage.state === 'rejected' ? '✕' : stage.state === 'done' ? '✓' : index + 1}
                     </span>
                     <p
                       className={`mt-4 text-sm font-semibold ${
@@ -287,14 +301,16 @@ export function DetailReportScreen() {
                     />
                     <span
                       className={`relative z-1 flex h-6 w-6 shrink-0 items-center justify-center border-2 text-[10px] font-bold ${
-                        stage.state === 'done'
-                          ? 'border-[#005BAC] bg-[#005BAC] text-white'
-                          : stage.state === 'current'
-                            ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
-                            : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
+                        stage.state === 'rejected'
+                          ? 'border-[#B42318] bg-[#B42318] text-white'
+                          : stage.state === 'done'
+                            ? 'border-[#005BAC] bg-[#005BAC] text-white'
+                            : stage.state === 'current'
+                              ? 'border-[#C99C20] bg-[#F2C94C] text-[#12355B]'
+                              : 'border-[#B9C8D7] bg-white text-[#7D8B99]'
                       }`}
                     >
-                      {stage.state === 'done' ? '✓' : index + 1}
+                      {stage.state === 'rejected' ? '✕' : stage.state === 'done' ? '✓' : index + 1}
                     </span>
                     <div>
                       <p
