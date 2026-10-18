@@ -171,6 +171,35 @@ export async function linkNimToAccount(params: {
   }
 }
 
+/**
+ * Menyelaraskan foto profil dengan akun Google yang sedang masuk.
+ *
+ * Foto hanya tersimpan saat identitas pertama kali didaftarkan, sehingga akun
+ * yang mendaftar sebelum penyimpanan itu ada tidak akan pernah memilikinya.
+ * Memintanya mendaftar ulang pun mustahil, karena NIM-nya sudah terkunci.
+ *
+ * Penulisan hanya terjadi ketika fotonya memang berbeda. Menulis pada setiap
+ * kali masuk akan menghabiskan kuota tulis harian tanpa mengubah apa pun.
+ */
+export async function selaraskanFotoProfil(params: {
+  uid: string
+  fotoUrl: string | null
+  profil: UserProfile | null
+}): Promise<UserProfile | null> {
+  const foto = params.fotoUrl ?? ''
+
+  if (!isFirebaseConfigured() || !params.profil || foto === '') return params.profil
+  if (params.profil.fotoUrl === foto) return params.profil
+
+  await setDoc(
+    doc(db, USERS_COLLECTION, params.uid),
+    { foto_url: foto, diperbaruiPada: serverTimestamp() },
+    { merge: true },
+  )
+
+  return { ...params.profil, fotoUrl: foto }
+}
+
 /** Memperbarui fakultas tanpa menyentuh tautan NIM. */
 export async function updateFaculty(uid: string, faculty: Faculty): Promise<void> {
   if (!isFirebaseConfigured()) throw new ProfileNotConfiguredError()

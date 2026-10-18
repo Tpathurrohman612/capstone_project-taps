@@ -4,7 +4,11 @@ import type { User } from 'firebase/auth'
 import { isFirebaseConfigured } from './firebase'
 import { observeAuthState } from '../../features/auth/lib/firebase-auth'
 import { isAdministrator } from '../../features/auth/lib/administrator'
-import { readUserProfile, type UserProfile } from '../../features/auth/lib/user-profile'
+import {
+  readUserProfile,
+  selaraskanFotoProfil,
+  type UserProfile,
+} from '../../features/auth/lib/user-profile'
 import { setActiveUserRole, type UserRole } from './auth-session'
 
 /**
@@ -53,7 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current) return null
 
     try {
-      return (await readUserProfile(current.uid)) ?? null
+      const profil = (await readUserProfile(current.uid)) ?? null
+
+      // Foto hanya tersimpan saat identitas pertama kali didaftarkan, dan
+      // akun yang terdaftar sebelum itu tidak akan pernah memilikinya.
+      // Penyelarasan di sini menulis hanya ketika fotonya memang berbeda,
+      // dan kegagalannya tidak boleh menahan pengguna di layar memuat.
+      return await selaraskanFotoProfil({
+        uid: current.uid,
+        fotoUrl: current.photoURL,
+        profil,
+      }).catch(() => profil)
     } catch {
       // Gagal membaca profil tidak boleh mengunci pengguna di layar memuat.
       // Pengguna diperlakukan sebagai belum melengkapi identitas, dan layar
