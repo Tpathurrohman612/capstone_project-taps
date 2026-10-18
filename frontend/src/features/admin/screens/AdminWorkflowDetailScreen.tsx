@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { nextStatuses } from '../../../shared/domain/report-status'
 import { useAdminReports } from '../lib/use-admin-reports'
-import { fetchReportUpdates } from '../../../shared/data/report-store'
+import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
@@ -28,6 +28,13 @@ export function AdminWorkflowDetailScreen() {
    * layar ini riwayatnya justru yang ditampilkan, sehingga dibaca terpisah.
    */
   const [riwayatStatus, setRiwayatStatus] = useState<WorkflowReport['updates']>([])
+
+  const [lampiran, setLampiran] = useState<
+    { name: string; type: string; size?: string; url?: string }[]
+  >([])
+
+  /** Gambar yang sedang dibuka besar. Null berarti tidak ada yang dibuka. */
+  const [pratinjau, setPratinjau] = useState<{ nama: string; url: string } | null>(null)
   const navigate = useNavigate()
   const context =
     window.sessionStorage.getItem('adminDetailContext') === 'history' ? 'history' : 'queue'
@@ -52,6 +59,23 @@ export function AdminWorkflowDetailScreen() {
       .catch(() => {
         // Gagal membaca riwayat tidak boleh mengosongkan seluruh halaman.
         if (aktif) setRiwayatStatus([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [report])
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchAttachments(report)
+      .then((hasil) => {
+        if (aktif) setLampiran(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca bukti pendukung tidak boleh mengosongkan laporannya.
+        if (aktif) setLampiran([])
       })
 
     return () => {
@@ -424,9 +448,14 @@ export function AdminWorkflowDetailScreen() {
               </p>
               <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Uraian Permasalahan</h2>
             </div>
-            <p className="p-6 text-sm leading-7">
-              Mahasiswa melaporkan kendala terkait “{report.title}” pada mata kuliah {report.course}{' '}
-              selama kegiatan Tutorial Online.
+            {/* Uraian ditampilkan apa adanya dari laporannya. Sebelumnya bagian
+                ini merakit kalimat dari judul dan mata kuliah, sehingga
+                Administrator membaca kalimat buatan sistem dan bukan penjelasan
+                yang ditulis mahasiswa. */}
+            <p className="whitespace-pre-wrap p-6 text-sm leading-7">
+              {report.description && report.description.trim() !== ''
+                ? report.description
+                : 'Mahasiswa tidak menuliskan uraian permasalahan.'}
             </p>
           </section>
           <section className="border border-[#D9E2EC] bg-white">
@@ -436,15 +465,69 @@ export function AdminWorkflowDetailScreen() {
               </p>
               <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Bukti Pendukung</h2>
             </div>
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium">bukti-pendukung-tuton.pdf</p>
-                <p className="mt-1 font-mono text-[10px] text-[#52657A]">PDF · 824 KB</p>
-              </div>
-              <button className="border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC]">
-                Buka
-              </button>
-            </div>
+            {/* Bukti pendukung dibaca dari laporannya. Sebelumnya bagian ini
+                menampilkan satu berkas yang ditulis langsung di dalam kode,
+                sehingga Administrator memeriksa bukti yang tidak pernah
+                diunggah siapa pun. */}
+            {lampiran.length > 0 ? (
+              <ul className="divide-y divide-[#D9E2EC]">
+                {lampiran.map(({ name, type, size, url }) => {
+                  const gambar = url !== undefined && url.startsWith('data:image/')
+
+                  return (
+                    <li key={name} className="flex items-center justify-between gap-5 px-6 py-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        {gambar ? (
+                          <img
+                            src={url}
+                            alt={`Pratinjau ${name}`}
+                            className="h-12 w-12 shrink-0 border border-[#B8D3E8] object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#B8D3E8] bg-[#EEF5FB] font-mono text-[10px] font-semibold text-[#005BAC]">
+                            {type}
+                          </span>
+                        )}
+                        <span className="min-w-0 truncate text-sm font-medium text-[#1F2937]">
+                          {name}
+                          {size ? (
+                            <span className="ml-2 text-xs font-normal text-[#52657A]">{size}</span>
+                          ) : null}
+                        </span>
+                      </div>
+
+                      {url === undefined ? (
+                        <span className="shrink-0 text-xs text-[#52657A]">
+                          Berkas belum tersimpan
+                        </span>
+                      ) : gambar ? (
+                        <button
+                          type="button"
+                          onClick={() => setPratinjau({ nama: name, url })}
+                          className="shrink-0 border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
+                        >
+                          Lihat
+                        </button>
+                      ) : (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          download={name}
+                          className="shrink-0 border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
+                        >
+                          Unduh
+                        </a>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="px-6 py-5 text-sm text-[#52657A]">
+                Tidak ada bukti pendukung yang dilampirkan.
+              </p>
+            )}
           </section>
           <section className="border border-[#D9E2EC] bg-white">
             <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4">
@@ -635,6 +718,52 @@ export function AdminWorkflowDetailScreen() {
               >
                 Selesaikan Laporan
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pratinjau gambar ukuran penuh, sama seperti pada layar mahasiswa,
+          agar Administrator dapat memeriksa bukti tanpa meninggalkan halaman. */}
+      {pratinjau && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Pratinjau ${pratinjau.nama}`}
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-[#12355B]/70 p-5"
+          onClick={() => setPratinjau(null)}
+        >
+          <div
+            className="flex max-h-full w-full max-w-3xl flex-col border-2 border-white bg-white"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-[#D9E2EC] px-5 py-3">
+              <p className="min-w-0 truncate text-sm font-medium text-[#12355B]">
+                {pratinjau.nama}
+              </p>
+              <div className="flex shrink-0 items-center gap-3">
+                <a
+                  href={pratinjau.url}
+                  download={pratinjau.nama}
+                  className="border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
+                >
+                  Unduh
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPratinjau(null)}
+                  className="border border-[#12355B] px-3 py-1.5 text-xs font-semibold text-[#12355B] transition hover:bg-[#12355B] hover:text-white"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+            <div className="min-h-0 overflow-auto bg-[#F7F9FC] p-4">
+              <img
+                src={pratinjau.url}
+                alt={pratinjau.nama}
+                className="mx-auto max-h-[70vh] w-auto max-w-full object-contain"
+              />
             </div>
           </div>
         </div>
