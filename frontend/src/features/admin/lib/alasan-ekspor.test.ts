@@ -1,43 +1,69 @@
 import { describe, expect, it } from 'vitest'
-import { alasanEksporTertutup } from './alasan-ekspor'
+import { alasanEksporTertutup, STATUS_EKSPOR } from './alasan-ekspor'
 
 /**
  * Alasan tombol ekspor tertutup.
  *
- * Yang dijaga di sini: setiap keadaan yang menonaktifkan tombol harus punya
- * penjelasannya, dan keadaan yang mengaktifkannya tidak boleh menyisakan
- * penjelasan yang menggantung.
+ * Syaratnya bertingkat, dan yang dijaga di sini adalah urutannya: menyebut
+ * syarat yang belakangan selagi syarat sebelumnya belum terpenuhi akan
+ * menyesatkan, karena syarat belakangan itu memang mustahil terpenuhi.
  */
 
+const lengkap = {
+  fakultas: 'Fakultas Sains dan Teknologi',
+  status: STATUS_EKSPOR,
+  jumlahSiap: 3,
+  jumlahTerpilih: 2,
+}
+
 describe('alasanEksporTertutup', () => {
-  it('meminta memilih fakultas ketika masih Semua', () => {
-    const alasan = alasanEksporTertutup({ fakultas: 'Semua', jumlahSiap: 5 })
+  it('tidak memberi alasan ketika seluruh syaratnya terpenuhi', () => {
+    expect(alasanEksporTertutup(lengkap)).toBeUndefined()
+  })
+
+  it('meminta memilih fakultas lebih dahulu', () => {
+    const alasan = alasanEksporTertutup({ ...lengkap, fakultas: 'Semua' })
 
     expect(alasan).toContain('Fakultas')
   })
 
-  it('mendahulukan pemilihan fakultas daripada ketiadaan laporan', () => {
-    // Menyebut "belum ada laporan" sebelum fakultasnya dipilih akan menyesatkan,
-    // karena jumlahnya memang selalu nol selama belum ada fakultas yang dipilih.
-    const alasan = alasanEksporTertutup({ fakultas: 'Semua', jumlahSiap: 0 })
-
-    expect(alasan).toContain('Fakultas')
-    expect(alasan).not.toContain('Lolos Pemeriksaan')
-  })
-
-  it('menyebut status yang dibutuhkan ketika fakultas sudah dipilih', () => {
+  it('mendahulukan fakultas daripada syarat mana pun yang lain', () => {
+    // Selama fakultasnya belum dipilih, tidak ada laporan yang siap maupun
+    // terpilih, sehingga menyebut keduanya akan menyesatkan.
     const alasan = alasanEksporTertutup({
-      fakultas: 'Fakultas Sains dan Teknologi',
+      fakultas: 'Semua',
+      status: 'Menunggu Pemeriksaan',
       jumlahSiap: 0,
+      jumlahTerpilih: 0,
     })
 
-    expect(alasan).toContain('Lolos Pemeriksaan')
-    expect(alasan).toContain('Fakultas Sains dan Teknologi')
+    expect(alasan).toContain('Fakultas')
+    expect(alasan).not.toContain('Centang')
+    expect(alasan).not.toContain('Status Laporan')
   })
 
-  it('tidak memberi alasan ketika ekspor memang dapat dijalankan', () => {
-    expect(
-      alasanEksporTertutup({ fakultas: 'Fakultas Sains dan Teknologi', jumlahSiap: 3 }),
-    ).toBeUndefined()
+  it('meminta memilih status setelah fakultasnya dipilih', () => {
+    const alasan = alasanEksporTertutup({
+      ...lengkap,
+      status: 'Menunggu Pemeriksaan',
+      jumlahSiap: 0,
+      jumlahTerpilih: 0,
+    })
+
+    expect(alasan).toContain(STATUS_EKSPOR)
+    expect(alasan).not.toContain('Centang')
+  })
+
+  it('menyatakan tidak ada laporan pada fakultas itu', () => {
+    const alasan = alasanEksporTertutup({ ...lengkap, jumlahSiap: 0, jumlahTerpilih: 0 })
+
+    expect(alasan).toContain('Fakultas Sains dan Teknologi')
+    expect(alasan).toContain(STATUS_EKSPOR)
+  })
+
+  it('meminta mencentang ketika laporannya ada tetapi belum dipilih', () => {
+    const alasan = alasanEksporTertutup({ ...lengkap, jumlahTerpilih: 0 })
+
+    expect(alasan).toContain('Centang')
   })
 })

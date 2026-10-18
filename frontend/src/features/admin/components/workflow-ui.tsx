@@ -222,6 +222,8 @@ export function WorkflowTable({
   selectable = false,
   selectedIds = [],
   onToggle,
+  onToggleAll,
+  statusTerpilih,
   showProgramStudy = false,
 }: {
   reports: WorkflowReport[]
@@ -229,10 +231,19 @@ export function WorkflowTable({
   selectable?: boolean
   selectedIds?: string[]
   onToggle?: (id: string) => void
+  onToggleAll?: (pilih: boolean) => void
+  /** Status yang boleh dipilih; tanpa ini seluruh baris dapat dipilih. */
+  statusTerpilih?: WorkflowStatus
   showProgramStudy?: boolean
 }) {
+  const dapatDipilih = (report: WorkflowReport) =>
+    statusTerpilih === undefined || report.status === statusTerpilih
+  const baris = reports.filter(dapatDipilih)
+  const semuaTerpilih = baris.length > 0 && baris.every((r) => selectedIds.includes(r.id))
   const gridColumns = showProgramStudy
-    ? 'grid-cols-[105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
+    ? selectable
+      ? 'grid-cols-[28px_105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
+      : 'grid-cols-[105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
     : selectable
       ? 'grid-cols-[28px_105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
       : 'grid-cols-[105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
@@ -242,7 +253,16 @@ export function WorkflowTable({
         <div
           className={`hidden ${gridColumns} ${showProgramStudy ? 'xl:min-w-[1500px]' : ''} gap-3 border-b border-[#D9E2EC] px-4 py-3 font-mono text-[9px] tracking-[0.09em] text-[#52657A] xl:grid`}
         >
-          {selectable && <span aria-hidden="true" />}
+          {selectable && (
+            <input
+              type="checkbox"
+              checked={semuaTerpilih}
+              onChange={() => onToggleAll?.(!semuaTerpilih)}
+              disabled={baris.length === 0}
+              aria-label="Pilih seluruh laporan yang dapat diekspor"
+              className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
+            />
+          )}
           <span>ID LAPORAN</span>
           <span>KATEGORI</span>
           <span>FAKULTAS</span>
@@ -268,7 +288,7 @@ export function WorkflowTable({
                     type="checkbox"
                     checked={selectedIds.includes(report.id)}
                     onChange={() => onToggle?.(report.id)}
-                    disabled={report.status !== 'Lolos Pemeriksaan'}
+                    disabled={!dapatDipilih(report)}
                     aria-label={`Pilih laporan ${report.id}`}
                     className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                   />
@@ -304,7 +324,7 @@ export function WorkflowTable({
                         type="checkbox"
                         checked={selectedIds.includes(report.id)}
                         onChange={() => onToggle?.(report.id)}
-                        disabled={report.status !== 'Lolos Pemeriksaan'}
+                        disabled={!dapatDipilih(report)}
                         aria-label={`Pilih laporan ${report.id}`}
                         className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                       />

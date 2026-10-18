@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAdminReports } from '../lib/use-admin-reports'
 import {
   barisLaporan,
@@ -17,7 +17,7 @@ import {
   reportProgramStudy,
 } from '../components/workflow-ui'
 import { isTerminal } from '../../../shared/domain/report-status'
-import { alasanEksporTertutup } from '../lib/alasan-ekspor'
+import { alasanEksporTertutup, STATUS_EKSPOR } from '../lib/alasan-ekspor'
 
 export function AdminWorkflowQueueScreen() {
   const [status, setStatus] = useState('Semua')
@@ -26,6 +26,14 @@ export function AdminWorkflowQueueScreen() {
   const [courseType, setCourseType] = useState('Semua')
   /** Penyusunan ZIP membaca lampiran seluruh laporan, sehingga perlu waktu. */
   const [menyusun, setMenyusun] = useState(false)
+  /** Laporan yang dicentang Administrator untuk diekspor. */
+  const [terpilih, setTerpilih] = useState<string[]>([])
+
+  // Pilihan yang bertahan setelah penyaring berubah akan membawa laporan yang
+  // tidak lagi terlihat ke dalam tindakan berikutnya.
+  useEffect(() => {
+    setTerpilih([])
+  }, [status, faculty])
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
@@ -40,18 +48,40 @@ export function AdminWorkflowQueueScreen() {
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase())
     )
   })
-  // Ekspor ditujukan ke satu unit, sehingga penyaringnya hanya fakultas.
-  // Menyertakan jenis mata kuliah akan membuat sebagian laporan fakultas yang
-  // sama tertinggal tanpa disadari, padahal seluruhnya ditujukan ke unit yang
-  // sama dan diperiksa dalam satu kesempatan.
-  const exportReports = allReports.filter(
+  // Ekspor ditujukan ke satu unit, sehingga penyaringnya hanya fakultas dan
+  // status. Jenis mata kuliah tidak membatasinya, karena seluruh laporan
+  // fakultas yang sama ditujukan ke unit yang sama.
+  const siapEkspor = allReports.filter(
+    (report) =>
+      faculty !== 'Semua' && report.status === STATUS_EKSPOR && report.studentFaculty === faculty,
+  )
+  const exportReports = siapEkspor.filter((report) => terpilih.includes(report.id))
+
+  // Meneruskan laporan dan mengekspornya adalah dua langkah berurutan, dan
+  // masing-masing bekerja pada status yang berbeda. Baris yang dapat dicentang
+  // karena itu mengikuti penyaring status yang sedang aktif, sehingga satu
+  // tabel melayani keduanya tanpa pilihan yang tercampur.
+  const siapTeruskan = allReports.filter(
     (report) =>
       faculty !== 'Semua' &&
       report.status === 'Lolos Pemeriksaan' &&
       report.studentFaculty === faculty,
   )
+  const statusTerpilih =
+    status === STATUS_EKSPOR
+      ? STATUS_EKSPOR
+      : status === 'Lolos Pemeriksaan'
+        ? ('Lolos Pemeriksaan' as const)
+        : undefined
+  const barisTerpilih = status === STATUS_EKSPOR ? siapEkspor : siapTeruskan
+  const teruskanReports = siapTeruskan.filter((report) => terpilih.includes(report.id))
   /** Mengapa ekspor belum dapat dijalankan, bila memang belum. */
-  const alasanEkspor = alasanEksporTertutup({ fakultas: faculty, jumlahSiap: exportReports.length })
+  const alasanEkspor = alasanEksporTertutup({
+    fakultas: faculty,
+    status,
+    jumlahSiap: siapEkspor.length,
+    jumlahTerpilih: exportReports.length,
+  })
   const includedPrograms = Array.from(new Set(exportReports.map(reportProgramStudy)))
   const exportFaculty = faculty
   const fileName = namaBerkasEkspor(faculty)
@@ -130,7 +160,7 @@ export function AdminWorkflowQueueScreen() {
     setKirimError('')
     const gagal: string[] = []
 
-    for (const report of exportReports) {
+    for (const report of teruskanReports) {
       const hasil = await ubahStatus({
         report,
         ke: 'Diteruskan ke Fakultas',
@@ -239,20 +269,38 @@ export function AdminWorkflowQueueScreen() {
               <span className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                 {String(reports.length).padStart(2, '0')} LAPORAN
               </span>
-              <button
-                onClick={() => setExportModalOpen(true)}
-                disabled={Boolean(alasanEkspor)}
-                title={alasanEkspor}
-                className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
-              >
-                Export Data Laporan
-              </button>
+              {/* Dua langkah berurutan, masing-masing pada statusnya sendiri.
+                  Menampilkan keduanya sekaligus membuat Administrator menebak
+                  mana yang berlaku untuk daftar yang sedang dilihatnya. */}
+              {status === 'Lolos Pemeriksaan' ? (
+                <button
+                  onClick={() => setSendModalOpen(true)}
+                  disabled={teruskanReports.length === 0}
+                  title={
+                    teruskanReports.length === 0
+                      ? 'Centang laporan yang akan diteruskan ke Fakultas.'
+                      : undefined
+                  }
+                  className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
+                >
+                  Teruskan ke Fakultas
+                </button>
+              ) : (
+                <button
+                  onClick={() => setExportModalOpen(true)}
+                  disabled={Boolean(alasanEkspor)}
+                  title={alasanEkspor}
+                  className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
+                >
+                  Export Data Laporan
+                </button>
+              )}
             </div>
           </div>
           {/* Alasannya sebelumnya hanya muncul setelah tombol ditekan, padahal
               tombol itu justru dinonaktifkan ketika syaratnya belum terpenuhi,
               sehingga penjelasannya tidak pernah terbaca. */}
-          {alasanEkspor && (
+          {status !== 'Lolos Pemeriksaan' && alasanEkspor && (
             <p className="mt-3 border-l-2 border-[#B8D3E8] bg-[#EEF5FB] px-4 py-3 text-sm leading-6 text-[#52657A]">
               <span className="font-semibold text-[#12355B]">Ekspor belum dapat dijalankan. </span>
               {alasanEkspor}
@@ -275,7 +323,22 @@ export function AdminWorkflowQueueScreen() {
               {galat}
             </p>
           ) : (
-            <WorkflowTable reports={reports} context="queue" showProgramStudy />
+            <WorkflowTable
+              reports={reports}
+              context="queue"
+              showProgramStudy
+              selectable
+              statusTerpilih={statusTerpilih}
+              selectedIds={terpilih}
+              onToggle={(id) =>
+                setTerpilih((sekarang) =>
+                  sekarang.includes(id)
+                    ? sekarang.filter((lain) => lain !== id)
+                    : [...sekarang, id],
+                )
+              }
+              onToggleAll={(pilih) => setTerpilih(pilih ? barisTerpilih.map((r) => r.id) : [])}
+            />
           )}
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
@@ -304,18 +367,9 @@ export function AdminWorkflowQueueScreen() {
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
                 onClick={() => setExportReady(false)}
-                className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
-              >
-                Tutup
-              </button>
-              <button
-                onClick={() => {
-                  setExportReady(false)
-                  setSendModalOpen(true)
-                }}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white"
               >
-                Tandai Data Sudah Dikirim
+                Tutup
               </button>
             </div>
           </div>
@@ -392,7 +446,7 @@ export function AdminWorkflowQueueScreen() {
           {/* Alasannya sebelumnya hanya muncul setelah tombol ditekan, padahal
               tombol itu justru dinonaktifkan ketika syaratnya belum terpenuhi,
               sehingga penjelasannya tidak pernah terbaca. */}
-          {alasanEkspor && (
+          {status !== 'Lolos Pemeriksaan' && alasanEkspor && (
             <p className="mt-3 border-l-2 border-[#B8D3E8] bg-[#EEF5FB] px-4 py-3 text-sm leading-6 text-[#52657A]">
               <span className="font-semibold text-[#12355B]">Ekspor belum dapat dijalankan. </span>
               {alasanEkspor}
