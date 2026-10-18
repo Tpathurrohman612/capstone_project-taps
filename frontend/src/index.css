@@ -51,3 +51,29 @@ button {
     overflow-y: auto;
   }
 }
+
+/*
+ * Kotak pilihan.
+ *
+ * Peramban menggambar tanda panah bawaannya menempel pada tepi border, dan
+ * posisinya tidak terpengaruh padding-right sama sekali. Menambah padding
+ * karena itu tidak pernah memberi jarak pada panahnya.
+ *
+ * Panah bawaan dimatikan lalu digambar ulang sebagai latar, sehingga jaraknya
+ * dapat ditentukan dan bentuknya sama di semua peramban. Aturan ini berlaku
+ * untuk seluruh kotak pilihan agar tidak ada yang terlewat ketika layar baru
+ * ditambahkan.
+ *
+ * Jarak kanan bagi teksnya tetap diatur lewat kelas pr-8 pada masing-masing
+ * kotak pilihan, karena kelas utilitas selalu mengalahkan aturan pemilih
+ * elemen seperti ini. Menuliskannya di sini pula hanya akan menjadi aturan
+ * mati yang menyesatkan pembacanya.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2352657A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 0.85rem;
+}
