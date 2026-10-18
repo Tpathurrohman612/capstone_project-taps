@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing'
-import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
 import type { Firestore } from 'firebase/firestore'
 
 /**
@@ -407,6 +407,46 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
           uidPencatat: UID_ADMIN,
         }),
       ).rejects.toThrow(/tidak ditemukan/)
+    })
+  })
+
+  describe('perkakas Pemilik', () => {
+    it('menghapus laporan beserta seluruh anakannya', async () => {
+      // Anakan yang tertinggal tidak terlihat di mana pun, tetapi tetap
+      // memakan kuota, dan satu lampiran base64 berukuran ratusan kilobait.
+      const repoMhs = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      const dibuat = await repoMhs.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'bukti.jpg', tipe_file: 'JPG', ukuran_file: '10 KB' }],
+      })
+
+      await env.withSecurityRulesDisabled(async (konteks) => {
+        await konteks.firestore().doc(`pemilik/${UID_ADMIN}`).set({ dicatatPada: new Date() })
+      })
+
+      vi.resetModules()
+      const konteksPemilik = sebagaiFirestore(env.authenticatedContext(UID_ADMIN))
+      // Memindahkan tiruan modul firebase ke konteks Pemilik; tanpa ini
+      // penghapusannya berjalan sebagai mahasiswa dan ditolak aturan.
+      await muatRepository(konteksPemilik)
+      const { hapusLaporan } = await import('../../features/owner/lib/pemilik-repository')
+
+      await hapusLaporan(dibuat.id_laporan)
+
+      const sisa = await Promise.all(
+        ['lampiran', 'riwayat_status_laporan'].map(async (koleksi) =>
+          getDocs(
+            query(
+              collection(konteksPemilik, koleksi),
+              where('id_laporan', '==', dibuat.id_laporan),
+            ),
+          ),
+        ),
+      )
+
+      for (const hasil of sisa) expect(hasil.size).toBe(0)
+      expect((await getDoc(doc(konteksPemilik, 'laporan', dibuat.id_laporan))).exists()).toBe(false)
     })
   })
 

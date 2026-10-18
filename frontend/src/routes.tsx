@@ -15,9 +15,15 @@ import { ReportHistoryScreen } from './features/student/screens/ReportHistoryScr
 import { ProfileScreen } from './features/student/screens/ProfileScreen'
 import { DesignSystemScreen } from './screens/DesignSystemScreen'
 import { RoleGuard } from './shared/components/RoleGuard'
+import { OwnerScreen } from './features/owner/screens/OwnerScreen'
 
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginScreen },
+  // Perkakas Pemilik, di luar lingkup proposal. Sengaja tidak tercantum pada
+  // navigasi mana pun. Penyembunyiannya bukan pengamanan: yang menjaga adalah
+  // aturan keamanan, dan layarnya sendiri memeriksa peran sebelum menampilkan
+  // apa pun. Tidak dibungkus RoleGuard karena perannya bukan peran aplikasi.
+  { path: '/pemilik', Component: OwnerScreen },
   {
     path: '/lengkapi-identitas',
     element: (

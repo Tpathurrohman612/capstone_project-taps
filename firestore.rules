@@ -46,6 +46,26 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/administrator/$(request.auth.uid));
     }
 
+    // Peran Pemilik, di luar lingkup proposal. Dipakai hanya oleh pengembang
+    // untuk menata peran dan membersihkan data. Seperti halnya Administrator,
+    // perannya ditentukan keberadaan dokumen pada koleksinya sendiri.
+    //
+    // Koleksi ini sengaja tidak dapat ditulis siapa pun, termasuk Pemilik.
+    // Pemilik yang dapat menghapus dokumennya sendiri akan mengunci dirinya
+    // keluar tanpa cara memulihkannya dari dalam aplikasi, dan Pemilik yang
+    // dapat menambah Pemilik lain memindahkan kendali tertinggi keluar dari
+    // Firebase Console. Penambahannya dilakukan manual di Console.
+    function isPemilik() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/pemilik/$(request.auth.uid));
+    }
+
+    match /pemilik/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
     // Allowlist peran. Ditambahkan manual lewat Firebase Console oleh
     // pengelola; klien tidak pernah boleh menulisnya, supaya tidak ada
     // pengguna yang dapat mengangkat dirinya sendiri.
@@ -56,9 +76,16 @@ service cloud.firestore {
     // dokumen sendiri tidak memberi hak apa pun: setiap akses ke koleksi lain
     // tetap diperiksa ulang lewat isAdmin() yang dievaluasi server.
     match /administrator/{uid} {
-      allow get: if isOwner(uid);
-      allow list: if false;
-      allow write: if false;
+      allow get: if isOwner(uid) || isPemilik();
+      // Pemilik perlu melihat daftarnya untuk menata peran; bagi yang lain
+      // daftar ini tetap tertutup.
+      allow list: if isPemilik();
+      // Dokumennya hanya penanda peran, sehingga isinya dibatasi agar tidak
+      // dipakai menyimpan data lain.
+      allow create: if isPemilik()
+        && request.resource.data.keys().hasOnly(['uid', 'dicatatPada']);
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     // Profil pengguna. Dokumen memakai Firebase UID sebagai pengenal, sesuai
@@ -75,7 +102,11 @@ service cloud.firestore {
         && teksOpsionalWajar(request.resource.data, 'program_studi', 150)
         && teksOpsionalWajar(request.resource.data, 'ut_daerah', 150)
         && request.resource.data.keys().size() <= 12;
-      allow delete: if false;
+      // Pemilik dapat menghapus akun, kecuali akunnya sendiri. Menghapus
+      // profil sendiri akan membuat aplikasi memperlakukannya sebagai pengguna
+      // yang belum melengkapi identitas, sedangkan NIM-nya tetap terkunci.
+      allow delete: if isPemilik() && request.auth.uid != uid;
+      allow list: if isPemilik();
     }
 
     // Indeks keunikan NIM. Aturan di atas hanya mengizinkan seorang pengguna
@@ -92,7 +123,11 @@ service cloud.firestore {
       allow list: if false;
       allow create: if isSignedIn()
         && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if false;
+      // Penghapusan akun harus melepaskan tautan NIM-nya. Tanpa itu NIM
+      // tersebut terkunci permanen pada akun yang sudah tidak ada.
+      allow delete: if isPemilik();
+      allow list: if isPemilik();
     }
 
     // Pencacah nomor laporan, satu dokumen per tahun.
@@ -111,7 +146,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.terakhir == 1;
       allow update: if isSignedIn()
         && request.resource.data.terakhir == resource.data.terakhir + 1;
-      allow delete: if false;
+      allow delete: if isPemilik();
     }
 
     // Daftar status laporan (Tabel 4.1) dan kategori laporan. Keduanya data
@@ -189,7 +224,7 @@ service cloud.firestore {
             && request.resource.data.id_status == 'Menunggu Pemeriksaan');
 
       // Laporan tidak pernah dihapus; riwayatnya adalah bukti penanganan.
-      allow delete: if false;
+      allow delete: if isPemilik();
     }
 
     // Riwayat status, lampiran, dan catatan penanganan mengikuti hak akses
@@ -218,7 +253,7 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['dibaca_pada']);
-      allow delete: if false;
+      allow delete: if isPemilik();
     }
 
     match /lampiran/{id} {
@@ -245,7 +280,8 @@ service cloud.firestore {
           || isAdmin()
         );
 
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     // Pengiriman validasi, hasil validasi, dan tindak lanjut sepenuhnya
@@ -263,7 +299,8 @@ service cloud.firestore {
       allow create: if isAdmin()
         && request.resource.data.uid_pengirim == request.auth.uid
         && bukanLaporanSendiri(request.resource.data.id_laporan);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     match /validasi/{id} {
@@ -271,7 +308,8 @@ service cloud.firestore {
       allow create: if isAdmin()
         && request.resource.data.uid_pencatat == request.auth.uid
         && bukanLaporanSendiri(request.resource.data.id_laporan);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     match /tindak_lanjut/{id} {
@@ -279,7 +317,8 @@ service cloud.firestore {
       allow create: if isAdmin()
         && request.resource.data.uid_pencatat == request.auth.uid
         && bukanLaporanSendiri(request.resource.data.id_laporan);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     // Koleksi lain belum dibuka. Tambahkan blok match tersendiri saat
