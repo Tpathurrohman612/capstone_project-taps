@@ -1,5 +1,6 @@
 import placeholderAvatar from '../../../assets/placeholder-avatar.svg'
 import { useAuth } from '../../../shared/lib/auth-context'
+import { maskId } from '../../../shared/lib/mask-id'
 import { AdminWorkflowShell } from '../components/workflow-ui'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 
@@ -25,8 +26,11 @@ export function AdminWorkflowProfileScreen() {
   const nama = profile?.displayName ?? user?.displayName ?? null
   const email = user?.email ?? null
   // Administrator dikenali lewat UID-nya pada koleksi administrator, sehingga
-  // UID itulah pengenal yang bermakna, bukan nomor yang dikarang.
-  const uid = user?.uid ?? null
+  // UID itulah pengenal yang bermakna, bukan nomor yang dikarang. Yang
+  // ditampilkan hanya potongan awal dan akhirnya; bagian itu sudah memadai
+  // untuk mencocokkan akun dengan catatan lain, sementara menampilkan UID utuh
+  // membuat tangkapan layar dan rekaman demonstrasi membawanya tanpa alasan.
+  const uid = maskId(user?.uid) ?? null
 
   return (
     <AdminWorkflowShell activeIndex={3}>
@@ -65,7 +69,9 @@ export function AdminWorkflowProfileScreen() {
                 />
                 <div>
                   <p className="text-base font-semibold text-[#12355B]">{atau(nama)}</p>
-                  <p className="mt-1 break-all font-mono text-xs text-[#005BAC]">{atau(uid)}</p>
+                  <p className="mt-1 font-mono text-xs text-[#005BAC]">
+                    <span title="Pengenal akun ditampilkan sebagian">{atau(uid)}</span>
+                  </p>
                 </div>
               </div>
               <AdminProfileItem label="Email" value={atau(email)} />
