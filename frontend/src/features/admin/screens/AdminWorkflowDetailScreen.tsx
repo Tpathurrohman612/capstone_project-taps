@@ -162,6 +162,10 @@ export function AdminWorkflowDetailScreen() {
     })
 
     if (!hasil.berhasil) {
+      // Modal ditutup lebih dulu agar pesan kegagalan di halaman terlihat.
+      // Membiarkannya terbuka membuat pengguna harus menutupnya sendiri untuk
+      // mengetahui apa yang salah.
+      setModalOpen(false)
       setAksiError(hasil.alasan)
       return
     }
@@ -189,7 +193,13 @@ export function AdminWorkflowDetailScreen() {
     })
 
     if (!hasil.berhasil) {
-      setValidationError(hasil.alasan)
+      // Kegagalan dari basis data bukan kesalahan isian, sehingga modalnya
+      // ditutup dan pesannya ditampilkan di halaman. Isian yang masih kosong
+      // tetap ditahan di dalam modal, karena itu memang dapat diperbaiki
+      // pengguna di tempat.
+      setValidationModalOpen(false)
+      setValidationError('')
+      setAksiError(hasil.alasan)
       return
     }
 
@@ -214,7 +224,9 @@ export function AdminWorkflowDetailScreen() {
     })
 
     if (!hasil.berhasil) {
-      setCompletionError(hasil.alasan)
+      setCompletionModalOpen(false)
+      setCompletionError('')
+      setAksiError(hasil.alasan)
       return
     }
     setCompletionModalOpen(false)
@@ -224,11 +236,13 @@ export function AdminWorkflowDetailScreen() {
   const openPrimaryAction = () => {
     if (report.status === 'Sedang Diproses') {
       setCompletionError('')
+      setAksiError('')
       setCompletionModalOpen(true)
       return
     }
     if (report.status === 'Menunggu Validasi' && !validationRecorded) {
       setValidationError('')
+      setAksiError('')
       setValidationModalOpen(true)
       return
     }
@@ -245,6 +259,18 @@ export function AdminWorkflowDetailScreen() {
   return (
     <AdminWorkflowShell activeIndex={context === 'history' ? 2 : 1}>
       <section className="px-8 py-7 max-[620px]:px-5">
+        {/* Kegagalan tindakan ditempatkan di bagian paling atas halaman.
+            Sebelumnya pesannya berada jauh di tengah daftar, sehingga
+            Administrator harus menggulir untuk mengetahui apa yang salah. */}
+        {aksiError && (
+          <p
+            role="alert"
+            className="mb-6 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+          >
+            {aksiError}
+          </p>
+        )}
+
         <header className="border-b border-[#D9E2EC] pb-8">
           <p className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#52657A]">
             ADMINISTRATOR / {context === 'history' ? 'RIWAYAT LAPORAN' : 'ANTREAN LAPORAN'} / DETAIL
@@ -308,14 +334,6 @@ export function AdminWorkflowDetailScreen() {
                   </li>
                 ))}
               </ol>
-              {aksiError && (
-                <p
-                  role="alert"
-                  className="mb-4 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-xs leading-5 text-[#B42318]"
-                >
-                  {aksiError}
-                </p>
-              )}
               {actionLabel && (
                 <div className="mt-7 flex items-center justify-between gap-5 border-t border-[#D9E2EC] pt-5 max-[620px]:block">
                   <div>
