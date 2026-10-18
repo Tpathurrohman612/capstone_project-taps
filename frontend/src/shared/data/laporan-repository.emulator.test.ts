@@ -410,6 +410,49 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
     })
   })
 
+  describe('identitas pelapor', () => {
+    it('membaca identitas dari field yang sebenarnya ditulis saat pendaftaran', async () => {
+      // Pembacaan yang memakai nama field keliru tidak membuat apa pun gagal:
+      // nilainya hanya terbaca kosong, dan berkas ekspor terkirim ke Fakultas
+      // dengan kolom nama yang kosong tanpa ada yang menyadarinya. Pengujian
+      // ini menulis dokumen persis seperti layar pendaftaran menulisnya.
+      await env.withSecurityRulesDisabled(async (konteks) => {
+        await konteks.firestore().doc(`pengguna/${UID}`).set({
+          displayName: 'Sidiq Toha',
+          nim: '12345678900',
+          email: 'sidiq@contoh.ac.id',
+          faculty: 'Fakultas Sains dan Teknologi',
+          program_studi: 'Sistem Informasi',
+          ut_daerah: 'UT Jakarta',
+          foto_url: 'https://contoh/foto.jpg',
+        })
+      })
+
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
+      const identitas = (await repo.listIdentitasPelapor([UID])).get(UID)
+
+      expect(identitas).toEqual({
+        nama: 'Sidiq Toha',
+        nim: '12345678900',
+        email: 'sidiq@contoh.ac.id',
+        fakultas: 'Fakultas Sains dan Teknologi',
+        programStudi: 'Sistem Informasi',
+        utDaerah: 'UT Jakarta',
+        fotoUrl: 'https://contoh/foto.jpg',
+      })
+    })
+
+    it('melewati pengguna yang dokumennya tidak ada', async () => {
+      // Laporan lama dapat kehilangan dokumen penggunanya, dan itu tidak boleh
+      // menggagalkan pembacaan identitas laporan lain pada ekspor yang sama.
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
+
+      const hasil = await repo.listIdentitasPelapor(['tidak-ada', ''])
+
+      expect(hasil.size).toBe(0)
+    })
+  })
+
   describe('entitas penanganan pada ERD', () => {
     async function sampaiStatus(ke: string, data?: Record<string, unknown>) {
       const konteksMhs = sebagaiFirestore(env.authenticatedContext(UID))

@@ -216,13 +216,22 @@ export async function addAttachments(params: {
   saveWorkflowReports(tersimpan)
 }
 
-/** Nama dan NIM pelapor beberapa laporan sekaligus, untuk berkas ekspor. */
+/** Identitas pelapor beberapa laporan sekaligus, untuk berkas ekspor. */
 export async function fetchIdentitasPelapor(
   reports: WorkflowReport[],
 ): Promise<Map<string, IdentitasPelapor>> {
   if (!usingFirestore()) return new Map()
 
   return await listIdentitasPelapor(reports.map((report) => report.studentNim))
+}
+
+/** Identitas satu pelapor, untuk halaman detail Administrator. */
+export async function fetchPelapor(
+  report: WorkflowReport | undefined,
+): Promise<IdentitasPelapor | undefined> {
+  if (!report || !usingFirestore() || report.studentNim === '') return undefined
+
+  return (await listIdentitasPelapor([report.studentNim])).get(report.studentNim)
 }
 
 /** Catatan penanganan satu laporan, kosong pada mode prototipe. */

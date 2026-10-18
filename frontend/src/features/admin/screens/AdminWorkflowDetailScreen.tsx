@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router'
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { isTerminal, nextStatuses } from '../../../shared/domain/report-status'
 import { judulRiwayat } from '../../../shared/lib/waktu-tahap'
+import { fetchPelapor } from '../../../shared/data/report-store'
+import type { IdentitasPelapor } from '../../../shared/data/laporan-repository'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
@@ -36,6 +38,16 @@ export function AdminWorkflowDetailScreen() {
    */
   const [riwayatStatus, setRiwayatStatus] = useState<WorkflowReport['updates']>([])
 
+  /**
+   * Identitas pelapor.
+   *
+   * Administrator sebelumnya tidak dapat mengetahui siapa yang melapor sama
+   * sekali, padahal ia yang memverifikasi kelayakan laporannya dan
+   * meneruskannya ke Fakultas. Dokumen laporan hanya menyimpan uid_pelapor,
+   * sehingga identitasnya dibaca terpisah dari koleksi pengguna.
+   */
+  const [pelapor, setPelapor] = useState<IdentitasPelapor | undefined>(undefined)
+
   const [lampiran, setLampiran] = useState<
     { name: string; type: string; size?: string; url?: string }[]
   >([])
@@ -66,6 +78,23 @@ export function AdminWorkflowDetailScreen() {
       .catch(() => {
         // Gagal membaca riwayat tidak boleh mengosongkan seluruh halaman.
         if (aktif) setRiwayatStatus([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [report])
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchPelapor(report)
+      .then((hasil) => {
+        if (aktif) setPelapor(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca identitas tidak boleh menutup seluruh halaman detail.
+        if (aktif) setPelapor(undefined)
       })
 
     return () => {
@@ -564,6 +593,60 @@ export function AdminWorkflowDetailScreen() {
               )}
             </div>
           </section>
+          {/* Administrator memverifikasi kelayakan laporan dan meneruskannya ke
+              Fakultas, sehingga ia perlu mengetahui siapa pelapornya. Identitasnya
+              tidak tersimpan pada dokumen laporan dan karena itu dibaca terpisah. */}
+          {pelapor && (
+            <section className="border border-[#D9E2EC] bg-white" aria-labelledby="data-pelapor">
+              <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
+                  02 / IDENTITAS
+                </p>
+                <h2 id="data-pelapor" className="mt-1 font-slab text-2xl text-[#12355B]">
+                  Data Pelapor
+                </h2>
+              </div>
+              <div className="flex items-start gap-5 px-6 py-5 max-[620px]:flex-col">
+                {/* Tautan fotonya milik Google dan dapat berhenti berlaku, sehingga
+                    gambar yang gagal dimuat diganti inisial, bukan ikon rusak. */}
+                {pelapor.fotoUrl ? (
+                  <img
+                    src={pelapor.fotoUrl}
+                    alt={`Foto profil ${pelapor.nama || 'pelapor'}`}
+                    referrerPolicy="no-referrer"
+                    onError={(event) => {
+                      event.currentTarget.style.display = 'none'
+                    }}
+                    className="h-16 w-16 shrink-0 border border-[#B8D3E8] object-cover"
+                  />
+                ) : (
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center border border-[#B8D3E8] bg-[#EEF5FB] font-slab text-xl text-[#005BAC]">
+                    {(pelapor.nama.trim()[0] ?? '?').toUpperCase()}
+                  </span>
+                )}
+                <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-8 gap-y-4 max-[760px]:grid-cols-1">
+                  {[
+                    ['Nama Mahasiswa', pelapor.nama],
+                    ['NIM', pelapor.nim],
+                    ['Surel', pelapor.email],
+                    ['Fakultas', pelapor.fakultas],
+                    ['Program Studi', pelapor.programStudi],
+                    ['UT Daerah', pelapor.utDaerah],
+                  ].map(([label, nilai]) => (
+                    <div key={label}>
+                      <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
+                        {label?.toUpperCase()}
+                      </dt>
+                      <dd className="mt-1 text-sm leading-6 break-words text-[#1F2937]">
+                        {nilai || 'Belum diisi'}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </section>
+          )}
+
           <section className="border border-[#D9E2EC] bg-white">
             <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4">
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">

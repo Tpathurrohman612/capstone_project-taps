@@ -25,6 +25,14 @@ export type UserProfile = {
   // pada halaman Profil. Keduanya opsional karena akun lama belum mengisinya.
   programStudi?: string
   utDaerah?: string
+  /**
+   * Foto profil akun Google.
+   *
+   * Disimpan agar Administrator dapat mengenali pelapor pada halaman detail
+   * laporan. Tautannya milik Google dan dapat berhenti berlaku, sehingga
+   * tampilannya harus tetap benar ketika gambarnya gagal dimuat.
+   */
+  fotoUrl?: string
 }
 
 export class ProfileNotConfiguredError extends Error {
@@ -81,6 +89,9 @@ export async function readUserProfile(uid: string): Promise<UserProfile | undefi
     ...(typeof data.program_studi === 'string' && data.program_studi !== ''
       ? { programStudi: data.program_studi }
       : {}),
+    ...(typeof data.foto_url === 'string' && data.foto_url !== ''
+      ? { fotoUrl: data.foto_url }
+      : {}),
     ...(typeof data.ut_daerah === 'string' && data.ut_daerah !== ''
       ? { utDaerah: data.ut_daerah }
       : {}),
@@ -105,6 +116,7 @@ export async function linkNimToAccount(params: {
   displayName?: string
   programStudi?: string
   utDaerah?: string
+  fotoUrl?: string
 }): Promise<UserProfile> {
   if (!isFirebaseConfigured()) throw new ProfileNotConfiguredError()
 
@@ -140,6 +152,7 @@ export async function linkNimToAccount(params: {
         ...(params.displayName ? { displayName: params.displayName } : {}),
         ...(params.programStudi ? { program_studi: params.programStudi } : {}),
         ...(params.utDaerah ? { ut_daerah: params.utDaerah } : {}),
+        ...(params.fotoUrl ? { foto_url: params.fotoUrl } : {}),
         diperbaruiPada: serverTimestamp(),
       },
       { merge: true },
@@ -154,6 +167,7 @@ export async function linkNimToAccount(params: {
     ...(params.displayName ? { displayName: params.displayName } : {}),
     ...(params.programStudi ? { programStudi: params.programStudi } : {}),
     ...(params.utDaerah ? { utDaerah: params.utDaerah } : {}),
+    ...(params.fotoUrl ? { fotoUrl: params.fotoUrl } : {}),
   }
 }
 

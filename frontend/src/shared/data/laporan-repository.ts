@@ -475,11 +475,37 @@ export async function tambahLampiran(idLaporan: string, lampiran: LampiranBaru[]
   await tulis.commit()
 }
 
-/** Identitas pelapor sebagaimana dibutuhkan berkas ekspor. */
-export type IdentitasPelapor = { nama: string; nim: string }
+/**
+ * Identitas pelapor sebagaimana tersimpan pada dokumen pengguna.
+ *
+ * Nama fieldnya mengikuti dokumen yang sebenarnya ditulis saat pendaftaran,
+ * bukan nama yang diperkirakan. Perbedaan di antara keduanya tidak membuat
+ * apa pun gagal: field yang keliru hanya terbaca sebagai teks kosong, dan
+ * berkas ekspor terkirim dengan kolom nama yang kosong tanpa ada yang
+ * menyadarinya.
+ */
+export type IdentitasPelapor = {
+  nama: string
+  nim: string
+  email: string
+  fakultas: string
+  programStudi: string
+  utDaerah: string
+  fotoUrl: string
+}
+
+const KOSONG: IdentitasPelapor = {
+  nama: '',
+  nim: '',
+  email: '',
+  fakultas: '',
+  programStudi: '',
+  utDaerah: '',
+  fotoUrl: '',
+}
 
 /**
- * Membaca nama dan NIM beberapa pelapor sekaligus.
+ * Membaca identitas beberapa pelapor sekaligus.
  *
  * Dokumen laporan hanya menyimpan uid_pelapor, sehingga identitasnya harus
  * dibaca dari koleksi pengguna. Pembacaannya dikelompokkan agar satu ekspor
@@ -497,18 +523,28 @@ export async function listIdentitasPelapor(
     unik.map(async (uid) => ({ uid, snapshot: await getDoc(doc(db, PENGGUNA_COLLECTION, uid)) })),
   )
 
+  const teks = (nilai: unknown): string => (typeof nilai === 'string' ? nilai : '')
+
   for (const { uid, snapshot } of dokumen) {
     if (!snapshot.exists()) continue
 
     const data = snapshot.data()
     hasil.set(uid, {
-      nama: typeof data.nama === 'string' ? data.nama : '',
-      nim: typeof data.nim === 'string' ? data.nim : '',
+      nama: teks(data.displayName),
+      nim: teks(data.nim),
+      email: teks(data.email),
+      fakultas: teks(data.faculty),
+      programStudi: teks(data.program_studi),
+      utDaerah: teks(data.ut_daerah),
+      fotoUrl: teks(data.foto_url),
     })
   }
 
   return hasil
 }
+
+/** Identitas kosong, dipakai ketika dokumen penggunanya tidak ditemukan. */
+export const identitasKosong = (): IdentitasPelapor => ({ ...KOSONG })
 
 /** Catatan penanganan satu laporan, sesuai entitas pada ERD Gambar 3.3. */
 export type Penanganan = {
