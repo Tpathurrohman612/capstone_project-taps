@@ -91,6 +91,11 @@ export type LampiranBaru = {
 export type Lampiran = LampiranBaru & {
   id_lampiran: string
   id_laporan: string
+  /**
+   * Alamat berkas pada Cloud Storage. Kosong selama paket Spark dipakai,
+   * karena Cloud Storage memerlukan Blaze dan hanya metadata yang disimpan.
+   */
+  path_storage?: string
 }
 
 export type LaporanBaru = Omit<
@@ -382,6 +387,9 @@ export async function listLampiran(idLaporan: string): Promise<Lampiran[]> {
         nama_file: data.nama_file,
         tipe_file: typeof data.tipe_file === 'string' ? data.tipe_file : 'FILE',
         ...(typeof data.ukuran_file === 'string' ? { ukuran_file: data.ukuran_file } : {}),
+        ...(typeof data.path_storage === 'string' && data.path_storage !== ''
+          ? { path_storage: data.path_storage }
+          : {}),
       } satisfies Lampiran
     })
     .filter((berkas): berkas is Lampiran => berkas !== undefined)

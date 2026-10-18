@@ -178,7 +178,7 @@ export async function changeReportStatus(params: {
  */
 export async function fetchAttachments(
   report: WorkflowReport | undefined,
-): Promise<{ name: string; type: string; size?: string }[]> {
+): Promise<{ name: string; type: string; size?: string; url?: string }[]> {
   if (!report) return []
 
   if (usingFirestore()) {
@@ -188,6 +188,9 @@ export async function fetchAttachments(
       name: berkas.nama_file,
       type: berkas.tipe_file,
       ...(berkas.ukuran_file ? { size: berkas.ukuran_file } : {}),
+      // Alamat berkas hanya ada setelah Cloud Storage dipakai. Selama kosong,
+      // layar tidak boleh menawarkan tautan yang tidak membuka apa pun.
+      ...(berkas.path_storage ? { url: berkas.path_storage } : {}),
     }))
   }
 
