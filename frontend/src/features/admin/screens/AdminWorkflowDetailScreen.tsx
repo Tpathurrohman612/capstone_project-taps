@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
-import { isTerminal, nextStatuses } from '../../../shared/domain/report-status'
+import { HASIL_VALIDASI, isTerminal, nextStatuses } from '../../../shared/domain/report-status'
 import { judulRiwayat } from '../../../shared/lib/waktu-tahap'
 import { fetchPelapor } from '../../../shared/data/report-store'
 import type { IdentitasPelapor } from '../../../shared/data/laporan-repository'
@@ -11,11 +11,31 @@ import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import { kelengkapanTerakhir } from '../../../shared/lib/alasan-status'
 
+/**
+ * Keterangan singkat tiap kemungkinan hasil validasi.
+ *
+ * Ketiganya berasal dari Tabel 4.2, tetapi namanya saja tidak menerangkan
+ * kapan masing-masing dipakai, terutama Tidak Ada Tanggapan yang menandai
+ * keadaan tanpa jawaban, bukan kesimpulan atas laporannya.
+ */
+const KETERANGAN_UMUM =
+  'Terbukti dan Tidak Terbukti dipakai ketika Fakultas/Unit menanggapi; ' +
+  'Tidak Ada Tanggapan dipakai ketika tidak ada jawaban sama sekali.'
+
+const KETERANGAN_HASIL: Record<string, string> = {
+  Terbukti: 'Fakultas/Unit membenarkan permasalahan yang dilaporkan mahasiswa.',
+  'Tidak Terbukti': 'Fakultas/Unit menyatakan permasalahan yang dilaporkan tidak terjadi.',
+  'Tidak Ada Tanggapan':
+    'Fakultas/Unit tidak memberikan jawaban sampai batas waktu yang ditetapkan.',
+}
+
 export function AdminWorkflowDetailScreen() {
   const [modalOpen, setModalOpen] = useState(false)
   const [validationModalOpen, setValidationModalOpen] = useState(false)
   const [validationResult, setValidationResult] = useState('')
   const [validationNote, setValidationNote] = useState('')
+  /** Unit yang memberi tanggapan; Tabel 4.2 mewajibkannya. */
+  const [validationUnit, setValidationUnit] = useState('')
   const [validationError, setValidationError] = useState('')
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
   const [completionResult, setCompletionResult] = useState('')
@@ -324,6 +344,12 @@ export function AdminWorkflowDetailScreen() {
       setValidationError('Hasil Validasi wajib diisi.')
       return
     }
+    const unit = validationUnit.trim()
+    if (!unit) {
+      setValidationError('Unit Validator wajib diisi.')
+      return
+    }
+
     const note = validationNote.trim()
     const hasil = await ubahStatus({
       report,
@@ -333,7 +359,7 @@ export function AdminWorkflowDetailScreen() {
         (note ? `. Catatan validasi: ${note}` : ''),
       data: {
         hasil_validasi: result,
-        unit_validator: report.studentFaculty ?? 'Fakultas/Unit terkait',
+        unit_validator: unit,
         // Catatan validasi sebelumnya hanya masuk ke keterangan riwayat,
         // sehingga entitas validasi pada ERD menyimpan hasilnya tanpa
         // penjelasannya, dan mahasiswa membacanya hanya sebagai satu kalimat
@@ -393,6 +419,7 @@ export function AdminWorkflowDetailScreen() {
     if (report.status === 'Diteruskan ke Fakultas' && !validationRecorded) {
       setValidationError('')
       setAksiError('')
+      setValidationUnit(report.studentFaculty ?? '')
       setValidationModalOpen(true)
       return
     }
@@ -876,32 +903,73 @@ export function AdminWorkflowDetailScreen() {
             <h2 id="validation-modal-title" className="mt-3 font-slab text-2xl text-[#12355B]">
               Catat Hasil Validasi
             </h2>
+            <p className="mt-3 text-sm leading-6 text-[#52657A]">
+              Catat kesimpulan yang disampaikan Fakultas/Unit terkait atas laporan ini.
+            </p>
+
+            {/* Tabel 4.2 menetapkan tiga kemungkinan hasil validasi, tetapi isiannya
+                sempat berupa teks bebas, sehingga kesimpulan yang tercatat dapat
+                berbunyi apa saja dan tidak dapat dibandingkan antarlaporan. */}
             <label className="mt-6 block">
               <span className="text-sm font-semibold text-[#12355B]">
                 Hasil Validasi <span className="text-[#005BAC]">*</span>
               </span>
-              <input
+              <select
                 required
                 value={validationResult}
                 onChange={(event) => {
                   setValidationResult(event.target.value)
                   if (validationError) setValidationError('')
                 }}
-                placeholder="Masukkan hasil validasi dari Fakultas/Unit terkait"
-                className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
-              />
+                className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+              >
+                <option value="">Pilih kesimpulan Fakultas/Unit</option>
+                {HASIL_VALIDASI.map((pilihan) => (
+                  <option key={pilihan} value={pilihan}>
+                    {pilihan}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-2 block text-xs leading-5 text-[#52657A]">
+                {KETERANGAN_HASIL[validationResult] ?? KETERANGAN_UMUM}
+              </span>
               {validationError && <p className="mt-2 text-xs text-[#B42318]">{validationError}</p>}
             </label>
+
             <label className="mt-5 block">
               <span className="text-sm font-semibold text-[#12355B]">
-                Catatan Validasi <span className="font-normal text-[#52657A]">(opsional)</span>
+                Unit Validator <span className="text-[#005BAC]">*</span>
+              </span>
+              <input
+                required
+                value={validationUnit}
+                onChange={(event) => {
+                  setValidationUnit(event.target.value)
+                  if (validationError) setValidationError('')
+                }}
+                placeholder="Fakultas/Unit yang memberi tanggapan"
+                className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+              />
+              <span className="mt-2 block text-xs leading-5 text-[#52657A]">
+                Terisi dari fakultas pelapor. Ubah bila yang menanggapi unit lain.
+              </span>
+            </label>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-semibold text-[#12355B]">
+                Penjelasan dari Fakultas/Unit{' '}
+                <span className="font-normal text-[#52657A]">(opsional)</span>
               </span>
               <textarea
                 value={validationNote}
                 onChange={(event) => setValidationNote(event.target.value)}
                 rows={4}
-                className="mt-2 block w-full resize-y border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+                placeholder="Alasan atau keterangan yang menyertai kesimpulan di atas"
+                className="mt-2 block w-full resize-y border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
               />
+              <span className="mt-2 block text-xs leading-5 text-[#52657A]">
+                Dibaca mahasiswa pada halaman detail laporannya.
+              </span>
             </label>
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
