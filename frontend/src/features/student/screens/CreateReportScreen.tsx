@@ -67,6 +67,26 @@ export function CreateReportScreen() {
   const [submissionComplete, setSubmissionComplete] = useState(false)
   const [submittedReportId, setSubmittedReportId] = useState('')
   const submissionPending = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  /**
+   * Mengosongkan seluruh isian setelah laporan terkirim.
+   *
+   * Menutup pemberitahuan berhasil membuka kembali tombol kirim, sehingga
+   * isian yang tertinggal dapat terkirim untuk kedua kalinya sebagai laporan
+   * baru. Sebagian besar isiannya tidak terkendali React, sehingga formulirnya
+   * dikosongkan melalui DOM, dan sisanya melalui state.
+   */
+  const kosongkanFormulir = () => {
+    formRef.current?.reset()
+    setDuration('')
+    setFiles([])
+    setErrors({})
+    setSubmitError('')
+    setFileError('')
+    setSubmittedReportId('')
+    setSubmissionComplete(false)
+  }
   const navigate = useNavigate()
   const inputClass = (field: string) =>
     errors[field]
@@ -218,7 +238,12 @@ export function CreateReportScreen() {
           Panduan Pengisian
         </button>
       </header>
-      <form className="mt-8 space-y-8" noValidate onSubmit={(event) => void handleSubmit(event)}>
+      <form
+        ref={formRef}
+        className="mt-8 space-y-8"
+        noValidate
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <section className="border border-[#D9E2EC] bg-white" aria-labelledby="info-laporan">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
@@ -447,7 +472,7 @@ export function CreateReportScreen() {
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
                 type="button"
-                onClick={() => setSubmissionComplete(false)}
+                onClick={kosongkanFormulir}
                 className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
               >
                 Tutup
