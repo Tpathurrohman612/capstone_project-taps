@@ -1,9 +1,17 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useStudentReports } from '../lib/use-student-reports'
-import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { addAttachments, changeReportStatus } from '../../../shared/data/report-store'
 import { checkTransition } from '../../../shared/domain/report-status'
-import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
+import {
+  compressImage,
+  fileKeDataUrl,
+  isCompressibleImage,
+} from '../../../shared/domain/image-compression'
+import { formatFileSize } from '../../../shared/domain/attachment-rules'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
+import { useAuth } from '../../../shared/lib/auth-context'
+import { AttachmentPicker } from '../../../shared/components/AttachmentPicker'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
 /**
@@ -15,14 +23,18 @@ import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
  * kelima Tabel 4.2 yang menetapkan Mahasiswa sebagai pemicunya.
  */
 export function CompleteReportScreen() {
-  const { riwayat } = useStudentReports()
+  const { reports } = useStudentReports()
   const navigate = useNavigate()
   const location = useLocation()
   const selectedReportId = new URLSearchParams(location.search).get('report')
 
-  const report = riwayat.find((item) => item.id === selectedReportId)
+  const report = reports.find((item) => item.id === selectedReportId)
   const [penjelasan, setPenjelasan] = useState('')
   const [error, setError] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [fileError, setFileError] = useState('')
+  const [mengirim, setMengirim] = useState(false)
+  const { user } = useAuth()
 
   const fieldClass =
     'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]'
@@ -69,7 +81,7 @@ export function CompleteReportScreen() {
     )
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (penjelasan.trim() === '') {
@@ -77,16 +89,15 @@ export function CompleteReportScreen() {
       return
     }
 
-    const reports = getWorkflowReports()
-    const target = reports.find((item) => item.id === report.id)
-
-    if (!target) {
-      setError('Laporan tidak ditemukan saat menyimpan. Muat ulang halaman lalu coba lagi.')
+    if (!user) {
+      setError('Sesi masuk sudah berakhir. Masuk kembali lalu coba lagi.')
       return
     }
 
+    // Kelayakan perpindahan diperiksa di sini agar pesannya muncul lebih awal;
+    // aturan keamanan memeriksanya lagi di server.
     const pemeriksaan = checkTransition({
-      dari: target.status,
+      dari: report.status,
       ke: 'Diterima',
       oleh: 'Mahasiswa',
     })
@@ -96,18 +107,48 @@ export function CompleteReportScreen() {
       return
     }
 
-    target.status = 'Diterima'
-    target.updates = [
-      {
-        time: formatIndonesianDateTime(new Date()),
-        title: 'Laporan dilengkapi mahasiswa',
-        text: penjelasan.trim(),
-      },
-      ...target.updates,
-    ]
+    setMengirim(true)
+    setError('')
 
-    saveWorkflowReports(reports)
-    navigate('/riwayat-laporan')
+    try {
+      // Lampiran disimpan lebih dahulu. Bila statusnya yang dipindahkan lebih
+      // dulu lalu penyimpanan lampiran gagal, laporan sudah kembali ke antrean
+      // tanpa membawa kelengkapan yang justru diminta.
+      const berkas: { name: string; type: string; size: string; data?: string }[] = []
+
+      for (const file of files) {
+        const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
+        const data = isCompressibleImage(file.type)
+          ? await compressImage(file).then((hasil) => {
+              if (!hasil.berhasil) throw new Error(`${file.name}: ${hasil.alasan}`)
+              return hasil.dataUrl
+            })
+          : await fileKeDataUrl(file)
+
+        berkas.push({
+          name: file.name,
+          type: extension,
+          size: formatFileSize(file.size),
+          ...(data ? { data } : {}),
+        })
+      }
+
+      await addAttachments({ report, attachments: berkas })
+
+      await changeReportStatus({
+        docId: report.docId,
+        reportNumber: report.id,
+        ke: 'Diterima',
+        oleh: 'Mahasiswa',
+        uidPencatat: user.uid,
+        keterangan: `Mahasiswa melengkapi laporan. ${penjelasan.trim()}`,
+      })
+
+      navigate('/riwayat-laporan')
+    } catch (penyebab) {
+      setError(jelaskanGalatFirestore(penyebab, 'ubah-status'))
+      setMengirim(false)
+    }
   }
 
   return (
@@ -121,14 +162,14 @@ export function CompleteReportScreen() {
         menjadi Diterima dan masuk antrean verifikasi.
       </p>
 
-      <div className="mt-7 border border-[#D9E2EC] bg-white">
+      <div className="mt-7 border border-[#D9E2EC] bg-white px-6 max-[620px]:px-5">
         <ReadOnlyItem label="Nomor Laporan" value={report.id} />
         <ReadOnlyItem label="Mata Kuliah" value={report.course} />
         <ReadOnlyItem label="Tutor" value={report.tutor} />
         <ReadOnlyItem label="Status Saat Ini" value={report.status} />
       </div>
 
-      <form className="mt-7" onSubmit={handleSubmit}>
+      <form className="mt-7" onSubmit={(event) => void handleSubmit(event)}>
         <label className="block">
           <span className="text-sm font-medium text-[#12355B]">Kelengkapan yang Ditambahkan</span>
           <textarea
@@ -146,6 +187,23 @@ export function CompleteReportScreen() {
           />
         </label>
 
+        {/* Permintaan kelengkapan sering berarti bukti yang kurang, bukan
+            penjelasan yang kurang. Tanpa pemilih berkas di sini, mahasiswa
+            harus membuat laporan baru hanya untuk melampirkan satu gambar. */}
+        <div className="mt-7">
+          <p className="text-sm font-medium text-[#12355B]">
+            Bukti Pendukung Tambahan <span className="font-normal text-[#52657A]">(opsional)</span>
+          </p>
+          <div className="mt-2">
+            <AttachmentPicker
+              files={files}
+              setFiles={setFiles}
+              error={fileError}
+              setError={setFileError}
+            />
+          </div>
+        </div>
+
         {error && (
           <p id="lengkapi-error" className="mt-3 text-xs leading-5 text-[#B42318]">
             {error}
@@ -155,9 +213,10 @@ export function CompleteReportScreen() {
         <div className="mt-7 flex gap-3">
           <button
             type="submit"
-            className="bg-[#005BAC] px-5 py-3.5 text-sm text-white transition hover:bg-[#004987] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2"
+            disabled={mengirim}
+            className="bg-[#005BAC] px-5 py-3.5 text-sm text-white transition hover:bg-[#004987] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#7B8EA3]"
           >
-            Kirim Kelengkapan
+            {mengirim ? 'Mengirim…' : 'Kirim Kelengkapan'}
           </button>
           <button
             type="button"

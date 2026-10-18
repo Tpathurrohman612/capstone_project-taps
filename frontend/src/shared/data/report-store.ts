@@ -11,6 +11,7 @@ import {
   createLaporan,
   listLampiran,
   listPenanganan,
+  tambahLampiran,
   listLaporanMilik,
   listSemuaLaporan,
   ubahStatusLaporan,
@@ -171,6 +172,45 @@ export async function changeReportStatus(params: {
   if (!target) throw new Error('Laporan tidak ditemukan.')
 
   target.status = params.ke
+  saveWorkflowReports(tersimpan)
+}
+
+/**
+ * Menambahkan lampiran pada laporan yang sudah ada.
+ *
+ * Dipakai layar Lengkapi Laporan. Pada mode prototipe lampirannya disatukan
+ * ke dalam laporan yang tersimpan, supaya perilakunya setara.
+ */
+export async function addAttachments(params: {
+  report: WorkflowReport
+  attachments: { name: string; type: string; size: string; data?: string }[]
+}): Promise<void> {
+  if (params.attachments.length === 0) return
+
+  if (usingFirestore()) {
+    if (!params.report.docId) {
+      throw new Error(
+        'Laporan ini belum tersimpan di basis data, sehingga lampiran belum dapat ditambahkan.',
+      )
+    }
+
+    await tambahLampiran(
+      params.report.docId,
+      params.attachments.map((berkas) => ({
+        nama_file: berkas.name,
+        tipe_file: berkas.type,
+        ukuran_file: berkas.size,
+        ...(berkas.data ? { isi_base64: berkas.data } : {}),
+      })),
+    )
+    return
+  }
+
+  const tersimpan = getWorkflowReports()
+  const target = tersimpan.find((item) => item.id === params.report.id)
+  if (!target) throw new Error('Laporan tidak ditemukan.')
+
+  target.attachments = [...(target.attachments ?? []), ...params.attachments]
   saveWorkflowReports(tersimpan)
 }
 

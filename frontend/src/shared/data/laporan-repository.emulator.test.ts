@@ -36,6 +36,7 @@ const PORT = 8080
 
 const UID = 'mahasiswa-penguji'
 const UID_ADMIN = 'administrator-penguji'
+const UID_LAIN = 'mahasiswa-lain'
 
 async function emulatorTersedia(): Promise<boolean> {
   try {
@@ -516,6 +517,59 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       expect(penanganan.validasi).toEqual([])
       expect(penanganan.tindakLanjut).toEqual([])
       expect(penanganan.pengiriman).toEqual([])
+    })
+
+    it('mahasiswa dapat melampirkan bukti saat melengkapi laporannya', async () => {
+      // Layar Lengkapi Laporan sebelumnya menulis ke sessionStorage, sehingga
+      // kelengkapannya tidak pernah sampai ke basis data sama sekali.
+      const konteksMhs = sebagaiFirestore(env.authenticatedContext(UID))
+      const repoMhs = await muatRepository(konteksMhs)
+      const dibuat = await repoMhs.createLaporan({ uid: UID, data: dataLaporan })
+
+      vi.resetModules()
+      const repoAdmin = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_ADMIN)))
+      await repoAdmin.ubahStatusLaporan({
+        idLaporan: dibuat.id_laporan,
+        ke: 'Perlu Informasi Tambahan',
+        oleh: 'Administrator',
+        uidPencatat: UID_ADMIN,
+        data: { alasan: 'Bukti belum terbaca' },
+      })
+
+      vi.resetModules()
+      const lagi = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      await lagi.tambahLampiran(dibuat.id_laporan, [
+        { nama_file: 'bukti-baru.jpg', tipe_file: 'JPG', ukuran_file: '120 KB' },
+      ])
+      await lagi.ubahStatusLaporan({
+        idLaporan: dibuat.id_laporan,
+        ke: 'Diterima',
+        oleh: 'Mahasiswa',
+        uidPencatat: UID,
+        keterangan: 'Mahasiswa melengkapi laporan. Bukti baru dilampirkan.',
+      })
+
+      const lampiran = await lagi.listLampiran(dibuat.id_laporan)
+      expect(lampiran.map((berkas) => berkas.nama_file)).toContain('bukti-baru.jpg')
+
+      const laporan = await lagi.getLaporan(dibuat.id_laporan)
+      expect(laporan?.id_status).toBe('Diterima')
+    })
+
+    it('menolak lampiran yang ditambahkan pada laporan milik orang lain', async () => {
+      // Tanpa pemeriksaan ini, siapa pun yang masuk dapat menitipkan berkas
+      // pada laporan orang lain dan menghabiskan kuota basis data.
+      const repoMhs = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      const dibuat = await repoMhs.createLaporan({ uid: UID, data: dataLaporan })
+
+      vi.resetModules()
+      const repoLain = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID_LAIN)))
+
+      await expect(
+        repoLain.tambahLampiran(dibuat.id_laporan, [
+          { nama_file: 'titipan.jpg', tipe_file: 'JPG', ukuran_file: '10 KB' },
+        ]),
+      ).rejects.toThrow()
     })
 
     it('tidak mencatat entitas penanganan pada perpindahan yang tidak terkait', async () => {

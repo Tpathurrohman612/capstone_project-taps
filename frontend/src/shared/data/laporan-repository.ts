@@ -6,6 +6,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  writeBatch,
   Timestamp,
   where,
   type DocumentData,
@@ -447,6 +448,30 @@ export async function listLampiran(idLaporan: string): Promise<Lampiran[]> {
       } satisfies Lampiran
     })
     .filter((berkas): berkas is Lampiran => berkas !== undefined)
+}
+
+/**
+ * Menambahkan lampiran pada laporan yang sudah ada.
+ *
+ * Dipakai ketika mahasiswa melengkapi laporan yang diminta Administrator.
+ * Aturan keamanan hanya mengizinkannya bila laporan induknya memang milik
+ * yang menulis, sehingga pemeriksaan kepemilikannya terjadi di server.
+ */
+export async function tambahLampiran(idLaporan: string, lampiran: LampiranBaru[]): Promise<void> {
+  pastikanSiap()
+
+  if (lampiran.length === 0) return
+
+  const tulis = writeBatch(db)
+  for (const berkas of lampiran) {
+    tulis.set(doc(collection(db, LAMPIRAN_COLLECTION)), {
+      id_laporan: idLaporan,
+      ...berkas,
+      tanggal_upload: serverTimestamp(),
+    })
+  }
+
+  await tulis.commit()
 }
 
 /** Catatan penanganan satu laporan, sesuai entitas pada ERD Gambar 3.3. */
