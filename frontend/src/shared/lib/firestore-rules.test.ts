@@ -217,6 +217,119 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
     })
   })
 
+  describe('Administrator tidak boleh menangani laporan sendiri', () => {
+    beforeEach(async () => {
+      // Laporan milik Administrator sendiri, mewakili mahasiswa yang kemudian
+      // diangkat menjadi Administrator sementara laporan lamanya tetap ada.
+      await env.withSecurityRulesDisabled(async (konteks) => {
+        await setDoc(doc(konteks.firestore(), 'laporan', 'laporan-milik-admin'), {
+          nomor_laporan: 'LT-2026-0500',
+          uid_pelapor: UID_ADMIN,
+          id_status: 'Diterima',
+          judul_laporan: 'Laporan yang dibuat sebelum diangkat',
+        })
+      })
+    })
+
+    it('menolak Administrator memverifikasi laporannya sendiri', async () => {
+      await assertFails(
+        updateDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-admin'), {
+          id_status: 'Diverifikasi',
+        }),
+      )
+    })
+
+    it('tetap mengizinkan Administrator memverifikasi laporan orang lain', async () => {
+      await assertSucceeds(
+        updateDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-satu'), {
+          id_status: 'Diverifikasi',
+        }),
+      )
+    })
+
+    it('mengizinkan Administrator membaca laporannya sendiri', async () => {
+      // Membaca tetap boleh; yang dilarang adalah menanganinya.
+      await assertSucceeds(getDoc(doc(dbAdmin(), 'laporan', 'laporan-milik-admin')))
+    })
+
+    it('menolak pencatatan hasil validasi atas laporannya sendiri', async () => {
+      await assertFails(
+        setDoc(doc(dbAdmin(), 'validasi', 'validasi-sendiri'), {
+          id_laporan: 'laporan-milik-admin',
+          id_pengiriman: 'kirim-1',
+          uid_pencatat: UID_ADMIN,
+          unit_validator: 'FST',
+          hasil_validasi: 'Terbukti',
+        }),
+      )
+    })
+
+    it('menolak pencatatan tindak lanjut atas laporannya sendiri', async () => {
+      await assertFails(
+        setDoc(doc(dbAdmin(), 'tindak_lanjut', 'tindak-sendiri'), {
+          id_laporan: 'laporan-milik-admin',
+          uid_pencatat: UID_ADMIN,
+          keterangan: 'Selesai sendiri',
+        }),
+      )
+    })
+  })
+
+  describe('batas ukuran isian', () => {
+    const laporanDasar = {
+      nomor_laporan: 'LT-2026-0600',
+      uid_pelapor: UID_MAHASISWA,
+      id_status: 'Diterima',
+      judul_laporan: 'Judul wajar',
+    }
+
+    it('menolak judul yang melampaui batas panjang', async () => {
+      await assertFails(
+        setDoc(doc(dbMahasiswa(), 'laporan', 'judul-panjang'), {
+          ...laporanDasar,
+          judul_laporan: 'A'.repeat(201),
+        }),
+      )
+    })
+
+    it('menolak uraian sepanjang hampir satu megabyte', async () => {
+      // Tanpa batas, pengiriman semacam ini sah menurut aturan dan dapat
+      // diulang sampai kuota basis data habis.
+      await assertFails(
+        setDoc(doc(dbMahasiswa(), 'laporan', 'uraian-raksasa'), {
+          ...laporanDasar,
+          deskripsi: 'A'.repeat(900000),
+        }),
+      )
+    })
+
+    it('menolak judul kosong', async () => {
+      await assertFails(
+        setDoc(doc(dbMahasiswa(), 'laporan', 'judul-kosong'), {
+          ...laporanDasar,
+          judul_laporan: '',
+        }),
+      )
+    })
+
+    it('menolak dokumen dengan field berlebihan', async () => {
+      const berlebihan: Record<string, unknown> = { ...laporanDasar }
+      for (let i = 0; i < 30; i += 1) berlebihan[`tambahan_${i}`] = 'x'
+
+      await assertFails(setDoc(doc(dbMahasiswa(), 'laporan', 'field-banyak'), berlebihan))
+    })
+
+    it('tetap menerima laporan berukuran wajar', async () => {
+      await assertSucceeds(
+        setDoc(doc(dbMahasiswa(), 'laporan', 'wajar'), {
+          ...laporanDasar,
+          deskripsi: 'Uraian permasalahan yang panjangnya masuk akal.',
+          nama_tutor: 'Budi Santoso',
+        }),
+      )
+    })
+  })
+
   describe('allowlist administrator', () => {
     it('menolak pengguna mengangkat dirinya menjadi Administrator', async () => {
       await assertFails(

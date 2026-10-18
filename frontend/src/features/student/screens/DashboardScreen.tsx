@@ -1,26 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { studentNotifications, type StudentNotification } from '../data/notifications'
 import type { HistoryReport } from '../../../shared/types/history-report'
 import { useStudentReports } from '../lib/use-student-reports'
+import { useNotifications, type TampilanNotifikasi } from '../lib/use-notifications'
+import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 
 export function DashboardScreen() {
-  const { riwayat, memuat: memuatLaporan, identity } = useStudentReports()
+  const { riwayat, reports, memuat: memuatLaporan, identity } = useStudentReports()
   const [selectedReport, setSelectedReport] = useState<HistoryReport | null>(null)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<StudentNotification[]>(studentNotifications)
+  const {
+    notifikasi: notifications,
+    belumDibaca: unreadNotifications,
+    tandaiDibaca,
+    tandaiSemuaDibaca,
+  } = useNotifications(reports)
   const navigate = useNavigate()
   const studentReports = riwayat
   const recentReports = studentReports.slice(0, 3)
-  const unreadNotifications = notifications.filter((notification) => notification.unread).length
 
-  const openNotification = (notification: StudentNotification) => {
-    const report = studentReports.find((item) => item.id === notification.reportId)
+  const openNotification = (notification: TampilanNotifikasi) => {
+    const report = studentReports.find((item) => item.id === notification.nomorLaporan)
     if (report) setSelectedReport(report)
-    setNotifications((items) =>
-      items.map((item) => (item.id === notification.id ? { ...item, unread: false } : item)),
-    )
+    // Penandaan sudah dibaca kini tersimpan di Firestore pada field
+    // dibaca_pada, bukan hanya di state yang hilang saat halaman dimuat ulang.
+    void tandaiDibaca(notification.id)
     setNotificationsOpen(false)
   }
 
@@ -83,13 +88,13 @@ export function DashboardScreen() {
                         : 'SEMUA SUDAH DIBACA'}
                     </p>
                   </div>
-                  {notifications.length > 0 && (
+                  {unreadNotifications > 0 && (
                     <button
                       type="button"
-                      onClick={() => setNotifications([])}
+                      onClick={() => void tandaiSemuaDibaca()}
                       className="border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
                     >
-                      Kosongkan
+                      Tandai semua dibaca
                     </button>
                   )}
                 </div>
@@ -103,14 +108,17 @@ export function DashboardScreen() {
                         onClick={() => openNotification(notification)}
                         className="relative w-full px-4 py-4 pr-8 text-left transition hover:bg-[#F7F9FC]"
                       >
-                        {notification.unread && (
+                        {notification.belumDibaca && (
                           <span className="absolute right-4 top-5 h-2 w-2 bg-[#005BAC]" />
                         )}
                         <p className="text-sm font-medium leading-5 text-[#12355B]">
-                          {notification.message}
+                          {notification.pesan}
                         </p>
                         <p className="mt-2 font-mono text-[10px] tracking-[0.08em] text-[#52657A]">
-                          {notification.reportId} · {notification.time}
+                          {notification.nomorLaporan ?? 'Laporan'}
+                          {notification.waktu
+                            ? ` · ${formatIndonesianDateTime(notification.waktu)}`
+                            : ''}
                         </p>
                       </button>
                     ))}

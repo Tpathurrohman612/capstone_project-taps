@@ -17,6 +17,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Batas panjang isian.
+    //
+    // Tanpa batas, seorang pengguna yang sudah masuk dapat mengirim satu
+    // laporan berisi teks mendekati satu megabyte berulang kali. Aturannya
+    // tetap mengizinkan karena hanya memeriksa tipe, sehingga kuota basis data
+    // habis tanpa ada yang melanggar aturan mana pun. Batas ditegakkan di sini
+    // karena pemeriksaan di peramban dapat dilewati dengan memanggil SDK
+    // secara langsung.
+    function teksWajar(nilai, maksimum) {
+      return nilai is string && nilai.size() > 0 && nilai.size() <= maksimum;
+    }
+
+    function teksOpsionalWajar(data, kunci, maksimum) {
+      return !(kunci in data) || (data[kunci] is string && data[kunci].size() <= maksimum);
+    }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
@@ -51,7 +67,14 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin();
       // Peran tidak boleh ikut ditulis klien — sumbernya koleksi administrator.
       allow create, update: if isOwner(uid)
-        && !('role' in request.resource.data);
+        && !('role' in request.resource.data)
+        && teksOpsionalWajar(request.resource.data, 'nim', 32)
+        && teksOpsionalWajar(request.resource.data, 'email', 254)
+        && teksOpsionalWajar(request.resource.data, 'displayName', 150)
+        && teksOpsionalWajar(request.resource.data, 'faculty', 150)
+        && teksOpsionalWajar(request.resource.data, 'program_studi', 150)
+        && teksOpsionalWajar(request.resource.data, 'ut_daerah', 150)
+        && request.resource.data.keys().size() <= 12;
       allow delete: if false;
     }
 
@@ -126,13 +149,32 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.uid_pelapor == request.auth.uid
         && request.resource.data.id_status == 'Diterima'
-        && request.resource.data.nomor_laporan is string
-        && request.resource.data.judul_laporan is string;
+        && teksWajar(request.resource.data.nomor_laporan, 32)
+        && teksWajar(request.resource.data.judul_laporan, 200)
+        && teksOpsionalWajar(request.resource.data, 'deskripsi', 5000)
+        && teksOpsionalWajar(request.resource.data, 'nama_tutor', 150)
+        && teksOpsionalWajar(request.resource.data, 'id_kategori', 150)
+        && teksOpsionalWajar(request.resource.data, 'kode_mata_kuliah', 32)
+        && teksOpsionalWajar(request.resource.data, 'nama_mata_kuliah', 200)
+        && teksOpsionalWajar(request.resource.data, 'kelas_mata_kuliah', 32)
+        && teksOpsionalWajar(request.resource.data, 'perkiraan_durasi', 100)
+        && teksOpsionalWajar(request.resource.data, 'prodi_pelapor', 150)
+        && teksOpsionalWajar(request.resource.data, 'fakultas_pelapor', 150)
+        // Jumlah field dibatasi agar dokumen tidak dapat digelembungkan
+        // dengan field yang tidak dikenal rancangan.
+        && request.resource.data.keys().size() <= 20;
 
-      // Perubahan status adalah wewenang Administrator. Mahasiswa hanya boleh
-      // menyunting laporannya sendiri selama status masih memungkinkan, yaitu
-      // saat diminta melengkapi, dan tidak boleh memindahkan kepemilikan.
-      allow update: if isAdmin()
+      // Perubahan status adalah wewenang Administrator, kecuali atas laporan
+      // yang dibuatnya sendiri. Seorang mahasiswa yang kemudian diangkat
+      // menjadi Administrator tetap membawa laporan lamanya, dan tanpa
+      // pengecualian ini ia dapat memverifikasi, memvalidasi, lalu
+      // menyelesaikan keluhannya sendiri. Penanganan laporan semacam itu harus
+      // dilakukan Administrator lain.
+      //
+      // Mahasiswa hanya boleh menyunting laporannya sendiri selama status
+      // masih memungkinkan, yaitu saat diminta melengkapi, dan tidak boleh
+      // memindahkan kepemilikan.
+      allow update: if (isAdmin() && resource.data.uid_pelapor != request.auth.uid)
         || (laporanMilikSendiri()
             && resource.data.id_status == 'Perlu Informasi Tambahan'
             && request.resource.data.uid_pelapor == resource.data.uid_pelapor
@@ -166,7 +208,9 @@ service cloud.firestore {
       // karena uid_pencatat tidak dapat dipalsukan dan laporan induknya
       // sendiri tetap dilindungi aturannya masing-masing.
       allow create: if isSignedIn()
-        && request.resource.data.uid_pencatat == request.auth.uid;
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && teksOpsionalWajar(request.resource.data, 'keterangan', 2000)
+        && request.resource.data.keys().size() <= 10;
       // Hanya penanda baca notifikasi (FR-07) yang boleh berubah.
       allow update: if isSignedIn()
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -184,7 +228,9 @@ service cloud.firestore {
       // kepemilikannya ketika induknya sudah ada, sehingga tidak ada yang
       // dapat menambahkan bukti pada laporan milik orang lain.
       allow create: if isSignedIn()
-        && request.resource.data.id_laporan is string
+        && teksWajar(request.resource.data.id_laporan, 64)
+        && teksWajar(request.resource.data.nama_file, 300)
+        && request.resource.data.keys().size() <= 8
         && (
           !exists(/databases/$(database)/documents/laporan/$(request.resource.data.id_laporan))
           || laporanInduk(request.resource.data.id_laporan).uid_pelapor == request.auth.uid
@@ -197,21 +243,34 @@ service cloud.firestore {
     // Pengiriman validasi, hasil validasi, dan tindak lanjut sepenuhnya
     // wewenang Administrator. Mahasiswa boleh membacanya pada laporannya
     // sendiri agar dapat melihat perkembangan penanganan.
+    // Administrator tidak boleh menangani laporan yang dibuatnya sendiri,
+    // sehingga pemeriksaan yang sama diterapkan pada seluruh pencatatan
+    // penanganan, bukan hanya pada perubahan status.
+    function bukanLaporanSendiri(idLaporan) {
+      return laporanInduk(idLaporan).uid_pelapor != request.auth.uid;
+    }
+
     match /pengiriman_validasi/{id} {
       allow get, list: if isSignedIn();
-      allow create: if isAdmin() && request.resource.data.uid_pengirim == request.auth.uid;
+      allow create: if isAdmin()
+        && request.resource.data.uid_pengirim == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
       allow update, delete: if false;
     }
 
     match /validasi/{id} {
       allow get, list: if isSignedIn();
-      allow create: if isAdmin() && request.resource.data.uid_pencatat == request.auth.uid;
+      allow create: if isAdmin()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
       allow update, delete: if false;
     }
 
     match /tindak_lanjut/{id} {
       allow get, list: if isSignedIn();
-      allow create: if isAdmin() && request.resource.data.uid_pencatat == request.auth.uid;
+      allow create: if isAdmin()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
       allow update, delete: if false;
     }
 

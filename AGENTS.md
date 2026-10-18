@@ -78,3 +78,23 @@ without Java.
 Status values come from `frontend/src/shared/domain/report-status.ts`, a direct
 translation of Tabel 4.1 and Tabel 4.2 in the proposal. Change the tables first,
 then the module — never only the code.
+
+## Security posture
+
+Authorization lives in `firestore.rules`, not in the client. Three invariants
+the rules enforce and the emulator tests cover:
+
+- A student can only read their own reports; queries that cannot prove this
+  are rejected rather than silently returning other people's data.
+- An Administrator cannot act on a report they filed themselves. A student
+  promoted to Administrator keeps their old reports, so without this they
+  could verify and close their own complaint.
+- Text fields have length caps and documents have a field-count cap, so a
+  signed-in user cannot exhaust the database quota with oversized writes.
+
+App Check is wired but inert until `VITE_FIREBASE_APPCHECK_SITE_KEY` is set.
+Leave it empty locally; set it for any deployment reachable from the internet,
+otherwise the web config in the bundle lets anyone call Firestore directly.
+
+Not covered: per-user write rate limiting, which needs Cloud Functions and
+therefore the Blaze plan.

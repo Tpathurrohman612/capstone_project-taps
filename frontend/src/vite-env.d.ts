@@ -13,6 +13,11 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_APP_ID: string
   /** 'true' points the app at the local Emulator Suite instead of the real project. */
   readonly VITE_FIREBASE_USE_EMULATOR?: string
+  /**
+   * reCAPTCHA v3 site key for Firebase App Check. Empty disables App Check,
+   * which keeps local development and the emulator working.
+   */
+  readonly VITE_FIREBASE_APPCHECK_SITE_KEY?: string
 }
 
 interface ImportMeta {

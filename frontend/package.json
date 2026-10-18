@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:rules": "vitest run src/shared/lib/firestore-rules.test.ts src/shared/data/laporan-repository.emulator.test.ts",
+    "test:rules": "vitest run src/shared/lib/firestore-rules.test.ts src/shared/data/laporan-repository.emulator.test.ts src/shared/data/notification-repository.emulator.test.ts",
     "test:rules:emulator": "firebase --project demo-taps emulators:exec --only firestore \"corepack pnpm@10.34.3 --dir frontend run test:rules\""
   },
   "dependencies": {
