@@ -47,6 +47,22 @@ export const PREFIKS_KELENGKAPAN = 'Mahasiswa melengkapi laporan.'
 export type CatatanKelengkapan = { waktu: string; penjelasan: string }
 
 /**
+ * Kelengkapan terakhir yang dikirim mahasiswa.
+ *
+ * Kelengkapan diperlakukan sebagai satu keterangan yang disunting berulang,
+ * bukan sebagai catatan yang bertumpuk. Ketika Administrator meminta
+ * kelengkapan lagi, isian mahasiswa diisi lebih dahulu dengan keterangan
+ * terakhirnya, sehingga yang dikirim berikutnya sudah memuat seluruh
+ * keterangan sebelumnya. Menampilkan setiap pengiriman sebagai baris
+ * tersendiri akan mengulang isi yang sama berkali-kali.
+ */
+export function kelengkapanTerakhir(
+  riwayat: WorkflowReport['updates'],
+): CatatanKelengkapan | undefined {
+  return catatanKelengkapan(riwayat)[0]
+}
+
+/**
  * Seluruh kelengkapan yang pernah dikirim mahasiswa, terbaru lebih dahulu.
  *
  * Kelengkapan tersimpan sebagai keterangan riwayat, sehingga tanpa pembacaan

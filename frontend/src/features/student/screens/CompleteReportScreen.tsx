@@ -11,7 +11,11 @@ import {
 import { formatFileSize } from '../../../shared/domain/attachment-rules'
 import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 import { useAuth } from '../../../shared/lib/auth-context'
-import { alasanStatus, PREFIKS_KELENGKAPAN } from '../../../shared/lib/alasan-status'
+import {
+  alasanStatus,
+  kelengkapanTerakhir,
+  PREFIKS_KELENGKAPAN,
+} from '../../../shared/lib/alasan-status'
 import { fetchReportUpdates } from '../../../shared/data/report-store'
 import { AttachmentPicker } from '../../../shared/components/AttachmentPicker'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
@@ -37,7 +41,16 @@ export function CompleteReportScreen() {
 
     fetchReportUpdates(report)
       .then((riwayat) => {
-        if (aktif) setAlasan(alasanStatus(riwayat, 'Perlu Informasi Tambahan'))
+        if (!aktif) return
+
+        setAlasan(alasanStatus(riwayat, 'Perlu Informasi Tambahan'))
+
+        // Isian diisi lebih dahulu dengan keterangan terakhir mahasiswa,
+        // sehingga permintaan kelengkapan berikutnya menyunting keterangan
+        // yang sama alih-alih menumpuk catatan baru. Lampiran tidak ikut
+        // dibawa: berkas yang sudah terkirim tetap melekat pada laporannya.
+        const sebelumnya = kelengkapanTerakhir(riwayat)
+        if (sebelumnya) setPenjelasan(sebelumnya.penjelasan)
       })
       .catch(() => {
         if (aktif) setAlasan(undefined)

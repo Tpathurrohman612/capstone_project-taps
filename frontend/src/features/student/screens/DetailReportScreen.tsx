@@ -11,7 +11,7 @@ import type { Penanganan } from '../../../shared/data/laporan-repository'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { alasanStatus, catatanKelengkapan } from '../../../shared/lib/alasan-status'
+import { alasanStatus, kelengkapanTerakhir } from '../../../shared/lib/alasan-status'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 import type { WorkflowReport } from '../../../shared/types/workflow'
@@ -199,8 +199,8 @@ export function DetailReportScreen() {
   /** Alasan Administrator untuk status laporan sekarang, bila ada. */
   const alasanAdministrator = alasanStatus(riwayatStatus, report.status)
 
-  /** Kelengkapan yang pernah dikirim mahasiswa, terbaru lebih dahulu. */
-  const kelengkapan = catatanKelengkapan(riwayatStatus)
+  /** Kelengkapan terakhir yang dikirim mahasiswa. */
+  const kelengkapan = kelengkapanTerakhir(riwayatStatus)
   const detailAttachments = attachments
   return (
     <>
@@ -541,7 +541,7 @@ export function DetailReportScreen() {
               pada lini masa dan bercampur dengan catatan Administrator. Dipisahkan
               dari uraian permasalahan karena ditulis pada waktu dan untuk keperluan
               yang berbeda. */}
-          {kelengkapan.length > 0 && (
+          {kelengkapan && (
             <section
               className="border border-[#D9E2EC] bg-white"
               aria-labelledby="kelengkapan-laporan"
@@ -554,15 +554,11 @@ export function DetailReportScreen() {
                   Informasi Tambahan
                 </h2>
               </div>
-              <div className="divide-y divide-[#D9E2EC]">
-                {kelengkapan.map((catatan, index) => (
-                  <div key={`kelengkapan-${index}`} className="px-6 py-5 max-[620px]:px-5">
-                    <p className="text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
-                      {catatan.penjelasan}
-                    </p>
-                    <p className="mt-2 text-xs text-[#52657A]">Dikirim {catatan.waktu}</p>
-                  </div>
-                ))}
+              <div className="px-6 py-5 max-[620px]:px-5">
+                <p className="text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
+                  {kelengkapan.penjelasan}
+                </p>
+                <p className="mt-2 text-xs text-[#52657A]">Diperbarui {kelengkapan.waktu}</p>
               </div>
             </section>
           )}

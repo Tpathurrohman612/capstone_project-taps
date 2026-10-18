@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alasanStatus, catatanKelengkapan } from './alasan-status'
+import { alasanStatus, catatanKelengkapan, kelengkapanTerakhir } from './alasan-status'
 
 /**
  * Pengambil alasan Administrator.
@@ -142,5 +142,37 @@ describe('catatanKelengkapan', () => {
 
   it('mengembalikan daftar kosong ketika laporan belum pernah dilengkapi', () => {
     expect(catatanKelengkapan([])).toEqual([])
+  })
+})
+
+describe('kelengkapanTerakhir', () => {
+  it('mengambil kelengkapan terbaru saja', () => {
+    // Isian mahasiswa diisi lebih dahulu dengan keterangan terakhirnya, maka
+    // keterangan terakhir itu sudah memuat seluruh keterangan sebelumnya.
+    // Menampilkan setiap pengiriman akan mengulang isi yang sama.
+    const riwayat = [
+      catatan(
+        'Status menjadi Diterima',
+        'Mahasiswa melengkapi laporan. Pertama\n\nKedua',
+        '18 Oktober 2026, 11:00',
+      ),
+      catatan(
+        'Status menjadi Diterima',
+        'Mahasiswa melengkapi laporan. Pertama',
+        '18 Oktober 2026, 09:00',
+      ),
+    ]
+
+    expect(kelengkapanTerakhir(riwayat)).toEqual({
+      waktu: '18 Oktober 2026, 11:00',
+      penjelasan: 'Pertama\n\nKedua',
+    })
+  })
+
+  it('menyatakan tidak ada ketika laporan belum pernah dilengkapi', () => {
+    expect(kelengkapanTerakhir([])).toBeUndefined()
+    expect(
+      kelengkapanTerakhir([catatan('Status menjadi Ditolak', 'Laporan ditolak. Alasan: X')]),
+    ).toBeUndefined()
   })
 })
