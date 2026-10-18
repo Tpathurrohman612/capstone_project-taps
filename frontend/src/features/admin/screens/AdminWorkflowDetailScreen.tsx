@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { WorkflowStatus } from '../../../shared/types/workflow'
+import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { nextStatuses } from '../../../shared/domain/report-status'
 import { useAdminReports } from '../lib/use-admin-reports'
+import { fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 
@@ -18,6 +19,15 @@ export function AdminWorkflowDetailScreen() {
   /** Pesan kegagalan tindakan. Dideklarasikan bersama hook lain, karena hook
    * wajib dipanggil tanpa syarat dan mendahului setiap return. */
   const [aksiError, setAksiError] = useState('')
+
+  /**
+   * Riwayat perubahan status laporan.
+   *
+   * Daftar laporan tidak membawa riwayatnya, karena menariknya pada setiap
+   * pembacaan daftar akan menggandakan biaya tanpa ada yang memakainya. Di
+   * layar ini riwayatnya justru yang ditampilkan, sehingga dibaca terpisah.
+   */
+  const [riwayatStatus, setRiwayatStatus] = useState<WorkflowReport['updates']>([])
   const navigate = useNavigate()
   const context =
     window.sessionStorage.getItem('adminDetailContext') === 'history' ? 'history' : 'queue'
@@ -31,6 +41,23 @@ export function AdminWorkflowDetailScreen() {
   // membuat layar menampilkan laporan milik data demo lengkap dengan statusnya,
   // dan setiap tindakan yang dilakukan di sana mengenai laporan yang keliru.
   const report = semuaLaporan.find((item) => item.id === id)
+
+  useEffect(() => {
+    let aktif = true
+
+    fetchReportUpdates(report)
+      .then((hasil) => {
+        if (aktif) setRiwayatStatus(hasil)
+      })
+      .catch(() => {
+        // Gagal membaca riwayat tidak boleh mengosongkan seluruh halaman.
+        if (aktif) setRiwayatStatus([])
+      })
+
+    return () => {
+      aktif = false
+    }
+  }, [report])
 
   if (!memuatLaporan && !report) {
     return (
@@ -74,7 +101,7 @@ export function AdminWorkflowDetailScreen() {
   // Tambahan dan Ditolak dijalankan lewat tindakan tersendiri.
   const mainFlowNext = (status: WorkflowStatus): WorkflowStatus | null =>
     nextStatuses(status, 'Administrator')[0] ?? null
-  const validationRecorded = report.updates.some(
+  const validationRecorded = riwayatStatus.some(
     (update) => update.title === 'Hasil validasi diterima dan dicatat',
   )
   const actionLabel =
@@ -427,8 +454,8 @@ export function AdminWorkflowDetailScreen() {
               <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Pembaruan Pengelola</h2>
             </div>
             <div className="space-y-5 p-6">
-              {report.updates.length ? (
-                report.updates.map((update) => (
+              {riwayatStatus.length ? (
+                riwayatStatus.map((update) => (
                   <div key={`${update.time}-${update.title}`} className="flex gap-4">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center border border-[#005BAC] text-[10px] text-[#005BAC]">
                       ●

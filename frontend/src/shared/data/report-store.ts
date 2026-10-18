@@ -4,6 +4,8 @@ import type { ReportStatus, StatusActor } from '../domain/report-status'
 import { isFirebaseConfigured } from '../lib/firebase'
 import { getWorkflowReports, saveWorkflowReports } from '../lib/workflow-storage'
 import { formToLaporanBaru, laporanToWorkflowReport } from './report-mapper'
+import { listNotifications } from './notification-repository'
+import { formatIndonesianDateTime } from '../lib/date-time'
 import {
   createLaporan,
   listLampiran,
@@ -168,6 +170,33 @@ export async function changeReportStatus(params: {
 
   target.status = params.ke
   saveWorkflowReports(tersimpan)
+}
+
+/**
+ * Riwayat perubahan status satu laporan.
+ *
+ * Riwayat tidak ikut dibaca bersama daftar laporan, karena daftar hanya
+ * memerlukan status terkininya dan menarik seluruh riwayat setiap kali daftar
+ * dibuka akan menggandakan biaya pembacaan tanpa ada yang memakainya.
+ */
+export async function fetchReportUpdates(
+  report: WorkflowReport | undefined,
+): Promise<WorkflowReport['updates']> {
+  if (!report) return []
+
+  if (usingFirestore()) {
+    if (!report.docId) return []
+
+    const riwayat = await listNotifications([report.docId])
+
+    return riwayat.map((catatan) => ({
+      time: catatan.waktu ? formatIndonesianDateTime(catatan.waktu) : 'Belum ada catatan waktu',
+      title: `Status menjadi ${catatan.status}`,
+      text: catatan.keterangan || `Laporan berpindah ke status ${catatan.status}.`,
+    }))
+  }
+
+  return report.updates
 }
 
 /**

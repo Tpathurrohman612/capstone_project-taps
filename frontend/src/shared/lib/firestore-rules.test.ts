@@ -6,7 +6,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 /**
@@ -122,6 +122,31 @@ describe.skipIf(!aktif)('aturan keamanan Firestore', () => {
 
     it('menolak pengguna yang belum masuk membaca laporan', async () => {
       await assertFails(getDoc(doc(dbTamu(), 'laporan', 'laporan-milik-satu')))
+    })
+  })
+
+  describe('Administrator membaca seluruh laporan', () => {
+    it('membaca laporan milik mahasiswa lain', async () => {
+      await assertSucceeds(getDocs(collection(dbAdmin(), 'laporan')))
+    })
+
+    it('tetap berhasil meskipun ada dokumen tanpa uid_pelapor', async () => {
+      // Aturan yang memeriksa kepemilikan lebih dulu akan galat pada dokumen
+      // semacam ini, dan galat pada aturan menolak seluruh kueri, bukan hanya
+      // dokumen itu. Administrator karena itu diperiksa lebih dulu.
+      await env.withSecurityRulesDisabled(async (konteks) => {
+        await setDoc(doc(konteks.firestore(), 'laporan', 'laporan-rusak'), {
+          nomor_laporan: 'LT-2026-9999',
+          id_status: 'Diterima',
+          judul_laporan: 'Dokumen tanpa pemilik',
+        })
+      })
+
+      await assertSucceeds(getDocs(collection(dbAdmin(), 'laporan')))
+    })
+
+    it('menolak mahasiswa membaca seluruh laporan', async () => {
+      await assertFails(getDocs(collection(dbMahasiswa(), 'laporan')))
     })
   })
 

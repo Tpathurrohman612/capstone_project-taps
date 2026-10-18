@@ -137,11 +137,18 @@ service cloud.firestore {
     // penyaring uid_pelapor akan gagal, bukan diam-diam mengembalikan laporan
     // milik orang lain.
     function laporanMilikSendiri() {
-      return isSignedIn() && resource.data.uid_pelapor == request.auth.uid;
+      return isSignedIn()
+        && 'uid_pelapor' in resource.data
+        && resource.data.uid_pelapor == request.auth.uid;
     }
 
     match /laporan/{id} {
-      allow get, list: if laporanMilikSendiri() || isAdmin();
+      // isAdmin() diperiksa lebih dulu karena tidak menyentuh isi dokumen.
+      // Aturan menghubung-singkat, sehingga Administrator tidak perlu melewati
+      // pemeriksaan kepemilikan sama sekali. Urutan sebaliknya berbahaya: satu
+      // dokumen yang kehilangan uid_pelapor membuat evaluasinya galat, dan
+      // galat pada aturan menolak seluruh kueri, bukan hanya dokumen itu.
+      allow get, list: if isAdmin() || laporanMilikSendiri();
 
       // Mahasiswa membuat laporan atas namanya sendiri, dan status awal wajib
       // Diterima sesuai baris pertama Tabel 4.2. Dengan begitu tidak ada
