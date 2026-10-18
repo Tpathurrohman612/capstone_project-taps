@@ -82,11 +82,11 @@ export function AdminWorkflowQueueScreen() {
     jumlahSiap: siapEkspor.length,
     jumlahTerpilih: exportReports.length,
   })
-  const includedPrograms = Array.from(new Set(exportReports.map(reportProgramStudy)))
   const exportFaculty = faculty
-  const fileName = namaBerkasEkspor(faculty)
-  const exportProgram =
-    includedPrograms.length > 1 ? 'Beberapa Program Studi' : (includedPrograms[0] ?? '—')
+  const namaExcel = namaBerkasEkspor(faculty)
+  // Yang terunduh adalah ZIP, dan menampilkan nama berkas Excel di dalamnya
+  // membuat Administrator mencari berkas yang tidak pernah ada di unduhannya.
+  const fileName = namaExcel.replace(/\.xlsx$/, '.zip')
   /**
    * Mengunduh data laporan sebagai berkas Excel.
    *
@@ -131,14 +131,13 @@ export function AdminWorkflowQueueScreen() {
         ),
       )
 
-      const namaExcel = namaBerkasEkspor(exportFaculty)
       const zip = await susunZipEkspor({
         excel: bukuKerjaKeArrayBuffer(buatBukuKerja(baris)),
         namaExcel,
         laporan: lampiran,
       })
 
-      unduhBlob(zip, namaExcel.replace(/\.xlsx$/, '.zip'))
+      unduhBlob(zip, fileName)
       return true
     } catch (penyebab) {
       setKirimError(jelaskanGalatFirestore(penyebab, 'daftar-laporan-administrator'))
@@ -392,12 +391,6 @@ export function AdminWorkflowQueueScreen() {
                   FAKULTAS TUJUAN
                 </dt>
                 <dd className="mt-1 font-medium">{exportFaculty}</dd>
-              </div>
-              <div>
-                <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
-                  PROGRAM STUDI
-                </dt>
-                <dd className="mt-1 font-medium">{exportProgram}</dd>
               </div>
               <div>
                 <dt className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">
