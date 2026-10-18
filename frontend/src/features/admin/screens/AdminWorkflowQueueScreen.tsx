@@ -8,6 +8,7 @@ import {
   reportProgramStudy,
 } from '../components/workflow-ui'
 import { isTerminal } from '../../../shared/domain/report-status'
+import { alasanEksporTertutup } from '../lib/alasan-ekspor'
 
 export function AdminWorkflowQueueScreen() {
   const [status, setStatus] = useState('Semua')
@@ -35,6 +36,8 @@ export function AdminWorkflowQueueScreen() {
       report.studentFaculty === faculty &&
       (courseType === 'Semua' || report.courseType === courseType),
   )
+  /** Mengapa ekspor belum dapat dijalankan, bila memang belum. */
+  const alasanEkspor = alasanEksporTertutup({ fakultas: faculty, jumlahSiap: exportReports.length })
   const includedPrograms = Array.from(new Set(exportReports.map(reportProgramStudy)))
   const exportFaculty = faculty
   const fileName = namaBerkasEkspor(faculty)
@@ -186,13 +189,23 @@ export function AdminWorkflowQueueScreen() {
               </span>
               <button
                 onClick={() => setExportModalOpen(true)}
-                disabled={faculty === 'Semua' || !exportReports.length}
+                disabled={Boolean(alasanEkspor)}
+                title={alasanEkspor}
                 className="bg-[#005BAC] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#A9B8C8]"
               >
                 Export Data Laporan
               </button>
             </div>
           </div>
+          {/* Alasannya sebelumnya hanya muncul setelah tombol ditekan, padahal
+              tombol itu justru dinonaktifkan ketika syaratnya belum terpenuhi,
+              sehingga penjelasannya tidak pernah terbaca. */}
+          {alasanEkspor && (
+            <p className="mt-3 border-l-2 border-[#B8D3E8] bg-[#EEF5FB] px-4 py-3 text-sm leading-6 text-[#52657A]">
+              <span className="font-semibold text-[#12355B]">Ekspor belum dapat dijalankan. </span>
+              {alasanEkspor}
+            </p>
+          )}
           {/* Tabel kosong saat memuat akan terbaca sebagai antrean kosong,
               padahal laporannya belum tiba dari basis data. */}
           {memuatLaporan ? (
@@ -317,6 +330,15 @@ export function AdminWorkflowQueueScreen() {
               </button>
             </div>
           </div>
+          {/* Alasannya sebelumnya hanya muncul setelah tombol ditekan, padahal
+              tombol itu justru dinonaktifkan ketika syaratnya belum terpenuhi,
+              sehingga penjelasannya tidak pernah terbaca. */}
+          {alasanEkspor && (
+            <p className="mt-3 border-l-2 border-[#B8D3E8] bg-[#EEF5FB] px-4 py-3 text-sm leading-6 text-[#52657A]">
+              <span className="font-semibold text-[#12355B]">Ekspor belum dapat dijalankan. </span>
+              {alasanEkspor}
+            </p>
+          )}
         </div>
       )}
       {sendModalOpen && (
