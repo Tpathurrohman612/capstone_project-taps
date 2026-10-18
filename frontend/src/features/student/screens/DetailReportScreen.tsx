@@ -11,6 +11,7 @@ import type { Penanganan } from '../../../shared/data/laporan-repository'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { waktuTahap } from '../../../shared/lib/waktu-tahap'
 import { alasanStatus, kelengkapanTerakhir } from '../../../shared/lib/alasan-status'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
@@ -160,21 +161,13 @@ export function DetailReportScreen() {
     Selesai: 4,
   }
   const currentStage = stageByStatus[report.status]
-  const statusUpdateTitles: Record<string, string[]> = {
-    Diterima: ['Laporan diterima'],
-    Diverifikasi: ['Laporan diverifikasi'],
-    'Menunggu Validasi': ['Validasi disiapkan', 'Data laporan dikirim ke Fakultas/Unit terkait'],
-    'Sedang Diproses': ['Laporan memasuki proses tindak lanjut', 'Laporan diproses'],
-    Selesai: ['Laporan selesai'],
-  }
-  const timelineTime = (label: string, index: number) => {
-    const update = administratorReport?.updates.find((item) =>
-      statusUpdateTitles[label]?.includes(item.title),
-    )
-    if (update) return update.time
-    if (index > currentStage) return 'Menunggu pembaruan'
-    return 'Belum ada catatan waktu'
-  }
+  const timelineTime = (label: string, index: number) =>
+    waktuTahap({
+      riwayat: riwayatStatus,
+      status: label,
+      indeks: index,
+      tahapSekarang: currentStage,
+    })
   const detailStatusStages = statusStages.map((stage, index) => ({
     ...stage,
     time: timelineTime(stage.label, index),

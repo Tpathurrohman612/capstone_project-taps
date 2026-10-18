@@ -7,6 +7,7 @@ import { formToLaporanBaru, laporanToWorkflowReport } from './report-mapper'
 import { listNotifications } from './notification-repository'
 import { formatIndonesianDateTime } from '../lib/date-time'
 import type { Penanganan } from './laporan-repository'
+import { judulRiwayat } from '../lib/waktu-tahap'
 import {
   createLaporan,
   listLampiran,
@@ -242,7 +243,7 @@ export async function fetchReportUpdates(
 
     return riwayat.map((catatan) => ({
       time: catatan.waktu ? formatIndonesianDateTime(catatan.waktu) : 'Belum ada catatan waktu',
-      title: `Status menjadi ${catatan.status}`,
+      title: judulRiwayat(catatan.status),
       text: catatan.keterangan || `Laporan berpindah ke status ${catatan.status}.`,
     }))
   }

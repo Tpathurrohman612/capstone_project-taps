@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { isTerminal, nextStatuses } from '../../../shared/domain/report-status'
+import { judulRiwayat } from '../../../shared/lib/waktu-tahap'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
@@ -131,8 +132,16 @@ export function AdminWorkflowDetailScreen() {
   // Tambahan dan Ditolak dijalankan lewat tindakan tersendiri.
   const mainFlowNext = (status: WorkflowStatus): WorkflowStatus | null =>
     nextStatuses(status, 'Administrator')[0] ?? null
+  /**
+   * Apakah hasil validasi laporan ini sudah dicatat.
+   *
+   * Sebelumnya diperiksa dengan mencocokkan judul catatan riwayat terhadap
+   * kalimat yang hanya ada pada data contoh, sehingga pada data sungguhan
+   * nilainya selalu salah. Pencatatan hasil validasi memindahkan laporan ke
+   * Sedang Diproses, dan status itulah penandanya.
+   */
   const validationRecorded = riwayatStatus.some(
-    (update) => update.title === 'Hasil validasi diterima dan dicatat',
+    (update) => update.title === judulRiwayat('Sedang Diproses'),
   )
 
   /** Kelengkapan terakhir yang dikirim mahasiswa. */
