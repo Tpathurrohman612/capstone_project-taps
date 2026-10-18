@@ -3,6 +3,7 @@ import { usePemilik } from '../lib/use-pemilik'
 import { fetchAllReports } from '../../../shared/data/report-store'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { maskId } from '../../../shared/lib/mask-id'
+import { useAuth } from '../../../shared/lib/auth-context'
 
 /**
  * Perkakas Pemilik, di luar lingkup proposal.
@@ -25,6 +26,8 @@ type Konfirmasi = {
 export function OwnerScreen() {
   const { pemilik, akun, memuat, galat, muatUlang, ubahPeran, hapusPengguna, hapusSatuLaporan } =
     usePemilik()
+  const { user } = useAuth()
+  const uidSendiri = user?.uid ?? ''
 
   const [laporan, setLaporan] = useState<WorkflowReport[]>([])
   const [konfirmasi, setKonfirmasi] = useState<Konfirmasi | null>(null)
@@ -165,6 +168,14 @@ export function OwnerScreen() {
                           ADMINISTRATOR
                         </span>
                       )}
+                      {/* Peran Pemilik ditampilkan terpisah: keduanya tidak
+                          saling menggantikan, dan Pemilik tidak dapat
+                          menangani laporan. */}
+                      {item.pemilik && (
+                        <span className="ml-2 border border-[#B42318] px-2 py-0.5 font-mono text-[10px] font-semibold text-[#B42318]">
+                          PEMILIK
+                        </span>
+                      )}
                     </p>
                     <p className="mt-1 text-sm break-words text-[#52657A]">{item.email}</p>
                     <p className="mt-1 font-mono text-[11px] text-[#52657A]">
@@ -194,6 +205,12 @@ export function OwnerScreen() {
                     </button>
                     <button
                       type="button"
+                      disabled={item.uid === uidSendiri}
+                      title={
+                        item.uid === uidSendiri
+                          ? 'Akun sendiri tidak dapat dihapus. Menghapusnya membuat aplikasi memperlakukan Anda sebagai pengguna yang belum melengkapi identitas, sedangkan NIM-nya tetap terkunci.'
+                          : undefined
+                      }
                       onClick={() =>
                         mintaKonfirmasi({
                           judul: 'Penghapusan akun',
@@ -202,7 +219,7 @@ export function OwnerScreen() {
                           jalankan: () => hapusPengguna(item),
                         })
                       }
-                      className="border border-[#B42318] px-3 py-2 text-xs font-semibold text-[#B42318]"
+                      className="border border-[#B42318] px-3 py-2 text-xs font-semibold text-[#B42318] disabled:cursor-not-allowed disabled:border-[#B9C8D7] disabled:text-[#7D8B99]"
                     >
                       Hapus Akun
                     </button>

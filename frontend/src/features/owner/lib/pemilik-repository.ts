@@ -24,6 +24,7 @@ const PENGGUNA = 'pengguna'
 const ADMINISTRATOR = 'administrator'
 const NIM_TERPAKAI = 'nim_terpakai'
 const LAPORAN = 'laporan'
+const PEMILIK = 'pemilik'
 
 /** Koleksi yang menyimpan anakan satu laporan, ditandai field id_laporan. */
 const ANAKAN_LAPORAN = [
@@ -66,18 +67,21 @@ export type AkunPengguna = {
   fakultas: string
   programStudi: string
   administrator: boolean
+  pemilik: boolean
 }
 
 /** Seluruh akun beserta perannya. */
 export async function listAkun(): Promise<AkunPengguna[]> {
   pastikanSiap()
 
-  const [pengguna, administrator] = await Promise.all([
+  const [pengguna, administrator, pemilik] = await Promise.all([
     getDocs(collection(db, PENGGUNA)),
     getDocs(collection(db, ADMINISTRATOR)),
+    getDocs(collection(db, PEMILIK)),
   ])
 
   const peranAdmin = new Set(administrator.docs.map((d) => d.id))
+  const peranPemilik = new Set(pemilik.docs.map((d) => d.id))
   const teks = (nilai: unknown): string => (typeof nilai === 'string' ? nilai : '')
 
   return pengguna.docs
@@ -91,6 +95,7 @@ export async function listAkun(): Promise<AkunPengguna[]> {
         fakultas: teks(data.faculty),
         programStudi: teks(data.program_studi),
         administrator: peranAdmin.has(snapshot.id),
+        pemilik: peranPemilik.has(snapshot.id),
       }
     })
     .sort((kiri, kanan) => kiri.nama.localeCompare(kanan.nama, 'id'))

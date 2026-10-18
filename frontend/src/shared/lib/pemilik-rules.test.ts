@@ -87,10 +87,19 @@ describe.skipIf(!aktif)('koleksi pemilik', () => {
     await assertFails(setDoc(doc(db(ADMIN), 'pemilik', ADMIN), { x: 1 }))
   })
 
-  it('hanya dapat dibaca oleh pemiliknya sendiri', async () => {
+  it('hanya dapat dibaca oleh pemiliknya sendiri atau sesama Pemilik', async () => {
     await assertSucceeds(getDoc(doc(db(PEMILIK), 'pemilik', PEMILIK)))
     await assertFails(getDoc(doc(db(ADMIN), 'pemilik', PEMILIK)))
-    await assertFails(getDocs(collection(db(PEMILIK), 'pemilik')))
+  })
+
+  it('daftarnya terbuka bagi Pemilik, tertutup bagi peran lain', async () => {
+    // Konsol perlu menyatakan siapa saja yang memegang peran ini. Menutupnya
+    // membuat konsol hanya mampu menandai dirinya sendiri, dan itu
+    // menyesatkan ketika Pemiliknya lebih dari satu.
+    await assertSucceeds(getDocs(collection(db(PEMILIK), 'pemilik')))
+    await assertFails(getDocs(collection(db(ADMIN), 'pemilik')))
+    await assertFails(getDocs(collection(db(MAHASISWA), 'pemilik')))
+    await assertFails(getDocs(collection(db(), 'pemilik')))
   })
 })
 

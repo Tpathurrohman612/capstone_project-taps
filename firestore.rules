@@ -61,8 +61,12 @@ service cloud.firestore {
     }
 
     match /pemilik/{uid} {
-      allow get: if isOwner(uid);
-      allow list: if false;
+      allow get: if isOwner(uid) || isPemilik();
+      // Dibuka bagi sesama Pemilik supaya konsolnya dapat menyatakan siapa
+      // saja yang memegang peran ini. Menutupnya membuat konsol hanya mampu
+      // menandai dirinya sendiri, dan itu menyesatkan ketika Pemiliknya lebih
+      // dari satu. Bagi peran lain daftar ini tetap tertutup.
+      allow list: if isPemilik();
       allow write: if false;
     }
 
