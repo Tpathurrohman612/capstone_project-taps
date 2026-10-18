@@ -16,7 +16,7 @@ export function AdminWorkflowQueueScreen() {
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportReady, setExportReady] = useState(false)
   const [sendModalOpen, setSendModalOpen] = useState(false)
-  const { reports: allReports, memuat: memuatLaporan, ubahStatus } = useAdminReports()
+  const { reports: allReports, memuat: memuatLaporan, galat, ubahStatus } = useAdminReports()
   const [kirimError, setKirimError] = useState('')
   const reports = allReports.filter((report) => {
     return (
@@ -197,6 +197,16 @@ export function AdminWorkflowQueueScreen() {
           {memuatLaporan ? (
             <p className="px-6 py-8 text-center text-sm text-[#52657A]">
               Memuat antrean laporan dari basis data…
+            </p>
+          ) : galat ? (
+            /* Penolakan aturan keamanan dibedakan dari daftar kosong. Tanpa
+               ini, akun yang belum terdaftar sebagai Administrator hanya
+               melihat antrean kosong tanpa tahu sebabnya. */
+            <p
+              role="alert"
+              className="m-6 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+            >
+              {galat}
             </p>
           ) : (
             <WorkflowTable reports={reports} context="queue" showProgramStudy />

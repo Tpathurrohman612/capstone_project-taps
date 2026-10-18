@@ -3,7 +3,7 @@ import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, WorkflowTable } from '../components/workflow-ui'
 
 export function AdminWorkflowHistoryScreen() {
-  const { reports: semuaLaporan, memuat: memuatLaporan } = useAdminReports()
+  const { reports: semuaLaporan, memuat: memuatLaporan, galat } = useAdminReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
   const reports = semuaLaporan.filter(
@@ -69,6 +69,16 @@ export function AdminWorkflowHistoryScreen() {
           {memuatLaporan ? (
             <p className="px-6 py-8 text-center text-sm text-[#52657A]">
               Memuat laporan dari basis data…
+            </p>
+          ) : galat ? (
+            /* Penolakan aturan keamanan dibedakan dari daftar kosong. Tanpa
+               ini, akun yang belum terdaftar sebagai Administrator hanya
+               melihat antrean kosong tanpa tahu sebabnya. */
+            <p
+              role="alert"
+              className="m-6 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+            >
+              {galat}
             </p>
           ) : (
             <WorkflowTable reports={reports} context="history" />

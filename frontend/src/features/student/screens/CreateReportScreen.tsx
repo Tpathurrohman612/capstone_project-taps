@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { submitReport } from '../../../shared/data/report-store'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 import {
   checkAttachments,
   formatFileSize,
@@ -199,11 +200,7 @@ export function CreateReportScreen() {
         },
       })
     } catch (penyebab) {
-      setSubmitError(
-        penyebab instanceof Error
-          ? penyebab.message
-          : 'Laporan gagal dikirim. Periksa koneksi lalu coba lagi.',
-      )
+      setSubmitError(jelaskanGalatFirestore(penyebab, 'simpan-laporan'))
       return
     }
 

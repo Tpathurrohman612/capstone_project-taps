@@ -3,6 +3,7 @@ import type { WorkflowReport } from '../../../shared/types/workflow'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 import { changeReportStatus, fetchAllReports } from '../../../shared/data/report-store'
 import { useAuth } from '../../../shared/lib/auth-context'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 
 /**
  * Seluruh laporan bagi Administrator.
@@ -35,11 +36,7 @@ export function useAdminReports() {
       .catch((penyebab: unknown) => {
         if (!aktif) return
         setReports([])
-        setGalat(
-          penyebab instanceof Error
-            ? penyebab.message
-            : 'Gagal memuat laporan. Periksa koneksi lalu coba lagi.',
-        )
+        setGalat(jelaskanGalatFirestore(penyebab, 'daftar-laporan-administrator'))
       })
       .finally(() => {
         if (aktif) setMemuat(false)
@@ -85,13 +82,7 @@ export function useAdminReports() {
         muatUlang()
         return { berhasil: true }
       } catch (penyebab) {
-        return {
-          berhasil: false,
-          alasan:
-            penyebab instanceof Error
-              ? penyebab.message
-              : 'Status laporan gagal diperbarui. Coba lagi.',
-        }
+        return { berhasil: false, alasan: jelaskanGalatFirestore(penyebab, 'ubah-status') }
       }
     },
     [user, muatUlang],

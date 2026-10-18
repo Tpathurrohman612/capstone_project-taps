@@ -3,6 +3,7 @@ import type { HistoryReport } from '../../../shared/types/history-report'
 import type { WorkflowReport } from '../../../shared/types/workflow'
 import { fetchMyReports, toHistoryReport } from '../../../shared/data/report-store'
 import { useStudentIdentity } from './student-identity'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 
 /**
  * Riwayat laporan milik mahasiswa yang sedang masuk.
@@ -50,11 +51,7 @@ export function useStudentReports() {
       .catch((penyebab: unknown) => {
         if (!aktif) return
         setReports([])
-        setGalat(
-          penyebab instanceof Error
-            ? penyebab.message
-            : 'Gagal memuat laporan. Periksa koneksi lalu coba lagi.',
-        )
+        setGalat(jelaskanGalatFirestore(penyebab, 'daftar-laporan-mahasiswa'))
       })
       .finally(() => {
         if (aktif) setMemuat(false)

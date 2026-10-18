@@ -107,8 +107,11 @@ describe('useAdminReports', () => {
 
     render(<Penampil />)
 
+    // Pesan bawaan Firestore diterjemahkan menjadi langkah yang dapat
+    // ditindaklanjuti, sehingga yang diperiksa penjelasannya, bukan kalimat
+    // aslinya.
     await waitFor(() => {
-      expect(screen.getByTestId('galat').textContent).toContain('permissions')
+      expect(screen.getByTestId('galat').textContent).toContain('administrator')
     })
     expect(screen.getByTestId('jumlah').textContent).toBe('0')
   })
