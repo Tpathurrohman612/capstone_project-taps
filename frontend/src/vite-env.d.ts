@@ -18,6 +18,11 @@ interface ImportMetaEnv {
    * which keeps local development and the emulator working.
    */
   readonly VITE_FIREBASE_APPCHECK_SITE_KEY?: string
+  /**
+   * App Check attestation provider: 'enterprise' (default, shown in the
+   * console as Fraud Defense) or 'v3' for the deprecated reCAPTCHA Classic.
+   */
+  readonly VITE_FIREBASE_APPCHECK_PROVIDER?: string
 }
 
 interface ImportMeta {

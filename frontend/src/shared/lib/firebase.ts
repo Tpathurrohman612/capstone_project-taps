@@ -1,5 +1,10 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app'
-import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check'
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  ReCaptchaV3Provider,
+  type AppCheck,
+} from 'firebase/app-check'
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore'
 import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage'
@@ -66,6 +71,21 @@ const useEmulator = import.meta.env.VITE_FIREBASE_USE_EMULATOR === 'true'
  */
 const appCheckSiteKey = (import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY ?? '').trim()
 
+/**
+ * Penyedia atestasi App Check.
+ *
+ * Firebase Console menamainya Fraud Defense, sebelumnya reCAPTCHA Enterprise,
+ * dan menandai reCAPTCHA Classic sebagai usang. Enterprise dipakai sebagai
+ * bawaan karena itu. Paket Spark tetap dapat memakainya, hanya dengan pilihan
+ * ambang skor yang lebih sedikit.
+ *
+ * Nilai 'v3' disediakan agar proyek yang terlanjur memakai kunci Classic tidak
+ * perlu berhenti bekerja sebelum sempat berpindah.
+ */
+const appCheckProvider = (import.meta.env.VITE_FIREBASE_APPCHECK_PROVIDER ?? 'enterprise')
+  .trim()
+  .toLowerCase()
+
 export const isAppCheckEnabled = appCheckSiteKey !== '' && !useEmulator
 
 /**
@@ -92,7 +112,10 @@ if (getApps().length === 0) {
   // berjalan di mesin sendiri dan tidak menghabiskan kuota apa pun.
   if (isAppCheckEnabled) {
     appCheckInstance = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(appCheckSiteKey),
+      provider:
+        appCheckProvider === 'v3'
+          ? new ReCaptchaV3Provider(appCheckSiteKey)
+          : new ReCaptchaEnterpriseProvider(appCheckSiteKey),
       isTokenAutoRefreshEnabled: true,
     })
   }

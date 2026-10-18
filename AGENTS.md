@@ -96,5 +96,11 @@ App Check is wired but inert until `VITE_FIREBASE_APPCHECK_SITE_KEY` is set.
 Leave it empty locally; set it for any deployment reachable from the internet,
 otherwise the web config in the bundle lets anyone call Firestore directly.
 
+The default provider is reCAPTCHA Enterprise, which the Firebase console now
+calls Fraud Defense; reCAPTCHA Classic is deprecated there. Enterprise works
+on the Spark plan, only with fewer selectable score thresholds. Set
+`VITE_FIREBASE_APPCHECK_PROVIDER=v3` only to keep an existing Classic key
+working during a migration.
+
 Not covered: per-user write rate limiting, which needs Cloud Functions and
 therefore the Blaze plan.
