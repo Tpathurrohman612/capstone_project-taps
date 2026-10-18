@@ -302,6 +302,30 @@ export function DetailReportScreen() {
                   </li>
                 ))}
               </ol>
+
+              {/* Jalur DET --> LENG pada Gambar 3.6. Ditempatkan di dalam
+                    bagian status, bukan di kaki halaman, karena statusnya
+                    sendiri yang menerangkan mengapa tombol ini ada; di kaki
+                    halaman tombol itu terlewat tanpa pernah terbaca. */}
+              {report.status === 'Perlu Informasi Tambahan' && (
+                <div className="mt-6 border-t border-[#D9E2EC] pt-5">
+                  <p className="text-sm font-semibold text-[#12355B]">
+                    Administrator meminta kelengkapan
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#52657A]">
+                    Laporan akan kembali masuk antrean verifikasi setelah kelengkapannya dikirim.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(`/riwayat-laporan/lengkapi-laporan?report=${report.id}`)
+                    }
+                    className="mt-4 inline-flex items-center gap-3 bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#004987]"
+                  >
+                    Lengkapi Laporan
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -532,18 +556,6 @@ export function DetailReportScreen() {
           >
             ← Kembali ke Riwayat Laporan
           </button>
-
-          {/* Jalur DET --> LENG pada Gambar 3.6, hanya muncul pada status yang
-              memang dapat dilengkapi menurut Tabel 4.2. */}
-          {report.status === 'Perlu Informasi Tambahan' && (
-            <button
-              type="button"
-              onClick={() => navigate(`/riwayat-laporan/lengkapi-laporan?report=${report.id}`)}
-              className="inline-flex items-center gap-3 bg-[#005BAC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#004987]"
-            >
-              Lengkapi Laporan
-            </button>
-          )}
         </div>
       </section>
 
