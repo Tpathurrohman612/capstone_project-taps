@@ -86,6 +86,14 @@ export type LampiranBaru = {
   nama_file: string
   tipe_file: string
   ukuran_file?: string
+  /**
+   * Isi berkas sebagai data URL base64.
+   *
+   * Cloud Storage memerlukan paket berbayar, sehingga bukti pendukung
+   * disimpan langsung di dalam dokumennya. Gambar dimampatkan lebih dulu agar
+   * muat dalam batas satu megabyte per dokumen Firestore.
+   */
+  isi_base64?: string
 }
 
 export type Lampiran = LampiranBaru & {
@@ -286,6 +294,7 @@ export async function createLaporan(params: {
         nama_file: berkas.nama_file,
         tipe_file: berkas.tipe_file,
         ...(berkas.ukuran_file ? { ukuran_file: berkas.ukuran_file } : {}),
+        ...(berkas.isi_base64 ? { isi_base64: berkas.isi_base64 } : {}),
         path_storage: '',
         tanggal_upload: serverTimestamp(),
       })
@@ -389,6 +398,9 @@ export async function listLampiran(idLaporan: string): Promise<Lampiran[]> {
         ...(typeof data.ukuran_file === 'string' ? { ukuran_file: data.ukuran_file } : {}),
         ...(typeof data.path_storage === 'string' && data.path_storage !== ''
           ? { path_storage: data.path_storage }
+          : {}),
+        ...(typeof data.isi_base64 === 'string' && data.isi_base64 !== ''
+          ? { isi_base64: data.isi_base64 }
           : {}),
       } satisfies Lampiran
     })

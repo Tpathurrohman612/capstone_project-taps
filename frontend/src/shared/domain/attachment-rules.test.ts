@@ -4,10 +4,17 @@ import {
   formatFileSize,
   MAX_FILE_COUNT,
   MAX_FILE_SIZE_BYTES,
+  MAX_UNCOMPRESSIBLE_BYTES,
 } from './attachment-rules'
 
 const MB = 1024 * 1024
-const berkas = (name: string, size = 1024) => ({ name, size })
+
+/**
+ * Berkas uji. Tipe gambar dipakai sebagai bawaan karena sebagian besar bukti
+ * pendukung berupa tangkapan layar, dan hanya gambar yang tunduk pada batas
+ * 5 MB; berkas lain dibatasi lebih ketat karena tidak dapat dimampatkan.
+ */
+const berkas = (name: string, size = 1024, type = 'image/png') => ({ name, size, type })
 
 describe('formatFileSize', () => {
   it('menulis ukuran kecil dalam byte', () => {
@@ -74,6 +81,52 @@ describe('batas ukuran berkas', () => {
 
     expect(hasil.diterima).toBe(false)
     expect(hasil.berkas).toEqual([])
+  })
+})
+
+describe('batas berkas yang tidak dapat dimampatkan', () => {
+  it('menolak PDF yang melebihi batas penyimpanan', () => {
+    // PDF tidak dapat dimampatkan, sehingga ukurannya tidak akan berubah
+    // sebelum disimpan sebagai base64 di dalam dokumen Firestore.
+    const hasil = checkAttachments({
+      sudahAda: [],
+      tambahan: [berkas('besar.pdf', MAX_UNCOMPRESSIBLE_BYTES + 1, 'application/pdf')],
+    })
+
+    expect(hasil.diterima).toBe(false)
+    if (!hasil.diterima) {
+      expect(hasil.alasan).toContain('tidak dapat dimampatkan')
+      expect(hasil.alasan).toContain('besar.pdf')
+    }
+  })
+
+  it('menerima PDF yang masih di bawah batas', () => {
+    const hasil = checkAttachments({
+      sudahAda: [],
+      tambahan: [berkas('kecil.pdf', 200 * 1024, 'application/pdf')],
+    })
+
+    expect(hasil.diterima).toBe(true)
+  })
+
+  it('tetap menerima gambar besar karena akan dimampatkan', () => {
+    // Pengguna tidak perlu memperkecil tangkapan layarnya sendiri.
+    const hasil = checkAttachments({
+      sudahAda: [],
+      tambahan: [berkas('tangkapan.png', 4 * MB, 'image/png')],
+    })
+
+    expect(hasil.diterima).toBe(true)
+  })
+
+  it('memperlakukan berkas tanpa tipe sebagai tidak dapat dimampatkan', () => {
+    // Tanpa tipe, tidak ada dasar untuk menjanjikan pemampatan berhasil.
+    const hasil = checkAttachments({
+      sudahAda: [],
+      tambahan: [{ name: 'entah.bin', size: MAX_UNCOMPRESSIBLE_BYTES + 1 }],
+    })
+
+    expect(hasil.diterima).toBe(false)
   })
 })
 

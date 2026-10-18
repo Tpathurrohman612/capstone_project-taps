@@ -19,7 +19,30 @@ export const MAX_FILE_SIZE_LABEL = '5 MB'
 export type FileLike = {
   name: string
   size: number
+  /** Tipe MIME. Kosong berarti tidak diketahui dan diperlakukan sebagai bukan gambar. */
+  type?: string
 }
+
+/**
+ * Batas berkas yang tidak dapat dimampatkan, misalnya PDF.
+ *
+ * Bukti pendukung disimpan sebagai data base64 di dalam dokumen Firestore
+ * karena Cloud Storage memerlukan paket berbayar. Satu dokumen dibatasi 1 MiB
+ * dan base64 memperbesar sekitar sepertiga, sehingga berkas yang tidak dapat
+ * dimampatkan harus sudah kecil sejak awal.
+ *
+ * Gambar tidak tunduk pada batas ini karena akan dimampatkan lebih dulu;
+ * batasnya tetap MAX_FILE_SIZE_BYTES agar pengguna tidak perlu memperkecil
+ * tangkapan layarnya sendiri.
+ */
+export const MAX_UNCOMPRESSIBLE_BYTES = Math.floor((1024 * 1024 * 0.7 * 3) / 4)
+
+export const MAX_UNCOMPRESSIBLE_LABEL = '500 KB'
+
+const TIPE_GAMBAR = ['image/jpeg', 'image/png', 'image/webp']
+
+const dapatDimampatkan = (berkas: FileLike): boolean =>
+  typeof berkas.type === 'string' && TIPE_GAMBAR.includes(berkas.type.toLowerCase())
 
 export type AttachmentCheck =
   | { diterima: true; berkas: FileLike[] }
@@ -44,6 +67,23 @@ export function checkAttachments(params: {
   tambahan: readonly FileLike[]
 }): AttachmentCheck {
   const { sudahAda, tambahan } = params
+
+  // Berkas yang tidak dapat dimampatkan diperiksa terhadap batas penyimpanan
+  // yang lebih ketat, karena ukurannya tidak akan berubah sebelum disimpan.
+  const tidakMuat = tambahan.filter(
+    (berkas) => !dapatDimampatkan(berkas) && berkas.size > MAX_UNCOMPRESSIBLE_BYTES,
+  )
+
+  if (tidakMuat.length > 0) {
+    const nama = tidakMuat.map((berkas) => berkas.name).join(', ')
+    return {
+      diterima: false,
+      alasan:
+        `Berkas selain gambar paling besar ${MAX_UNCOMPRESSIBLE_LABEL} karena tidak ` +
+        `dapat dimampatkan. Berkas berikut melebihi batas: ${nama}.`,
+      berkas: [...sudahAda],
+    }
+  }
 
   const terlaluBesar = tambahan.filter((berkas) => berkas.size > MAX_FILE_SIZE_BYTES)
 

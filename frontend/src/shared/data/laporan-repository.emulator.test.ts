@@ -205,6 +205,39 @@ describe.skipIf(!aktif)('laporan-repository pada emulator', () => {
       expect(await repo.listLampiran(satu.id_laporan)).toHaveLength(1)
     })
 
+    it('menyimpan isi berkas sehingga dapat ditampilkan kembali', async () => {
+      // Tanpa Cloud Storage, isi berkas disimpan sebagai data base64 di dalam
+      // dokumen lampiran. Bila tidak tersimpan, layar hanya dapat menampilkan
+      // nama berkas tanpa ada yang dapat dibuka.
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+      const isi = 'data:image/jpeg;base64,' + 'A'.repeat(2000)
+
+      const dibuat = await repo.createLaporan({
+        uid: UID,
+        data: dataLaporan,
+        lampiran: [{ nama_file: 'bukti.jpg', tipe_file: 'JPG', isi_base64: isi }],
+      })
+
+      const berkas = await repo.listLampiran(dibuat.id_laporan)
+      expect(berkas[0]?.isi_base64).toBe(isi)
+    })
+
+    it('menolak isi berkas yang melewati batas dokumen', async () => {
+      // Batas keras Firestore satu megabyte per dokumen. Aturan menolak lebih
+      // dulu agar kegagalannya jelas, bukan berupa galat ukuran dokumen.
+      const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
+
+      await expect(
+        repo.createLaporan({
+          uid: UID,
+          data: dataLaporan,
+          lampiran: [
+            { nama_file: 'raksasa.jpg', tipe_file: 'JPG', isi_base64: 'A'.repeat(800000) },
+          ],
+        }),
+      ).rejects.toThrow()
+    })
+
     it('mengembalikan daftar kosong untuk laporan tanpa bukti pendukung', async () => {
       const repo = await muatRepository(sebagaiFirestore(env.authenticatedContext(UID)))
       const tanpa = await repo.createLaporan({ uid: UID, data: dataLaporan })

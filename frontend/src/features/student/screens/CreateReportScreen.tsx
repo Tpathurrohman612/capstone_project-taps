@@ -7,7 +7,13 @@ import {
   formatFileSize,
   MAX_FILE_COUNT,
   MAX_FILE_SIZE_LABEL,
+  MAX_UNCOMPRESSIBLE_LABEL,
 } from '../../../shared/domain/attachment-rules'
+import {
+  compressImage,
+  fileKeDataUrl,
+  isCompressibleImage,
+} from '../../../shared/domain/image-compression'
 import { useStudentIdentity } from '../lib/student-identity'
 
 function Field({
@@ -138,14 +144,38 @@ export function CreateReportScreen() {
       return
     }
 
-    const attachmentDetails = files.map((file) => {
+    // Gambar dimampatkan lebih dulu agar muat sebagai data base64 di dalam
+    // dokumen Firestore, karena Cloud Storage memerlukan paket berbayar.
+    // Berkas lain disimpan apa adanya; ukurannya sudah dibatasi saat dipilih.
+    const attachmentDetails: { name: string; type: string; size: string; data?: string }[] = []
+
+    for (const file of files) {
       const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
-      return {
+
+      let data: string | undefined
+      try {
+        if (isCompressibleImage(file.type)) {
+          const hasil = await compressImage(file)
+          if (!hasil.berhasil) {
+            setSubmitError(`${file.name}: ${hasil.alasan}`)
+            return
+          }
+          data = hasil.dataUrl
+        } else {
+          data = await fileKeDataUrl(file)
+        }
+      } catch {
+        setSubmitError(`Berkas ${file.name} gagal diproses. Coba unggah ulang.`)
+        return
+      }
+
+      attachmentDetails.push({
         name: file.name,
         type: extension,
         size: formatFileSize(file.size),
-      }
-    })
+        ...(data ? { data } : {}),
+      })
+    }
 
     // Penyimpanan melalui report-store, bukan langsung ke sessionStorage.
     // Dengan begitu laporan masuk ke Cloud Firestore ketika Firebase
@@ -392,8 +422,8 @@ export function CreateReportScreen() {
                 Unggah bukti pendukung
               </span>
               <span className="mt-1 hidden text-xs text-[#52657A] sm:block">
-                Maksimal {MAX_FILE_COUNT} file · Maksimal {MAX_FILE_SIZE_LABEL} per file · .jpg,
-                .jpeg, .png, .pdf
+                Maksimal {MAX_FILE_COUNT} file · Gambar maksimal {MAX_FILE_SIZE_LABEL} dan akan
+                dimampatkan · PDF maksimal {MAX_UNCOMPRESSIBLE_LABEL} · .jpg, .jpeg, .png, .pdf
               </span>
               <span className="mt-2 flex flex-col gap-1 text-xs text-[#52657A] sm:hidden">
                 <span>Maksimal {MAX_FILE_COUNT} file</span>

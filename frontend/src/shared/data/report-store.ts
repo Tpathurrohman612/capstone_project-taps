@@ -37,7 +37,7 @@ export type ReportInput = {
   deskripsi?: string
   prodi?: string
   fakultas?: string
-  attachments?: { name: string; type: string; size: string }[]
+  attachments?: { name: string; type: string; size: string; data?: string }[]
 }
 
 export const usingFirestore = (): boolean => isFirebaseConfigured()
@@ -83,6 +83,7 @@ export async function submitReport(params: {
         nama_file: berkas.name,
         tipe_file: berkas.type,
         ukuran_file: berkas.size,
+        ...(berkas.data ? { isi_base64: berkas.data } : {}),
       })),
     })
     return hasil.nomor_laporan
@@ -188,9 +189,14 @@ export async function fetchAttachments(
       name: berkas.nama_file,
       type: berkas.tipe_file,
       ...(berkas.ukuran_file ? { size: berkas.ukuran_file } : {}),
-      // Alamat berkas hanya ada setelah Cloud Storage dipakai. Selama kosong,
-      // layar tidak boleh menawarkan tautan yang tidak membuka apa pun.
-      ...(berkas.path_storage ? { url: berkas.path_storage } : {}),
+      // Isi berkas disimpan sebagai data URL di dalam dokumennya sendiri,
+      // sehingga dapat langsung dipakai sebagai alamat tanpa Cloud Storage.
+      // path_storage dipakai lebih dulu bila kelak berkas pindah ke Storage.
+      ...(berkas.path_storage
+        ? { url: berkas.path_storage }
+        : berkas.isi_base64
+          ? { url: berkas.isi_base64 }
+          : {}),
     }))
   }
 

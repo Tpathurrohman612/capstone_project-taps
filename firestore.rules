@@ -227,9 +227,14 @@ service cloud.firestore {
       // diizinkan ketika induknya memang belum ada, dan tetap diperiksa
       // kepemilikannya ketika induknya sudah ada, sehingga tidak ada yang
       // dapat menambahkan bukti pada laporan milik orang lain.
+      // Isi berkas disimpan sebagai data base64 di dalam dokumen ini, karena
+      // Cloud Storage memerlukan paket berbayar. Batasnya ditetapkan jauh di
+      // bawah batas keras satu megabyte per dokumen, agar field lain pada
+      // dokumen yang sama tetap memiliki ruang.
       allow create: if isSignedIn()
         && teksWajar(request.resource.data.id_laporan, 64)
         && teksWajar(request.resource.data.nama_file, 300)
+        && teksOpsionalWajar(request.resource.data, 'isi_base64', 734003)
         && request.resource.data.keys().size() <= 8
         && (
           !exists(/databases/$(database)/documents/laporan/$(request.resource.data.id_laporan))
