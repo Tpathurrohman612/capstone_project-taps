@@ -34,3 +34,33 @@ export function alasanStatus(
 
   return alasan === '' ? undefined : alasan
 }
+
+/**
+ * Kalimat pembuka keterangan ketika mahasiswa melengkapi laporannya.
+ *
+ * Dipakai bersama oleh penulis keterangan dan pembacanya, supaya keduanya
+ * tidak dapat berbeda tanpa ada yang menyadarinya.
+ */
+export const PREFIKS_KELENGKAPAN = 'Mahasiswa melengkapi laporan.'
+
+/** Satu kelengkapan yang pernah dikirim mahasiswa. */
+export type CatatanKelengkapan = { waktu: string; penjelasan: string }
+
+/**
+ * Seluruh kelengkapan yang pernah dikirim mahasiswa, terbaru lebih dahulu.
+ *
+ * Kelengkapan tersimpan sebagai keterangan riwayat, sehingga tanpa pembacaan
+ * ini ia hanya terbaca sebagai satu baris pada lini masa dan bercampur dengan
+ * catatan Administrator. Administrator maupun mahasiswa membutuhkannya
+ * sebagai keterangan tersendiri, terpisah dari uraian permasalahan yang
+ * ditulis pada awal laporan.
+ */
+export function catatanKelengkapan(riwayat: WorkflowReport['updates']): CatatanKelengkapan[] {
+  return riwayat
+    .filter((item) => item.text.trim().startsWith(PREFIKS_KELENGKAPAN))
+    .map((item) => ({
+      waktu: item.time,
+      penjelasan: item.text.trim().slice(PREFIKS_KELENGKAPAN.length).trim(),
+    }))
+    .filter((catatan) => catatan.penjelasan !== '')
+}

@@ -11,7 +11,7 @@ import {
 import { formatFileSize } from '../../../shared/domain/attachment-rules'
 import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
 import { useAuth } from '../../../shared/lib/auth-context'
-import { alasanStatus } from '../../../shared/lib/alasan-status'
+import { alasanStatus, PREFIKS_KELENGKAPAN } from '../../../shared/lib/alasan-status'
 import { fetchReportUpdates } from '../../../shared/data/report-store'
 import { AttachmentPicker } from '../../../shared/components/AttachmentPicker'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
@@ -167,7 +167,7 @@ export function CompleteReportScreen() {
         ke: 'Diterima',
         oleh: 'Mahasiswa',
         uidPencatat: user.uid,
-        keterangan: `Mahasiswa melengkapi laporan. ${penjelasan.trim()}`,
+        keterangan: `${PREFIKS_KELENGKAPAN} ${penjelasan.trim()}`,
       })
 
       navigate('/riwayat-laporan')

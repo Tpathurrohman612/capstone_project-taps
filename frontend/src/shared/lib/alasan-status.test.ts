@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alasanStatus } from './alasan-status'
+import { alasanStatus, catatanKelengkapan } from './alasan-status'
 
 /**
  * Pengambil alasan Administrator.
@@ -83,5 +83,64 @@ describe('alasanStatus', () => {
     const riwayat = [catatan('Status menjadi Ditolak', 'Laporan ditolak. Alasan:   ')]
 
     expect(alasanStatus(riwayat, 'Ditolak')).toBeUndefined()
+  })
+})
+
+describe('catatanKelengkapan', () => {
+  it('mengambil kelengkapan yang dikirim mahasiswa', () => {
+    const riwayat = [
+      catatan(
+        'Status menjadi Diterima',
+        'Mahasiswa melengkapi laporan. Tangkapan layar sudah saya lampirkan.',
+      ),
+    ]
+
+    expect(catatanKelengkapan(riwayat)).toEqual([
+      { waktu: '18 Oktober 2026, 10:00', penjelasan: 'Tangkapan layar sudah saya lampirkan.' },
+    ])
+  })
+
+  it('tidak mencampurnya dengan catatan Administrator', () => {
+    // Keduanya tersimpan pada koleksi yang sama, dan tanpa pemisahan ini
+    // alasan penolakan akan ikut terbaca sebagai kelengkapan mahasiswa.
+    const riwayat = [
+      catatan(
+        'Status menjadi Perlu Informasi Tambahan',
+        'Administrator meminta kelengkapan. Alasan: Kurang bukti',
+      ),
+      catatan('Status menjadi Diterima', 'Mahasiswa melengkapi laporan. Ini buktinya.'),
+      catatan('Status menjadi Diverifikasi', 'Laporan diverifikasi.'),
+    ]
+
+    expect(catatanKelengkapan(riwayat)).toEqual([
+      { waktu: '18 Oktober 2026, 10:00', penjelasan: 'Ini buktinya.' },
+    ])
+  })
+
+  it('mengembalikan seluruh kelengkapan ketika laporan dua kali dilengkapi', () => {
+    const riwayat = [
+      catatan(
+        'Status menjadi Diterima',
+        'Mahasiswa melengkapi laporan. Kedua',
+        '18 Oktober 2026, 11:00',
+      ),
+      catatan(
+        'Status menjadi Diterima',
+        'Mahasiswa melengkapi laporan. Pertama',
+        '18 Oktober 2026, 09:00',
+      ),
+    ]
+
+    expect(catatanKelengkapan(riwayat).map((item) => item.penjelasan)).toEqual(['Kedua', 'Pertama'])
+  })
+
+  it('mengabaikan kelengkapan yang penjelasannya kosong', () => {
+    const riwayat = [catatan('Status menjadi Diterima', 'Mahasiswa melengkapi laporan.   ')]
+
+    expect(catatanKelengkapan(riwayat)).toEqual([])
+  })
+
+  it('mengembalikan daftar kosong ketika laporan belum pernah dilengkapi', () => {
+    expect(catatanKelengkapan([])).toEqual([])
   })
 })

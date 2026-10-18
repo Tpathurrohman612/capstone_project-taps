@@ -11,7 +11,7 @@ import type { Penanganan } from '../../../shared/data/laporan-repository'
 import { formatIndonesianDateTime } from '../../../shared/lib/date-time'
 import { statusBadge } from '../lib/status-badge'
 import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { alasanStatus } from '../../../shared/lib/alasan-status'
+import { alasanStatus, catatanKelengkapan } from '../../../shared/lib/alasan-status'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
 import type { ReportStatus } from '../../../shared/domain/report-status'
 import type { WorkflowReport } from '../../../shared/types/workflow'
@@ -198,6 +198,9 @@ export function DetailReportScreen() {
 
   /** Alasan Administrator untuk status laporan sekarang, bila ada. */
   const alasanAdministrator = alasanStatus(riwayatStatus, report.status)
+
+  /** Kelengkapan yang pernah dikirim mahasiswa, terbaru lebih dahulu. */
+  const kelengkapan = catatanKelengkapan(riwayatStatus)
   const detailAttachments = attachments
   return (
     <>
@@ -527,6 +530,37 @@ export function DetailReportScreen() {
                         {formatIndonesianDateTime(item.tanggal)}
                       </p>
                     ) : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Kelengkapan yang dikirim mahasiswa. Tersimpan sebagai keterangan
+              riwayat, sehingga tanpa bagian ini ia hanya terbaca sebagai satu baris
+              pada lini masa dan bercampur dengan catatan Administrator. Dipisahkan
+              dari uraian permasalahan karena ditulis pada waktu dan untuk keperluan
+              yang berbeda. */}
+          {kelengkapan.length > 0 && (
+            <section
+              className="border border-[#D9E2EC] bg-white"
+              aria-labelledby="kelengkapan-laporan"
+            >
+              <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
+                  KELENGKAPAN DARI MAHASISWA
+                </p>
+                <h2 id="kelengkapan-laporan" className="mt-1 font-slab text-2xl text-[#12355B]">
+                  Informasi Tambahan
+                </h2>
+              </div>
+              <div className="divide-y divide-[#D9E2EC]">
+                {kelengkapan.map((catatan, index) => (
+                  <div key={`kelengkapan-${index}`} className="px-6 py-5 max-[620px]:px-5">
+                    <p className="text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
+                      {catatan.penjelasan}
+                    </p>
+                    <p className="mt-2 text-xs text-[#52657A]">Dikirim {catatan.waktu}</p>
                   </div>
                 ))}
               </div>

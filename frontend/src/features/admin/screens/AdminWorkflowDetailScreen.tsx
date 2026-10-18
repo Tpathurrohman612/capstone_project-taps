@@ -6,6 +6,7 @@ import { useAdminReports } from '../lib/use-admin-reports'
 import { fetchAttachments, fetchReportUpdates } from '../../../shared/data/report-store'
 import { AdminWorkflowShell, workflowStatusClass } from '../components/workflow-ui'
 import { ReadOnlyItem } from '../../../shared/components/ReadOnlyItem'
+import { catatanKelengkapan } from '../../../shared/lib/alasan-status'
 
 export function AdminWorkflowDetailScreen() {
   const [modalOpen, setModalOpen] = useState(false)
@@ -133,6 +134,9 @@ export function AdminWorkflowDetailScreen() {
   const validationRecorded = riwayatStatus.some(
     (update) => update.title === 'Hasil validasi diterima dan dicatat',
   )
+
+  /** Kelengkapan yang pernah dikirim mahasiswa, terbaru lebih dahulu. */
+  const kelengkapan = catatanKelengkapan(riwayatStatus)
   const actionLabel =
     report.status === 'Diterima'
       ? 'Verifikasi Laporan'
@@ -614,6 +618,31 @@ export function AdminWorkflowDetailScreen() {
               </p>
             )}
           </section>
+          {/* Kelengkapan yang dikirim mahasiswa setelah diminta. Administrator
+              memerlukannya terpisah dari uraian permasalahan: uraian ditulis saat
+              laporan dibuat, kelengkapan ditulis untuk menjawab permintaannya
+              sendiri, dan keduanya diperiksa pada waktu yang berbeda. */}
+          {kelengkapan.length > 0 && (
+            <section className="border border-[#D9E2EC] bg-white">
+              <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
+                  KELENGKAPAN DARI MAHASISWA
+                </p>
+                <h2 className="mt-1 font-slab text-2xl text-[#12355B]">Informasi Tambahan</h2>
+              </div>
+              <div className="divide-y divide-[#D9E2EC]">
+                {kelengkapan.map((catatan, index) => (
+                  <div key={`kelengkapan-${index}`} className="px-6 py-5">
+                    <p className="text-sm leading-6 whitespace-pre-wrap text-[#1F2937]">
+                      {catatan.penjelasan}
+                    </p>
+                    <p className="mt-2 text-xs text-[#52657A]">Dikirim {catatan.waktu}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="border border-[#D9E2EC] bg-white">
             <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4">
               <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
