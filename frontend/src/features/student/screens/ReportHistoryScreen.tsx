@@ -97,9 +97,7 @@ export function ReportHistoryScreen() {
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">TUTOR</p>
                   <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.tutor}</p>
-                  <p className="mt-1 text-xs text-[#52657A]">
-                    Menunggu Pemeriksaan {report.submitted}
-                  </p>
+                  <p className="mt-1 text-xs text-[#52657A]">Dikirim {report.submitted}</p>
                 </div>
                 <Link
                   to={`/riwayat-laporan/detail-laporan?report=${report.id}`}

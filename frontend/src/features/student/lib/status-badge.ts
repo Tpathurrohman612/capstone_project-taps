@@ -14,9 +14,13 @@ const badgeByStatus: Record<ReportStatus, string> = {
   'Perlu Dilengkapi': 'border-[#E8B882] bg-[#FDF3E8] text-[#8A4B12]',
   Ditolak: 'border-[#E3AFAB] bg-[#FDF0EF] text-[#B42318]',
   'Lolos Pemeriksaan': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
-  'Diteruskan ke Fakultas': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
+  // Dibedakan dari Lolos Pemeriksaan: keduanya sebelumnya berwarna sama
+  // persis, sehingga dua tahap berbeda tidak dapat dipisahkan sekilas.
+  'Diteruskan ke Fakultas': 'border-[#005BAC] bg-[#DCEBF8] text-[#004987]',
   Ditindaklanjuti: 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
-  Selesai: 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]',
+  // Status akhir diberi warna pekat. Warna pucatnya sebelumnya nyaris sama
+  // dengan latar kartu, sehingga lencananya terbaca seperti tanpa warna.
+  Selesai: 'border-[#12355B] bg-[#12355B] text-white',
 }
 
 export const statusBadge = (status: ReportStatus) => badgeByStatus[status]

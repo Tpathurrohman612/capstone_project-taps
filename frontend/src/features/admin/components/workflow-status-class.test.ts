@@ -62,4 +62,33 @@ describe('warna lencana status', () => {
       )
     }
   })
+
+  it('memberi warna berbeda untuk setiap status', () => {
+    // Dua status berwarna sama persis tidak dapat dipisahkan sekilas, dan itu
+    // pernah terjadi pada Lolos Pemeriksaan dengan Diteruskan ke Fakultas.
+    const warna = REPORT_STATUSES.map((status) => statusBadge(status))
+
+    expect(new Set(warna).size, 'ada status yang berwarna sama persis').toBe(warna.length)
+  })
+
+  it('tidak memakai warna yang nyaris sama dengan latar kartu', () => {
+    // Latar kartu riwayat #F7F9FC. Lencana berlatar sedekat itu terbaca
+    // seperti tanpa warna sama sekali, dan itu pernah terjadi pada Selesai.
+    expect(statusBadge('Selesai')).not.toContain('#EEF5FB')
+  })
+
+  it('tidak menyebut nama status sebagai teks tertanam pada layar', () => {
+    // Penggantian nama status pernah mengubah label tanggal "Diterima
+    // <tanggal>" menjadi klaim status yang keliru, karena teks itu kebetulan
+    // memuat nama status. Teks semacam itu tidak boleh berdampingan dengan
+    // nilai yang bukan status.
+    const layar = readFileSync(
+      join(__dirname, '../../student/screens/ReportHistoryScreen.tsx'),
+      'utf8',
+    )
+
+    for (const status of REPORT_STATUSES) {
+      expect(layar, `"${status}" tertanam sebagai teks biasa`).not.toContain(`${status} {report.`)
+    }
+  })
 })

@@ -32,9 +32,9 @@ const statusClassByStatus: Record<WorkflowStatus, string> = {
   'Perlu Dilengkapi': 'border-[#E8B882] bg-[#FDF3E8] text-[#8A4B12]',
   Ditolak: 'border-[#E3AFAB] bg-[#FDF0EF] text-[#B42318]',
   'Lolos Pemeriksaan': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
-  'Diteruskan ke Fakultas': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
+  'Diteruskan ke Fakultas': 'border-[#005BAC] bg-[#DCEBF8] text-[#004987]',
   Ditindaklanjuti: 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
-  Selesai: 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]',
+  Selesai: 'border-[#12355B] bg-[#12355B] text-white',
 }
 
 export const workflowStatusClass = (status: WorkflowStatus) => statusClassByStatus[status]
