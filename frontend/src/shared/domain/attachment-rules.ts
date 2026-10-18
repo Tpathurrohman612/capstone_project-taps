@@ -26,6 +26,11 @@ export type FileLike = {
 /**
  * Batas berkas yang tidak dapat dimampatkan, misalnya PDF.
  *
+ * Ditetapkan tepat 500 KB agar sama persis dengan keterangan yang dibaca
+ * pengguna. Perhitungan batas dokumen Firestore sebenarnya membolehkan sekitar
+ * 538 KB, tetapi memakai angka bulat yang sama dengan tulisan di layar lebih
+ * berharga daripada tambahan 38 KB yang tidak terasa.
+ *
  * Bukti pendukung disimpan sebagai data base64 di dalam dokumen Firestore
  * karena Cloud Storage memerlukan paket berbayar. Satu dokumen dibatasi 1 MiB
  * dan base64 memperbesar sekitar sepertiga, sehingga berkas yang tidak dapat
@@ -35,7 +40,7 @@ export type FileLike = {
  * batasnya tetap MAX_FILE_SIZE_BYTES agar pengguna tidak perlu memperkecil
  * tangkapan layarnya sendiri.
  */
-export const MAX_UNCOMPRESSIBLE_BYTES = Math.floor((1024 * 1024 * 0.7 * 3) / 4)
+export const MAX_UNCOMPRESSIBLE_BYTES = 500 * 1024
 
 export const MAX_UNCOMPRESSIBLE_LABEL = '500 KB'
 

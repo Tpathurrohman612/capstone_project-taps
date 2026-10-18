@@ -4,7 +4,9 @@ import {
   formatFileSize,
   MAX_FILE_COUNT,
   MAX_FILE_SIZE_BYTES,
+  MAX_FILE_SIZE_LABEL,
   MAX_UNCOMPRESSIBLE_BYTES,
+  MAX_UNCOMPRESSIBLE_LABEL,
 } from './attachment-rules'
 
 const MB = 1024 * 1024
@@ -81,6 +83,25 @@ describe('batas ukuran berkas', () => {
 
     expect(hasil.diterima).toBe(false)
     expect(hasil.berkas).toEqual([])
+  })
+})
+
+describe('keterangan batas sama dengan batas sesungguhnya', () => {
+  it('menuliskan batas gambar persis seperti nilainya', () => {
+    // Keterangan di layar dan pemeriksaan di kode harus menyebut angka yang
+    // sama. Perbedaan di antara keduanya membuat penolakan terasa sewenang
+    // wenang bagi pengguna.
+    expect(MAX_FILE_SIZE_LABEL).toBe(`${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB`)
+  })
+
+  it('menuliskan batas berkas tak-termampatkan persis seperti nilainya', () => {
+    expect(MAX_UNCOMPRESSIBLE_LABEL).toBe(`${MAX_UNCOMPRESSIBLE_BYTES / 1024} KB`)
+  })
+
+  it('menjaga batas tak-termampatkan tetap muat di dalam satu dokumen', () => {
+    // Base64 memperbesar sekitar sepertiga; hasilnya harus tetap di bawah
+    // batas keras satu megabyte per dokumen Firestore.
+    expect(Math.ceil((MAX_UNCOMPRESSIBLE_BYTES * 4) / 3)).toBeLessThan(1024 * 1024)
   })
 })
 
