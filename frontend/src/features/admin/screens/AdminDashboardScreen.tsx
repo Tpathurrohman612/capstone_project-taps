@@ -6,6 +6,7 @@ import { useAdminReports } from '../lib/use-admin-reports'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
 import { workflowStatusClass } from '../components/workflow-ui'
+import { isTerminal, type ReportStatus } from '../../../shared/domain/report-status'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -47,12 +48,12 @@ export function AdminDashboardScreen() {
   const byDashboardOrder = (left: WorkflowReport, right: WorkflowReport) =>
     dashboardOrder.indexOf(left.id) - dashboardOrder.indexOf(right.id)
   const priorityReports = dashboardWorkflowReports
-    .filter((report) => report.status !== 'Selesai')
+    .filter((report) => !isTerminal(report.status))
     .sort(byDashboardOrder)
     .map(dashboardReport)
   const recentReports = [...dashboardWorkflowReports].sort(byDashboardOrder).map(dashboardReport)
-  const setDashboardDetailTarget = (id: string, status: string) => {
-    window.sessionStorage.setItem('adminDetailContext', status === 'Selesai' ? 'history' : 'queue')
+  const setDashboardDetailTarget = (id: string, status: ReportStatus) => {
+    window.sessionStorage.setItem('adminDetailContext', isTerminal(status) ? 'history' : 'queue')
     window.sessionStorage.setItem('adminDetailId', id)
   }
   return (

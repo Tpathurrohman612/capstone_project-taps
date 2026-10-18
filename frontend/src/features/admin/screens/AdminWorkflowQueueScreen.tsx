@@ -7,6 +7,7 @@ import {
   WorkflowTable,
   reportProgramStudy,
 } from '../components/workflow-ui'
+import { isTerminal } from '../../../shared/domain/report-status'
 
 export function AdminWorkflowQueueScreen() {
   const [status, setStatus] = useState('Semua')
@@ -20,7 +21,7 @@ export function AdminWorkflowQueueScreen() {
   const [kirimError, setKirimError] = useState('')
   const reports = allReports.filter((report) => {
     return (
-      report.status !== 'Selesai' &&
+      !isTerminal(report.status) &&
       (status === 'Semua' || report.status === status) &&
       (faculty === 'Semua' || report.studentFaculty === faculty) &&
       (courseType === 'Semua' || report.courseType === courseType) &&

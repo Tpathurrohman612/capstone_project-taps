@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, WorkflowTable } from '../components/workflow-ui'
+import { isTerminal } from '../../../shared/domain/report-status'
 
 export function AdminWorkflowHistoryScreen() {
   const { reports: semuaLaporan, memuat: memuatLaporan, galat } = useAdminReports()
@@ -8,7 +9,7 @@ export function AdminWorkflowHistoryScreen() {
   const [query, setQuery] = useState('')
   const reports = semuaLaporan.filter(
     (report) =>
-      report.status === 'Selesai' &&
+      isTerminal(report.status) &&
       (status === 'Semua' || report.status === status) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
   )

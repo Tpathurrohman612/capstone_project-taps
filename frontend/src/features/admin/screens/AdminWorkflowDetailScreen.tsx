@@ -154,16 +154,12 @@ export function AdminWorkflowDetailScreen() {
     isTerminal(report.status) || report.status === 'Perlu Dilengkapi'
       ? null
       : report.status === 'Menunggu Pemeriksaan'
-        ? 'Verifikasi Laporan'
+        ? 'Loloskan Pemeriksaan'
         : report.status === 'Lolos Pemeriksaan'
-          ? 'Siapkan Validasi'
+          ? 'Teruskan ke Fakultas'
           : report.status === 'Diteruskan ke Fakultas'
-            ? validationRecorded
-              ? 'Perbarui Status'
-              : 'Catat Hasil Validasi'
-            : report.status === 'Selesai'
-              ? null
-              : 'Perbarui Status'
+            ? 'Catat Tanggapan Fakultas'
+            : 'Catat Tindak Lanjut'
   const stageState = (index: number) => {
     // Ditolak bukan bagian dari lima tahap jalur utama, sehingga indexOf
     // mengembalikan -1 dan seluruh lini terbaca seolah laporan masih berjalan.
