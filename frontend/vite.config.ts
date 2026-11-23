@@ -48,6 +48,21 @@ export default defineConfig(({ mode }) => {
       // karena hanya memakai SDK Firestore.
       environment: 'jsdom',
       setupFiles: ['./src/test-setup.ts'],
+      // `.env.local` tidak ikut Git, sehingga di CI konfigurasi Firebase kosong
+      // dan firebase.ts melempar galat saat diimpor. Pengujian selalu memakai
+      // nilai tiruan ini, juga di mesin pengembang, agar tidak pernah menyentuh
+      // proyek Firebase sungguhan: initializeApp tidak menghubungi server, dan
+      // App Check tetap mati karena kunci situsnya tidak diisi.
+      env: {
+        VITE_FIREBASE_API_KEY: 'test-api-key',
+        VITE_FIREBASE_AUTH_DOMAIN: 'demo-test.firebaseapp.com',
+        VITE_FIREBASE_PROJECT_ID: 'demo-test',
+        VITE_FIREBASE_STORAGE_BUCKET: 'demo-test.appspot.com',
+        VITE_FIREBASE_MESSAGING_SENDER_ID: '000000000000',
+        VITE_FIREBASE_APP_ID: '1:000000000000:web:test',
+        VITE_FIREBASE_APPCHECK_SITE_KEY: '',
+        VITE_FIREBASE_USE_EMULATOR: '',
+      },
       coverage: {
         provider: 'v8',
         // 'lcov' writes coverage/lcov.info, which is the file SonarQube Cloud
