@@ -1,20 +1,18 @@
-import type { WorkflowReport, WorkflowStatus, WorkflowUpdate } from '../types/workflow'
+import type { WorkflowReport, WorkflowUpdate } from '../types/workflow'
+import { isReportStatus } from '../domain/report-status'
 import { workflowSeed } from '../data/workflow-seed'
 
 const workflowStorageKey = 'lapor-tuton-admin-workflow'
 const workflowStorageVersionKey = 'lapor-tuton-admin-workflow-version'
-const workflowStorageVersion = '7'
+// Dinaikkan ke 9 karena status "Diproses" berganti nama menjadi "Sedang
+// Diproses" sesuai Tabel 4.1. Rekaman lama memakai nama lama dan akan gagal
+// validasi, sehingga versi perlu naik agar data lama dibuang terkendali
+// daripada memunculkan peringatan data rusak.
+export const WORKFLOW_STORAGE_VERSION = '9'
+const workflowStorageVersion = WORKFLOW_STORAGE_VERSION
 const workflowStorageBackupKey = 'lapor-tuton-admin-workflow-corrupt-backup'
 const workflowStorageWarningKey = 'taps-workflow-storage-warning'
 const workflowStorageWarningEvent = 'taps:workflow-storage-warning'
-
-const validStatuses: WorkflowStatus[] = [
-  'Diterima',
-  'Diverifikasi',
-  'Menunggu Validasi',
-  'Diproses',
-  'Selesai',
-]
 
 export class WorkflowStorageError extends Error {
   constructor(message: string) {
@@ -35,15 +33,23 @@ const isWorkflowUpdate = (value: unknown): value is WorkflowUpdate =>
 const isWorkflowReport = (value: unknown): value is WorkflowReport => {
   if (!isRecord(value)) return false
 
-  const requiredStrings = ['id', 'title', 'category', 'course', 'className', 'tutor', 'submitted']
+  const requiredStrings = [
+    'id',
+    'studentNim',
+    'title',
+    'category',
+    'course',
+    'className',
+    'tutor',
+    'submitted',
+  ]
 
   if (!requiredStrings.every((field) => typeof value[field] === 'string')) {
     return false
   }
 
   if (
-    typeof value.status !== 'string' ||
-    !validStatuses.includes(value.status as WorkflowStatus) ||
+    !isReportStatus(value.status) ||
     !Array.isArray(value.updates) ||
     !value.updates.every(isWorkflowUpdate)
   ) {
@@ -69,6 +75,22 @@ const isWorkflowReport = (value: unknown): value is WorkflowReport => {
 
 const isWorkflowReportArray = (value: unknown): value is WorkflowReport[] =>
   Array.isArray(value) && value.every(isWorkflowReport)
+
+// Reports stored before they carried an owner are backfilled with an empty NIM
+// instead of being rejected as corrupt. An empty NIM matches no signed-in
+// student, so such a report stays visible to the Administrator and stays out of
+// every student history, which is the safe direction for a missing owner.
+const legacyOwnerNim = ''
+
+const backfillReportOwners = (value: unknown): unknown => {
+  if (!Array.isArray(value)) return value
+
+  return value.map((entry) =>
+    isRecord(entry) && typeof entry.studentNim !== 'string'
+      ? { ...entry, studentNim: legacyOwnerNim }
+      : entry,
+  )
+}
 
 let lastConsoleWarning = ''
 
@@ -173,7 +195,7 @@ export const getWorkflowReports = (): WorkflowReport[] => {
     let parsed: unknown
 
     try {
-      parsed = JSON.parse(raw)
+      parsed = backfillReportOwners(JSON.parse(raw))
     } catch {
       preserveCorruptSnapshot(storage, raw, 'JSON tidak dapat dibaca')
       return normalizeSeed()
@@ -227,7 +249,7 @@ export const saveWorkflowReports = (reports: WorkflowReport[]) => {
       let parsed: unknown
 
       try {
-        parsed = JSON.parse(raw)
+        parsed = backfillReportOwners(JSON.parse(raw))
       } catch {
         preserveCorruptSnapshot(storage, raw, 'JSON tidak dapat dibaca')
         throw new WorkflowStorageError(

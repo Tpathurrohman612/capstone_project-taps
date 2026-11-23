@@ -3,6 +3,9 @@ import { Link, Outlet, useLocation } from 'react-router'
 import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { navItems } from '../data/navigation'
+import { useNotifications } from '../lib/use-notifications'
+import { useStudentReports } from '../lib/use-student-reports'
+import { NotifikasiMengambang } from '../components/NotifikasiMengambang'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -13,6 +16,11 @@ const navButton = (active: boolean) =>
 
 export function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Pemberitahuan dipasang di layout, bukan di dasbor, agar mahasiswa
+  // mengetahui laporannya sudah ditangani di halaman mana pun ia berada.
+  const { reports } = useStudentReports()
+  const { notifikasi, tandaiDibaca } = useNotifications(reports)
   const location = useLocation()
   const isActive = (to: string) => to !== '#' && location.pathname === to
   const isCreateReportPage = location.pathname === '/buat-laporan'
@@ -157,6 +165,7 @@ export function AppLayout() {
         )}
         <Outlet />
       </div>
+      <NotifikasiMengambang notifikasi={notifikasi} onBaca={tandaiDibaca} />
     </main>
   )
 }

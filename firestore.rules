@@ -17,6 +17,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Batas panjang isian.
+    //
+    // Tanpa batas, seorang pengguna yang sudah masuk dapat mengirim satu
+    // laporan berisi teks mendekati satu megabyte berulang kali. Aturannya
+    // tetap mengizinkan karena hanya memeriksa tipe, sehingga kuota basis data
+    // habis tanpa ada yang melanggar aturan mana pun. Batas ditegakkan di sini
+    // karena pemeriksaan di peramban dapat dilewati dengan memanggil SDK
+    // secara langsung.
+    function teksWajar(nilai, maksimum) {
+      return nilai is string && nilai.size() > 0 && nilai.size() <= maksimum;
+    }
+
+    function teksOpsionalWajar(data, kunci, maksimum) {
+      return !(kunci in data) || (data[kunci] is string && data[kunci].size() <= maksimum);
+    }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
@@ -30,11 +46,50 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/administrator/$(request.auth.uid));
     }
 
+    // Peran Pemilik, di luar lingkup proposal. Dipakai hanya oleh pengembang
+    // untuk menata peran dan membersihkan data. Seperti halnya Administrator,
+    // perannya ditentukan keberadaan dokumen pada koleksinya sendiri.
+    //
+    // Koleksi ini sengaja tidak dapat ditulis siapa pun, termasuk Pemilik.
+    // Pemilik yang dapat menghapus dokumennya sendiri akan mengunci dirinya
+    // keluar tanpa cara memulihkannya dari dalam aplikasi, dan Pemilik yang
+    // dapat menambah Pemilik lain memindahkan kendali tertinggi keluar dari
+    // Firebase Console. Penambahannya dilakukan manual di Console.
+    function isPemilik() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/pemilik/$(request.auth.uid));
+    }
+
+    match /pemilik/{uid} {
+      allow get: if isOwner(uid) || isPemilik();
+      // Dibuka bagi sesama Pemilik supaya konsolnya dapat menyatakan siapa
+      // saja yang memegang peran ini. Menutupnya membuat konsol hanya mampu
+      // menandai dirinya sendiri, dan itu menyesatkan ketika Pemiliknya lebih
+      // dari satu. Bagi peran lain daftar ini tetap tertutup.
+      allow list: if isPemilik();
+      allow write: if false;
+    }
+
     // Allowlist peran. Ditambahkan manual lewat Firebase Console oleh
-    // pengelola; klien tidak pernah boleh membaca maupun menulisnya, supaya
-    // tidak ada pengguna yang dapat mengangkat dirinya sendiri.
+    // pengelola; klien tidak pernah boleh menulisnya, supaya tidak ada
+    // pengguna yang dapat mengangkat dirinya sendiri.
+    //
+    // Seorang pengguna boleh membaca dokumen miliknya sendiri agar aplikasi
+    // dapat mengetahui perannya setelah masuk. `list` tetap ditutup, sehingga
+    // daftar administrator tidak dapat dikumpulkan oleh siapa pun. Membaca
+    // dokumen sendiri tidak memberi hak apa pun: setiap akses ke koleksi lain
+    // tetap diperiksa ulang lewat isAdmin() yang dievaluasi server.
     match /administrator/{uid} {
-      allow read, write: if false;
+      allow get: if isOwner(uid) || isPemilik();
+      // Pemilik perlu melihat daftarnya untuk menata peran; bagi yang lain
+      // daftar ini tetap tertutup.
+      allow list: if isPemilik();
+      // Dokumennya hanya penanda peran, sehingga isinya dibatasi agar tidak
+      // dipakai menyimpan data lain.
+      allow create: if isPemilik()
+        && request.resource.data.keys().hasOnly(['uid', 'dicatatPada']);
+      allow update: if false;
+      allow delete: if isPemilik();
     }
 
     // Profil pengguna. Dokumen memakai Firebase UID sebagai pengenal, sesuai
@@ -43,13 +98,234 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin();
       // Peran tidak boleh ikut ditulis klien — sumbernya koleksi administrator.
       allow create, update: if isOwner(uid)
-        && !('role' in request.resource.data);
-      allow delete: if false;
+        && !('role' in request.resource.data)
+        && teksOpsionalWajar(request.resource.data, 'nim', 32)
+        && teksOpsionalWajar(request.resource.data, 'email', 254)
+        && teksOpsionalWajar(request.resource.data, 'displayName', 150)
+        && teksOpsionalWajar(request.resource.data, 'faculty', 150)
+        && teksOpsionalWajar(request.resource.data, 'program_studi', 150)
+        && teksOpsionalWajar(request.resource.data, 'ut_daerah', 150)
+        && request.resource.data.keys().size() <= 12;
+      // Pemilik dapat menghapus akun, kecuali akunnya sendiri. Menghapus
+      // profil sendiri akan membuat aplikasi memperlakukannya sebagai pengguna
+      // yang belum melengkapi identitas, sedangkan NIM-nya tetap terkunci.
+      allow delete: if isPemilik() && request.auth.uid != uid;
+      allow list: if isPemilik();
     }
 
-    // Koleksi lain (laporan, lampiran, riwayat_status_laporan,
-    // pengiriman_validasi, validasi, tindak_lanjut, kategori_laporan,
-    // status_laporan) belum dibuka. Tambahkan blok match tersendiri saat
+    // Indeks keunikan NIM. Aturan di atas hanya mengizinkan seorang pengguna
+    // membaca dokumen `pengguna` miliknya sendiri, sehingga keunikan NIM tidak
+    // dapat diperiksa dengan kueri biasa. Koleksi ini menyimpan satu dokumen
+    // per NIM berisi uid pemiliknya, dan tautannya dibuat dalam transaksi yang
+    // sama dengan penulisan profil.
+    //
+    // Dokumen tidak pernah boleh diubah atau dihapus klien, supaya satu NIM
+    // terkunci permanen pada satu akun. Melepas tautan adalah tindakan
+    // administratif yang dilakukan lewat Firebase Console.
+    match /nim_terpakai/{nim} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      // Penghapusan akun harus melepaskan tautan NIM-nya. Tanpa itu NIM
+      // tersebut terkunci permanen pada akun yang sudah tidak ada.
+      allow delete: if isPemilik();
+      allow list: if isPemilik();
+    }
+
+    // Pencacah nomor laporan, satu dokumen per tahun.
+    //
+    // Nomor laporan tidak dapat ditentukan dengan mencari nomor tertinggi pada
+    // koleksi laporan, karena aturan di bawah melarang mahasiswa membaca
+    // laporan milik orang lain sehingga kueri semacam itu pasti ditolak.
+    // Dokumen pencacah menyelesaikannya tanpa membuka data siapa pun.
+    //
+    // Nilainya hanya boleh naik tepat satu setiap penulisan, sehingga pengguna
+    // tidak dapat melompati atau mengulang nomor. Penurunan dan penghapusan
+    // ditutup sama sekali.
+    match /pencacah_laporan/{tahun} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn() && request.resource.data.terakhir == 1;
+      allow update: if isSignedIn()
+        && request.resource.data.terakhir == resource.data.terakhir + 1;
+      allow delete: if isPemilik();
+    }
+
+    // Daftar status laporan (Tabel 4.1) dan kategori laporan. Keduanya data
+    // acuan yang dibaca setiap pengguna dan hanya diubah pengelola lewat
+    // Console.
+    match /status_laporan/{id} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /kategori_laporan/{id} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Laporan. Inilah penegakan pembatasan akses yang diminta subbab 3.7:
+    // mahasiswa hanya dapat membaca laporan miliknya sendiri, dan pemeriksaan
+    // itu dijalankan server pada setiap permintaan, bukan oleh penyaringan di
+    // peramban yang dapat dilewati.
+    //
+    // `list` memakai syarat yang sama dengan `get`. Firestore menolak kueri
+    // yang tidak dapat dibuktikan memenuhi aturan, sehingga kueri tanpa
+    // penyaring uid_pelapor akan gagal, bukan diam-diam mengembalikan laporan
+    // milik orang lain.
+    function laporanMilikSendiri() {
+      return isSignedIn()
+        && 'uid_pelapor' in resource.data
+        && resource.data.uid_pelapor == request.auth.uid;
+    }
+
+    match /laporan/{id} {
+      // isAdmin() diperiksa lebih dulu karena tidak menyentuh isi dokumen.
+      // Aturan menghubung-singkat, sehingga Administrator tidak perlu melewati
+      // pemeriksaan kepemilikan sama sekali. Urutan sebaliknya berbahaya: satu
+      // dokumen yang kehilangan uid_pelapor membuat evaluasinya galat, dan
+      // galat pada aturan menolak seluruh kueri, bukan hanya dokumen itu.
+      allow get, list: if isAdmin() || laporanMilikSendiri();
+
+      // Mahasiswa membuat laporan atas namanya sendiri, dan status awal wajib
+      // Menunggu Pemeriksaan sesuai baris pertama Tabel 4.2. Dengan begitu tidak ada
+      // laporan yang lahir langsung berstatus Selesai.
+      allow create: if isSignedIn()
+        && request.resource.data.uid_pelapor == request.auth.uid
+        && request.resource.data.id_status == 'Menunggu Pemeriksaan'
+        && teksWajar(request.resource.data.nomor_laporan, 32)
+        && teksWajar(request.resource.data.judul_laporan, 200)
+        && teksOpsionalWajar(request.resource.data, 'deskripsi', 5000)
+        && teksOpsionalWajar(request.resource.data, 'nama_tutor', 150)
+        && teksOpsionalWajar(request.resource.data, 'id_kategori', 150)
+        && teksOpsionalWajar(request.resource.data, 'kode_mata_kuliah', 32)
+        && teksOpsionalWajar(request.resource.data, 'nama_mata_kuliah', 200)
+        && teksOpsionalWajar(request.resource.data, 'kelas_mata_kuliah', 32)
+        && teksOpsionalWajar(request.resource.data, 'perkiraan_durasi', 100)
+        && teksOpsionalWajar(request.resource.data, 'prodi_pelapor', 150)
+        && teksOpsionalWajar(request.resource.data, 'fakultas_pelapor', 150)
+        // Jumlah field dibatasi agar dokumen tidak dapat digelembungkan
+        // dengan field yang tidak dikenal rancangan.
+        && request.resource.data.keys().size() <= 20;
+
+      // Perubahan status adalah wewenang Administrator, kecuali atas laporan
+      // yang dibuatnya sendiri. Seorang mahasiswa yang kemudian diangkat
+      // menjadi Administrator tetap membawa laporan lamanya, dan tanpa
+      // pengecualian ini ia dapat memverifikasi, memvalidasi, lalu
+      // menyelesaikan keluhannya sendiri. Penanganan laporan semacam itu harus
+      // dilakukan Administrator lain.
+      //
+      // Mahasiswa hanya boleh menyunting laporannya sendiri selama status
+      // masih memungkinkan, yaitu saat diminta melengkapi, dan tidak boleh
+      // memindahkan kepemilikan.
+      allow update: if (isAdmin() && resource.data.uid_pelapor != request.auth.uid)
+        || (laporanMilikSendiri()
+            && resource.data.id_status == 'Perlu Dilengkapi'
+            && request.resource.data.uid_pelapor == resource.data.uid_pelapor
+            && request.resource.data.nomor_laporan == resource.data.nomor_laporan
+            && request.resource.data.id_status == 'Menunggu Pemeriksaan');
+
+      // Laporan tidak pernah dihapus; riwayatnya adalah bukti penanganan.
+      allow delete: if isPemilik();
+    }
+
+    // Riwayat status, lampiran, dan catatan penanganan mengikuti hak akses
+    // laporan induknya.
+    function laporanInduk(idLaporan) {
+      return get(/databases/$(database)/documents/laporan/$(idLaporan)).data;
+    }
+
+    match /riwayat_status_laporan/{id} {
+      allow get, list: if isSignedIn();
+      // Pencatat wajib dirinya sendiri, sehingga riwayat tidak dapat
+      // dipalsukan atas nama orang lain.
+      //
+      // Kepemilikan laporan induk sengaja tidak diperiksa di sini. Catatan
+      // riwayat pertama ditulis dalam transaksi yang sama dengan laporannya,
+      // dan aturan dievaluasi terhadap keadaan sebelum transaksi tersimpan,
+      // sehingga get() ke laporan induk akan selalu menemukan dokumen kosong
+      // dan menolak pembuatan laporan yang sah. Pembatasan sudah memadai
+      // karena uid_pencatat tidak dapat dipalsukan dan laporan induknya
+      // sendiri tetap dilindungi aturannya masing-masing.
+      allow create: if isSignedIn()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && teksOpsionalWajar(request.resource.data, 'keterangan', 2000)
+        && request.resource.data.keys().size() <= 10;
+      // Hanya penanda baca notifikasi (FR-07) yang boleh berubah.
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['dibaca_pada']);
+      allow delete: if isPemilik();
+    }
+
+    match /lampiran/{id} {
+      allow get, list: if isSignedIn();
+
+      // Bukti pendukung ditulis dalam transaksi yang sama dengan laporannya,
+      // sehingga saat aturan dievaluasi laporan induknya belum tersimpan dan
+      // pemeriksaan kepemilikan terhadapnya pasti gagal. Karena itu pembuatan
+      // diizinkan ketika induknya memang belum ada, dan tetap diperiksa
+      // kepemilikannya ketika induknya sudah ada, sehingga tidak ada yang
+      // dapat menambahkan bukti pada laporan milik orang lain.
+      // Isi berkas disimpan sebagai data base64 di dalam dokumen ini, karena
+      // Cloud Storage memerlukan paket berbayar. Batasnya ditetapkan jauh di
+      // bawah batas keras satu megabyte per dokumen, agar field lain pada
+      // dokumen yang sama tetap memiliki ruang.
+      allow create: if isSignedIn()
+        && teksWajar(request.resource.data.id_laporan, 64)
+        && teksWajar(request.resource.data.nama_file, 300)
+        && teksOpsionalWajar(request.resource.data, 'isi_base64', 734003)
+        && request.resource.data.keys().size() <= 8
+        && (
+          !exists(/databases/$(database)/documents/laporan/$(request.resource.data.id_laporan))
+          || laporanInduk(request.resource.data.id_laporan).uid_pelapor == request.auth.uid
+          || isAdmin()
+        );
+
+      allow update: if false;
+      allow delete: if isPemilik();
+    }
+
+    // Pengiriman validasi, hasil validasi, dan tindak lanjut sepenuhnya
+    // wewenang Administrator. Mahasiswa boleh membacanya pada laporannya
+    // sendiri agar dapat melihat perkembangan penanganan.
+    // Administrator tidak boleh menangani laporan yang dibuatnya sendiri,
+    // sehingga pemeriksaan yang sama diterapkan pada seluruh pencatatan
+    // penanganan, bukan hanya pada perubahan status.
+    function bukanLaporanSendiri(idLaporan) {
+      return laporanInduk(idLaporan).uid_pelapor != request.auth.uid;
+    }
+
+    match /pengiriman_validasi/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin()
+        && request.resource.data.uid_pengirim == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
+      allow update: if false;
+      allow delete: if isPemilik();
+    }
+
+    match /validasi/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
+      allow update: if false;
+      allow delete: if isPemilik();
+    }
+
+    match /tindak_lanjut/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin()
+        && request.resource.data.uid_pencatat == request.auth.uid
+        && bukanLaporanSendiri(request.resource.data.id_laporan);
+      allow update: if false;
+      allow delete: if isPemilik();
+    }
+
+    // Koleksi lain belum dibuka. Tambahkan blok match tersendiri saat
     // fiturnya dikerjakan.
     match /{document=**} {
       allow read, write: if false;

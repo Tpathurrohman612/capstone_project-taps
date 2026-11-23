@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -40,6 +41,42 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
+    },
+    test: {
+      // Pengujian alur me-render komponen, sehingga memerlukan DOM. Berkas
+      // *.emulator.test.ts tetap berjalan di lingkungan ini tanpa masalah
+      // karena hanya memakai SDK Firestore.
+      environment: 'jsdom',
+      setupFiles: ['./src/test-setup.ts'],
+      // `.env.local` tidak ikut Git, sehingga di CI konfigurasi Firebase kosong
+      // dan firebase.ts melempar galat saat diimpor. Pengujian selalu memakai
+      // nilai tiruan ini, juga di mesin pengembang, agar tidak pernah menyentuh
+      // proyek Firebase sungguhan: initializeApp tidak menghubungi server, dan
+      // App Check tetap mati karena kunci situsnya tidak diisi.
+      env: {
+        VITE_FIREBASE_API_KEY: 'test-api-key',
+        VITE_FIREBASE_AUTH_DOMAIN: 'demo-test.firebaseapp.com',
+        VITE_FIREBASE_PROJECT_ID: 'demo-test',
+        VITE_FIREBASE_STORAGE_BUCKET: 'demo-test.appspot.com',
+        VITE_FIREBASE_MESSAGING_SENDER_ID: '000000000000',
+        VITE_FIREBASE_APP_ID: '1:000000000000:web:test',
+        VITE_FIREBASE_APPCHECK_SITE_KEY: '',
+        VITE_FIREBASE_USE_EMULATOR: '',
+      },
+      coverage: {
+        provider: 'v8',
+        // 'lcov' writes coverage/lcov.info, which is the file SonarQube Cloud
+        // reads through sonar.javascript.lcov.reportPaths.
+        reporter: ['text', 'lcov'],
+        reportsDirectory: './coverage',
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/*.test.{ts,tsx}',
+          'src/**/*.d.ts',
+          'src/main.tsx',
+          'src/screens/DesignSystemScreen.tsx',
+        ],
+      },
     },
   }
 })

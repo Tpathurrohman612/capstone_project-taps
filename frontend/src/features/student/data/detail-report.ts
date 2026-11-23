@@ -1,12 +1,12 @@
 export const statusStages = [
-  { label: 'Diterima', time: '12 Sep 2026 · 09:14', state: 'done' },
-  { label: 'Diverifikasi', time: '13 Sep 2026 · 10:32', state: 'done' },
+  { label: 'Menunggu Pemeriksaan', time: '12 Sep 2026 · 09:14', state: 'done' },
+  { label: 'Lolos Pemeriksaan', time: '13 Sep 2026 · 10:32', state: 'done' },
   {
-    label: 'Menunggu Validasi',
+    label: 'Diteruskan ke Fakultas',
     time: 'Menunggu hasil validasi',
     state: 'upcoming',
   },
-  { label: 'Sedang Diproses', time: '14 Sep 2026 · 15:20', state: 'current' },
+  { label: 'Ditindaklanjuti', time: '14 Sep 2026 · 15:20', state: 'current' },
   { label: 'Selesai', time: 'Menunggu penyelesaian', state: 'upcoming' },
 ] as const
 

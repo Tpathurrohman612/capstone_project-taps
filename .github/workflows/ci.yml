@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - refactor/project-structure
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  periksa:
+    name: Analisis statis dan pengujian
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pasang dependensi
+        run: corepack pnpm@10.34.3 --dir frontend install --frozen-lockfile
+
+      # Analisis kode statis sesuai subbab 3.7 proposal: pemeriksa tipe
+      # TypeScript dalam mode ketat, ditambah deteksi variabel dan parameter
+      # yang tidak terpakai. Build gagal bila ada pelanggaran tipe.
+      - name: Analisis statis (TypeScript mode ketat)
+        run: corepack pnpm@10.34.3 --dir frontend run typecheck
+
+      - name: Pengujian unit dan coverage
+        run: corepack pnpm@10.34.3 --dir frontend run test:coverage

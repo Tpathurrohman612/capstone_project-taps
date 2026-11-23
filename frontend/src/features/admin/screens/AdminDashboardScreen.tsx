@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png'
 import type { WorkflowReport } from '../../../shared/types/workflow'
-import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { useAdminReports } from '../lib/use-admin-reports'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
+import { workflowStatusClass } from '../components/workflow-ui'
+import { isTerminal, type ReportStatus } from '../../../shared/domain/report-status'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -25,21 +27,14 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   )
 }
 
-const adminStatusClass = (status: string) =>
-  status === 'Selesai'
-    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
-    : status === 'Sedang Diproses'
-      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
-      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
-
 export function AdminDashboardScreen() {
+  const { reports: semuaLaporan, memuat: memuatLaporan } = useAdminReports()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const dashboardWorkflowReports = getWorkflowReports()
+  const dashboardWorkflowReports = semuaLaporan
   const dashboardReport = (report: WorkflowReport) => ({
     ...report,
     date: report.submitted,
-    action: report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail',
-    status: report.status === 'Diproses' ? 'Sedang Diproses' : report.status,
+    action: report.status === 'Menunggu Pemeriksaan' ? 'Verifikasi' : 'Lihat Detail',
   })
   const dashboardOrder = [
     'LT-2026-0008',
@@ -53,12 +48,12 @@ export function AdminDashboardScreen() {
   const byDashboardOrder = (left: WorkflowReport, right: WorkflowReport) =>
     dashboardOrder.indexOf(left.id) - dashboardOrder.indexOf(right.id)
   const priorityReports = dashboardWorkflowReports
-    .filter((report) => report.status !== 'Selesai')
+    .filter((report) => !isTerminal(report.status))
     .sort(byDashboardOrder)
     .map(dashboardReport)
   const recentReports = [...dashboardWorkflowReports].sort(byDashboardOrder).map(dashboardReport)
-  const setDashboardDetailTarget = (id: string, status: string) => {
-    window.sessionStorage.setItem('adminDetailContext', status === 'Selesai' ? 'history' : 'queue')
+  const setDashboardDetailTarget = (id: string, status: ReportStatus) => {
+    window.sessionStorage.setItem('adminDetailContext', isTerminal(status) ? 'history' : 'queue')
     window.sessionStorage.setItem('adminDetailId', id)
   }
   return (
@@ -227,36 +222,50 @@ export function AdminDashboardScreen() {
           <div className="mt-8 grid grid-cols-5 border border-[#D9E2EC] max-[1100px]:grid-cols-3 max-[760px]:grid-cols-2 max-[620px]:grid-cols-1">
             {[
               [
-                String(dashboardWorkflowReports.length).padStart(2, '0'),
+                memuatLaporan ? '—' : String(dashboardWorkflowReports.length).padStart(2, '0'),
                 'Total Laporan',
                 'Seluruh laporan masuk',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Diterima').length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Menunggu Pemeriksaan',
+                      ).length,
+                    ).padStart(2, '0'),
                 'Perlu Verifikasi',
                 'Menunggu verifikasi',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Menunggu Validasi')
-                    .length,
-                ).padStart(2, '0'),
-                'Menunggu Validasi',
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Diteruskan ke Fakultas',
+                      ).length,
+                    ).padStart(2, '0'),
+                'Diteruskan ke Fakultas',
                 'Menunggu hasil validasi',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Diproses').length,
-                ).padStart(2, '0'),
-                'Sedang Diproses',
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter(
+                        (report) => report.status === 'Ditindaklanjuti',
+                      ).length,
+                    ).padStart(2, '0'),
+                'Ditindaklanjuti',
                 'Dalam tindak lanjut',
               ],
               [
-                String(
-                  dashboardWorkflowReports.filter((report) => report.status === 'Selesai').length,
-                ).padStart(2, '0'),
+                memuatLaporan
+                  ? '—'
+                  : String(
+                      dashboardWorkflowReports.filter((report) => report.status === 'Selesai')
+                        .length,
+                    ).padStart(2, '0'),
                 'Selesai',
                 'Telah diselesaikan',
               ],
@@ -304,7 +313,7 @@ export function AdminDashboardScreen() {
                     </div>
                     <p className="text-sm font-medium text-[#1F2937]">{report.title}</p>
                     <span
-                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                     >
                       {report.status}
                     </span>
@@ -324,7 +333,7 @@ export function AdminDashboardScreen() {
                     <div className="flex items-start justify-between gap-4">
                       <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
-                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                       >
                         {report.status}
                       </span>
@@ -383,7 +392,7 @@ export function AdminDashboardScreen() {
                     <p className="text-sm">{report.className}</p>
                     <p className="text-sm">{report.tutor}</p>
                     <span
-                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                      className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                     >
                       {report.status}
                     </span>
@@ -399,7 +408,7 @@ export function AdminDashboardScreen() {
                     <div className="flex items-start justify-between gap-4">
                       <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                       <span
-                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${adminStatusClass(report.status)}`}
+                        className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                       >
                         {report.status}
                       </span>

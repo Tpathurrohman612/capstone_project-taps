@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthShell } from '../components/AuthShell'
 import { FACULTIES, type Faculty } from '../../../shared/data/faculties'
+import { useAuth } from '../../../shared/lib/auth-context'
+import { linkNimToAccount } from '../lib/user-profile'
 import {
   GOOGLE_ACCOUNT_LINK_KEY,
   getActiveGoogleAccountEmail,
@@ -11,15 +13,61 @@ import {
 
 export function IdentitySetupScreen() {
   const navigate = useNavigate()
-  const activeEmail = getActiveGoogleAccountEmail()
+  const { mode, user, profile, refreshProfile } = useAuth()
+  const activeEmail = mode === 'firebase' ? (user?.email ?? '') : getActiveGoogleAccountEmail()
   const linkedAccounts = getLinkedGoogleAccounts()
-  const existingEmailAccount = linkedAccounts.find(
-    (account) => account.email.toLowerCase() === activeEmail.toLowerCase(),
-  )
+  const existingEmailAccount =
+    mode === 'firebase'
+      ? undefined
+      : linkedAccounts.find((account) => account.email.toLowerCase() === activeEmail.toLowerCase())
 
-  const [nim, setNim] = useState(existingEmailAccount?.nim ?? '')
-  const [faculty, setFaculty] = useState<Faculty | ''>(existingEmailAccount?.faculty ?? '')
+  const [nim, setNim] = useState(
+    mode === 'firebase' ? (profile?.nim ?? '') : (existingEmailAccount?.nim ?? ''),
+  )
+  const [faculty, setFaculty] = useState<Faculty | ''>(
+    mode === 'firebase' ? (profile?.faculty ?? '') : (existingEmailAccount?.faculty ?? ''),
+  )
+  const [programStudi, setProgramStudi] = useState(profile?.programStudi ?? '')
+  const [utDaerah, setUtDaerah] = useState(profile?.utDaerah ?? '')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  /**
+   * Menyimpan tautan NIM ke Cloud Firestore. Keunikan NIM ditegakkan di dalam
+   * transaksi pada user-profile.ts, bukan di layar ini, supaya dua pendaftaran
+   * bersamaan tidak dapat lolos keduanya.
+   */
+  const saveToFirebase = async (normalizedNim: string, chosenFaculty: Faculty) => {
+    if (!user) {
+      setError('Sesi masuk sudah berakhir. Silakan masuk kembali.')
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      await linkNimToAccount({
+        uid: user.uid,
+        email: user.email ?? '',
+        nim: normalizedNim,
+        faculty: chosenFaculty,
+        ...(user.displayName ? { displayName: user.displayName } : {}),
+        ...(programStudi.trim() ? { programStudi: programStudi.trim() } : {}),
+        ...(utDaerah.trim() ? { utDaerah: utDaerah.trim() } : {}),
+      })
+
+      await refreshProfile()
+      navigate('/')
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Gagal menyimpan identitas. Periksa koneksi lalu coba lagi.',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -34,6 +82,12 @@ export function IdentitySetupScreen() {
 
     if (!faculty) {
       setError('Pilih fakultas asal mahasiswa.')
+      return
+    }
+
+    if (mode === 'firebase') {
+      setError('')
+      void saveToFirebase(normalizedNim, faculty)
       return
     }
 
@@ -139,7 +193,7 @@ export function IdentitySetupScreen() {
                 setFaculty(event.target.value as Faculty)
                 if (error) setError('')
               }}
-              className={fieldClass}
+              className={`${fieldClass} pr-8`}
             >
               <option value="" disabled>
                 Pilih fakultas
@@ -156,14 +210,32 @@ export function IdentitySetupScreen() {
             <span className="text-sm font-medium text-[#12355B]">
               Program Studi <span className="text-[#005BAC]">*</span>
             </span>
-            <input required className={fieldClass} placeholder="Masukkan program studi" />
+            <input
+              required
+              value={programStudi}
+              onChange={(event) => {
+                setProgramStudi(event.target.value)
+                if (error) setError('')
+              }}
+              className={fieldClass}
+              placeholder="Masukkan program studi"
+            />
           </label>
 
           <label className="block">
             <span className="text-sm font-medium text-[#12355B]">
               UT Daerah <span className="text-[#005BAC]">*</span>
             </span>
-            <input required className={fieldClass} placeholder="Masukkan UT Daerah" />
+            <input
+              required
+              value={utDaerah}
+              onChange={(event) => {
+                setUtDaerah(event.target.value)
+                if (error) setError('')
+              }}
+              className={fieldClass}
+              placeholder="Masukkan UT Daerah"
+            />
           </label>
 
           <div className="border border-[#D9E2EC] bg-[#F7F9FC] px-4 py-3">
@@ -173,9 +245,10 @@ export function IdentitySetupScreen() {
 
           <button
             type="submit"
-            className="w-full bg-[#005BAC] px-5 py-3.5 text-sm text-white transition hover:bg-[#004987] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2"
+            disabled={saving}
+            className="w-full bg-[#005BAC] px-5 py-3.5 text-sm text-white transition hover:bg-[#004987] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Lanjutkan
+            {saving ? 'Menyimpan…' : 'Lanjutkan'}
           </button>
         </form>
       </div>

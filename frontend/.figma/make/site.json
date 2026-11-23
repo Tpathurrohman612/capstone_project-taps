@@ -1,5 +1,13 @@
 {
-  "description": "Enables Universitas Terbuka students to report and track tutor-related issues with clear summaries and easy navigation for efficient problem resolution.",
+  "title": "Lapor Tuton — Universitas Terbuka",
+  "description": "Sistem pelaporan permasalahan terkait aktivitas dan layanan tutor pada Tutorial Online Universitas Terbuka.",
+  "language": "id",
+  "icons": {
+    "icon": "/logo-ut.png"
+  },
+  "openGraph": {
+    "image": "https://lapor-tutor.web.app/logo-ut.png"
+  },
   "robots": {
     "index": false
   },

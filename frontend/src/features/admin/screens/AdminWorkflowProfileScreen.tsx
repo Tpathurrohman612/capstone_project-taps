@@ -1,4 +1,6 @@
 import placeholderAvatar from '../../../assets/placeholder-avatar.svg'
+import { useAuth } from '../../../shared/lib/auth-context'
+import { maskId } from '../../../shared/lib/mask-id'
 import { AdminWorkflowShell } from '../components/workflow-ui'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 
@@ -14,6 +16,22 @@ function AdminProfileItem({ label, value }: { label: string; value: string }) {
 }
 
 export function AdminWorkflowProfileScreen() {
+  const { user, profile } = useAuth()
+
+  // Nilai yang belum tersedia ditulis apa adanya sebagai "Belum diisi", bukan
+  // diganti contoh. Data contoh pada halaman profil membuat pengguna mengira
+  // datanya sudah tersimpan padahal belum.
+  const atau = (nilai: string | null | undefined) => (nilai && nilai !== '' ? nilai : 'Belum diisi')
+
+  const nama = profile?.displayName ?? user?.displayName ?? null
+  const email = user?.email ?? null
+  // Administrator dikenali lewat UID-nya pada koleksi administrator, sehingga
+  // UID itulah pengenal yang bermakna, bukan nomor yang dikarang. Yang
+  // ditampilkan hanya potongan awal dan akhirnya; bagian itu sudah memadai
+  // untuk mencocokkan akun dengan catatan lain, sementara menampilkan UID utuh
+  // membuat tangkapan layar dan rekaman demonstrasi membawanya tanpa alasan.
+  const uid = maskId(user?.uid) ?? null
+
   return (
     <AdminWorkflowShell activeIndex={3}>
       <section className="px-8 py-7 max-[620px]:px-5">
@@ -41,19 +59,23 @@ export function AdminWorkflowProfileScreen() {
             <div className="px-6 max-[620px]:px-5">
               <div className="flex items-center gap-5 border-b border-[#D9E2EC] py-5">
                 <img
-                  src={placeholderAvatar}
-                  alt="Avatar administrator netral"
-                  className="h-[76px] w-[76px] shrink-0"
+                  src={user?.photoURL ?? placeholderAvatar}
+                  onError={(event) => {
+                    event.currentTarget.src = placeholderAvatar
+                  }}
+                  referrerPolicy="no-referrer"
+                  alt={nama ? `Foto profil ${nama}` : 'Avatar administrator netral'}
+                  className="h-[76px] w-[76px] shrink-0 object-cover"
                 />
                 <div>
-                  <p className="text-base font-semibold text-[#12355B]">
-                    Administrator Lapor Tuton
+                  <p className="text-base font-semibold text-[#12355B]">{atau(nama)}</p>
+                  <p className="mt-1 font-mono text-xs text-[#005BAC]">
+                    <span title="Pengenal akun ditampilkan sebagian">{atau(uid)}</span>
                   </p>
-                  <p className="mt-1 font-mono text-xs text-[#005BAC]">ADM-001</p>
                 </div>
               </div>
-              <AdminProfileItem label="Email" value="administrator@laportuton.example" />
-              <AdminProfileItem label="Unit/Pengelola" value="Pengelola Tutorial Online" />
+              <AdminProfileItem label="Email" value={atau(email)} />
+              <AdminProfileItem label="Unit/Pengelola" value={atau(profile?.faculty)} />
               <AdminProfileItem label="Peran" value="Administrator" />
               <div className="py-4">
                 <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">

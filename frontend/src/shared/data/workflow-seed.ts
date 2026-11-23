@@ -3,6 +3,8 @@ import type { WorkflowReport } from '../types/workflow'
 export const workflowSeed: WorkflowReport[] = [
   {
     id: 'LT-2026-0007',
+    studentNim: '048112233',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Belum ada tanggapan pada forum inisiasi',
     category: 'Aktivitas tutor',
     course: 'ESPA4123 · Statistika Ekonomi',
@@ -40,13 +42,15 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0005',
+    studentNim: '048445566',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Tutor belum memberi penilaian tugas',
     category: 'Aktivitas tutor',
     course: 'EKMA4157 · Manajemen Pemasaran',
     className: '03',
     tutor: 'Hendra Wijaya, S.E., M.M.',
     submitted: '14 September 2026',
-    status: 'Menunggu Validasi',
+    status: 'Diteruskan ke Fakultas',
     updates: [
       {
         time: '14 September 2026, 14:30',
@@ -62,13 +66,15 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0009',
+    studentNim: '048778899',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Umpan balik tugas akuntansi belum tersedia',
     category: 'Aktivitas tutor',
     course: 'AKUN4312 · Akuntansi Keuangan Menengah',
     className: '02',
     tutor: 'Dewi Lestari, S.E., M.Ak.',
     submitted: '18 September 2026',
-    status: 'Diverifikasi',
+    status: 'Lolos Pemeriksaan',
     courseType: 'Teori/Umum',
     duration: '3–6 hari',
     description:
@@ -87,13 +93,15 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0010',
+    studentNim: '049001122',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Umpan balik tugas belum tersedia',
     category: 'Aktivitas tutor',
     course: 'AKUN4312 · Akuntansi Keuangan Menengah',
     className: '02',
     tutor: 'Dewi Lestari, S.E., M.Ak.',
     submitted: '19 September 2026',
-    status: 'Diverifikasi',
+    status: 'Lolos Pemeriksaan',
     courseType: 'Teori/Umum',
     duration: '1 minggu atau lebih',
     description:
@@ -109,13 +117,15 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0001',
+    studentNim: '042557013',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Belum ada umpan balik diskusi minggu ke-3',
     category: 'Aktivitas tutor',
     course: 'EKMA4111 · Pengantar Bisnis',
     className: '01',
     tutor: 'Dr. Rina Kusuma, M.M.',
     submitted: '12 September 2026',
-    status: 'Diproses',
+    status: 'Ditindaklanjuti',
     updates: [
       {
         time: '13 September 2026, 10:15',
@@ -131,6 +141,8 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0008',
+    studentNim: '049334455',
+    studentFaculty: 'Fakultas Keguruan dan Ilmu Pendidikan',
     title: 'Materi tutorial minggu ke-5 belum tersedia',
     category: 'Materi Tutorial Online',
     course: 'MKDU4109 · Pendidikan Kewarganegaraan',
@@ -158,6 +170,8 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0003',
+    studentNim: '042557013',
+    studentFaculty: 'Fakultas Hukum, Ilmu Sosial, dan Ilmu Politik',
     title: 'Jadwal aktivitas tutor tidak sesuai ketentuan',
     category: 'Layanan tutor',
     course: 'ADBI4410 · Manajemen Sumber Daya Manusia',
@@ -180,6 +194,8 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0004',
+    studentNim: '042557013',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Keterlambatan respons pada forum diskusi',
     category: 'Aktivitas tutor',
     course: 'PAJA3210 · Perpajakan',
@@ -202,6 +218,8 @@ export const workflowSeed: WorkflowReport[] = [
   },
   {
     id: 'LT-2026-0002',
+    studentNim: '042557013',
+    studentFaculty: 'Fakultas Ekonomi dan Bisnis',
     title: 'Umpan balik tugas belum diterima',
     category: 'Layanan tutor',
     course: 'EKMA4216 · Manajemen Operasi',

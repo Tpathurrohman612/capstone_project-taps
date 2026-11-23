@@ -6,13 +6,12 @@ export const REGISTERED_GOOGLE_ACCOUNT_EMAIL = 'registered.student@gmail.com'
 export const GOOGLE_ACCOUNT_LINK_KEY = 'taps-linked-google-account'
 export const ACTIVE_GOOGLE_ACCOUNT_KEY = 'taps-active-google-account'
 export const REGISTERED_NIMS = new Set(['042557013'])
-export const INTERNAL_ACCOUNTS = [
-  {
-    email: 'administrator@laportuton.example',
-    password: 'Admin123!',
-    role: 'Administrator',
-  },
-] as const
+export const REGISTERED_GOOGLE_ACCOUNT_NIM = '042557013'
+
+// Masuk dengan email dan password sudah dihapus. Sistem hanya menyediakan satu
+// cara masuk, yaitu akun Google melalui Firebase Authentication sesuai subbab
+// 3.6 proposal, dan peran Administrator ditentukan oleh koleksi `administrator`
+// di Firestore yang diperiksa pada administrator.ts.
 
 export type LinkedGoogleAccount = {
   email: string
@@ -69,4 +68,15 @@ export function getActiveStudentFaculty(): Faculty | undefined {
     return 'Fakultas Sains dan Teknologi'
   }
   return getLinkedGoogleAccountByEmail(activeEmail)?.faculty
+}
+
+// NIM of the student in the active session, used as the ownership key on every
+// report. It is undefined when the signed-in Google account has not completed
+// identity setup yet, and callers must refuse to write a report in that case.
+export function getActiveStudentNim(): string | undefined {
+  const activeEmail = getActiveGoogleAccountEmail()
+  if (activeEmail.toLowerCase() === REGISTERED_GOOGLE_ACCOUNT_EMAIL.toLowerCase()) {
+    return REGISTERED_GOOGLE_ACCOUNT_NIM
+  }
+  return getLinkedGoogleAccountByEmail(activeEmail)?.nim
 }

@@ -1,41 +1,63 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthShell } from '../components/AuthShell'
 import { clearPrototypeAuthSession, setActiveUserRole } from '../../../shared/lib/auth-session'
+import { useAuth } from '../../../shared/lib/auth-context'
+import { describeAuthError, signInWithGoogle } from '../lib/firebase-auth'
+import { isAdministrator } from '../lib/administrator'
+import { readUserProfile } from '../lib/user-profile'
 import {
   ACTIVE_GOOGLE_ACCOUNT_KEY,
   getLinkedGoogleAccountByEmail,
-  INTERNAL_ACCOUNTS,
   NEW_GOOGLE_ACCOUNT_EMAIL,
   REGISTERED_GOOGLE_ACCOUNT_EMAIL,
   SECOND_NEW_GOOGLE_ACCOUNT_EMAIL,
 } from '../lib/google-account'
 
+/**
+ * Layar masuk.
+ *
+ * Sistem hanya menyediakan satu cara masuk, yaitu akun Google melalui Firebase
+ * Authentication, sesuai subbab 3.6 proposal. Administrator memakai pintu yang
+ * sama; perannya ditentukan oleh koleksi `administrator` di Firestore, bukan
+ * oleh formulir terpisah.
+ */
 export function LoginScreen() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loginError, setLoginError] = useState('')
+  const { mode } = useAuth()
+  const [googleError, setGoogleError] = useState('')
+  const [signingIn, setSigningIn] = useState(false)
   const [googleAccountDialogOpen, setGoogleAccountDialogOpen] = useState(false)
 
-  const fieldClass =
-    'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7B8EA3] focus:border-[#005BAC] focus:ring-1 focus:ring-[#005BAC]'
+  /**
+   * Tujuan setelah masuk mengikuti Gambar 3.6: Administrator ke dasbor
+   * administrator, Mahasiswa ke dasbor bila identitasnya sudah lengkap, dan ke
+   * halaman lengkapi identitas bila belum.
+   */
+  const handleFirebaseGoogleSignIn = async () => {
+    setGoogleError('')
+    setSigningIn(true)
 
-  const handleInternalLogin = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    clearPrototypeAuthSession()
-    const account = INTERNAL_ACCOUNTS.find(
-      (item) => item.email === email.trim().toLowerCase() && item.password === password,
-    )
+    try {
+      clearPrototypeAuthSession()
+      const user = await signInWithGoogle()
 
-    if (!account) {
-      setLoginError('Email atau password tidak sesuai.')
-      return
-    }
+      if (await isAdministrator(user.uid)) {
+        setActiveUserRole('Administrator')
+        navigate('/administrator')
+        return
+      }
 
-    if (account.role === 'Administrator') {
-      setActiveUserRole(account.role)
-      navigate('/administrator')
+      setActiveUserRole('Mahasiswa')
+      const profile = await readUserProfile(user.uid)
+      navigate(profile ? '/' : '/lengkapi-identitas')
+    } catch (error) {
+      const message = describeAuthError(error)
+      // Pesan kosong berarti pengguna menutup jendela Google sendiri, bukan
+      // kegagalan yang perlu ditampilkan.
+      if (message) setGoogleError(message)
+    } finally {
+      setSigningIn(false)
     }
   }
 
@@ -69,65 +91,21 @@ export function LoginScreen() {
             Masuk ke Lapor Tuton
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#52657A]">
-            Gunakan akun internal atau akun Google untuk masuk ke sistem.
+            Gunakan akun Google untuk masuk ke sistem.
           </p>
-
-          <form className="mt-7 text-left" onSubmit={handleInternalLogin}>
-            <label className="block">
-              <span className="text-sm font-medium text-[#12355B]">Email</span>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value)
-                  if (loginError) setLoginError('')
-                }}
-                className={fieldClass}
-                placeholder="Masukkan email"
-                autoComplete="email"
-              />
-            </label>
-            <label className="mt-5 block">
-              <span className="text-sm font-medium text-[#12355B]">Password</span>
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value)
-                  if (loginError) setLoginError('')
-                }}
-                className={fieldClass}
-                placeholder="Masukkan password"
-                autoComplete="current-password"
-                aria-describedby={loginError ? 'login-error' : undefined}
-                aria-invalid={Boolean(loginError)}
-              />
-            </label>
-            {loginError && (
-              <p id="login-error" className="mt-3 text-xs leading-5 text-[#B42318]">
-                {loginError}
-              </p>
-            )}
-            <button
-              type="submit"
-              className="mt-6 w-full bg-[#005BAC] px-5 py-3.5 text-sm text-white transition hover:bg-[#004987] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2"
-            >
-              Masuk
-            </button>
-          </form>
-
-          <div className="my-7 flex items-center gap-3 text-xs text-[#52657A]" aria-hidden="true">
-            <span className="h-px flex-1 bg-[#D9E2EC]" />
-            <span>atau</span>
-            <span className="h-px flex-1 bg-[#D9E2EC]" />
-          </div>
 
           <button
             type="button"
-            onClick={() => setGoogleAccountDialogOpen(true)}
-            className="flex w-full items-center justify-center gap-3 border border-[#12355B] bg-white px-5 py-3.5 text-sm text-[#12355B] transition hover:bg-[#EEF5FB] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2"
+            disabled={signingIn}
+            onClick={() => {
+              if (mode === 'firebase') {
+                void handleFirebaseGoogleSignIn()
+                return
+              }
+              setGoogleAccountDialogOpen(true)
+            }}
+            className="mt-7 flex w-full items-center justify-center gap-3 border border-[#12355B] bg-white px-5 py-3.5 text-sm text-[#12355B] transition hover:bg-[#EEF5FB] focus:outline-none focus:ring-2 focus:ring-[#005BAC] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-describedby={googleError ? 'google-error' : undefined}
           >
             <span
               className="flex h-6 w-6 items-center justify-center rounded-full border border-[#D9E2EC] bg-white text-sm font-semibold text-[#005BAC]"
@@ -135,8 +113,22 @@ export function LoginScreen() {
             >
               G
             </span>
-            Masuk dengan Google
+            {signingIn ? 'Menghubungkan ke Google…' : 'Masuk dengan Google'}
           </button>
+
+          {googleError && (
+            <p id="google-error" className="mt-3 text-left text-xs leading-5 text-[#B42318]">
+              {googleError}
+            </p>
+          )}
+
+          {mode === 'simulasi' && (
+            <p className="mt-4 border border-dashed border-[#B9C8D7] bg-[#F7F9FC] px-3 py-2 text-left text-xs leading-5 text-[#52657A]">
+              Mode simulasi: Firebase belum dikonfigurasi, sehingga tombol di atas membuka pilihan
+              akun contoh. Salin <code>frontend/.env.example</code> menjadi{' '}
+              <code>frontend/.env.local</code> untuk memakai akun Google sungguhan.
+            </p>
+          )}
         </div>
 
         <p className="mt-7 border-t border-[#D9E2EC] pt-5 text-center text-xs leading-5 text-[#52657A]">

@@ -1,13 +1,12 @@
+import type { ReportStatus } from '../domain/report-status'
+
 export type HistoryReport = {
   id: string
   title: string
-  status:
-    | 'Diterima'
-    | 'Perlu Verifikasi'
-    | 'Diverifikasi'
-    | 'Menunggu Validasi'
-    | 'Sedang Diproses'
-    | 'Selesai'
+  // Sebelumnya tipe ini memuat 'Perlu Verifikasi', status yang tidak ada pada
+  // Tabel 4.1 maupun di tempat lain pada kode. Kini mengikuti satu definisi
+  // status yang sama dengan seluruh sistem.
+  status: ReportStatus
   course: string
   className: string
   tutor: string

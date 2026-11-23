@@ -4,6 +4,7 @@ import universitasTerbukaLogo from '../../../assets/universitas-terbuka-logo.png
 import type { WorkflowReport, WorkflowStatus } from '../../../shared/types/workflow'
 import { handlePrototypeLogout } from '../../../shared/lib/auth-session'
 import { adminNavItems } from '../data/navigation'
+import { courseProgram } from '../../../shared/data/course-programs'
 
 const navButton = (active: boolean) =>
   `group flex items-center gap-3 border px-3 py-3 text-left text-sm transition-colors ${
@@ -24,12 +25,19 @@ function NavNumber({ active, number }: { active: boolean; number: number }) {
   )
 }
 
-export const workflowStatusClass = (status: WorkflowStatus) =>
-  status === 'Selesai'
-    ? 'border-[#B8D3E8] bg-[#EEF5FB] text-[#12355B]'
-    : status === 'Diproses' || status === 'Diterima'
-      ? 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]'
-      : 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]'
+// Record lengkap dan bertipe: menambah status pada Tabel 4.1 akan memunculkan
+// galat kompilasi di sini, sehingga tidak ada status yang tampil tanpa warna.
+const statusClassByStatus: Record<WorkflowStatus, string> = {
+  'Menunggu Pemeriksaan': 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
+  'Perlu Dilengkapi': 'border-[#E8B882] bg-[#FDF3E8] text-[#8A4B12]',
+  Ditolak: 'border-[#E3AFAB] bg-[#FDF0EF] text-[#B42318]',
+  'Lolos Pemeriksaan': 'border-[#A8C5DC] bg-[#F2F7FB] text-[#005BAC]',
+  'Diteruskan ke Fakultas': 'border-[#005BAC] bg-[#DCEBF8] text-[#004987]',
+  Ditindaklanjuti: 'border-[#E4C66C] bg-[#FFF8E2] text-[#735A13]',
+  Selesai: 'border-[#12355B] bg-[#12355B] text-white',
+}
+
+export const workflowStatusClass = (status: WorkflowStatus) => statusClassByStatus[status]
 
 export function AdminWorkflowShell({
   activeIndex,
@@ -198,30 +206,21 @@ export function WorkflowDetailLink({
 
 export { FACULTIES, type Faculty } from '../../../shared/data/faculties'
 
-export const reportGroup = (report: WorkflowReport) => {
-  if (report.course.startsWith('AKUN')) {
-    return {
-      faculty: 'Fakultas Ekonomi dan Bisnis',
-      programStudy: 'Akuntansi',
-    }
-  }
-  if (report.course.startsWith('ESPA')) {
-    return {
-      faculty: 'Fakultas Ekonomi dan Bisnis',
-      programStudy: 'Ekonomi Pembangunan',
-    }
-  }
-  if (report.course.startsWith('ADBI')) {
-    return {
-      faculty: 'Fakultas Hukum, Ilmu Sosial, dan Ilmu Politik',
-      programStudy: 'Administrasi Bisnis',
-    }
-  }
-  return {
-    faculty: 'Fakultas Ekonomi dan Bisnis',
-    programStudy: report.course.startsWith('PAJA') ? 'Akuntansi Keuangan Publik' : 'Manajemen',
-  }
-}
+// Program study of the reported course, resolved from its course code through
+// COURSE_PROGRAMS. An unlisted course code yields a dash instead of being
+// folded into an unrelated program study, and no faculty is derived here: the
+// faculty shown and exported is report.studentFaculty, so a course code can no
+// longer contradict it.
+/**
+ * Program studi pelapor.
+ *
+ * Yang dipakai lebih dahulu adalah program studi yang tercatat pada
+ * laporannya sendiri. Penurunan dari kode mata kuliah hanya cadangan untuk
+ * laporan lama yang belum mencatatnya, dan selalu meleset untuk kode mata
+ * kuliah yang tidak ada pada daftar bawaan.
+ */
+export const reportProgramStudy = (report: WorkflowReport) =>
+  report.studentProgram?.trim() || courseProgram(report.course)?.programStudy || '—'
 
 export const exportFilePart = (value: string) => value.replace(/[^A-Za-z0-9]+/g, '_')
 
@@ -231,6 +230,8 @@ export function WorkflowTable({
   selectable = false,
   selectedIds = [],
   onToggle,
+  onToggleAll,
+  statusTerpilih,
   showProgramStudy = false,
 }: {
   reports: WorkflowReport[]
@@ -238,10 +239,19 @@ export function WorkflowTable({
   selectable?: boolean
   selectedIds?: string[]
   onToggle?: (id: string) => void
+  onToggleAll?: (pilih: boolean) => void
+  /** Status yang boleh dipilih; tanpa ini seluruh baris dapat dipilih. */
+  statusTerpilih?: WorkflowStatus
   showProgramStudy?: boolean
 }) {
+  const dapatDipilih = (report: WorkflowReport) =>
+    statusTerpilih === undefined || report.status === statusTerpilih
+  const baris = reports.filter(dapatDipilih)
+  const semuaTerpilih = baris.length > 0 && baris.every((r) => selectedIds.includes(r.id))
   const gridColumns = showProgramStudy
-    ? 'grid-cols-[105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
+    ? selectable
+      ? 'grid-cols-[28px_105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
+      : 'grid-cols-[105px_130px_140px_130px_minmax(240px,1fr)_100px_150px_120px_125px_95px]'
     : selectable
       ? 'grid-cols-[28px_105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
       : 'grid-cols-[105px_130px_140px_minmax(0,1fr)_52px_150px_120px_125px_95px]'
@@ -251,7 +261,16 @@ export function WorkflowTable({
         <div
           className={`hidden ${gridColumns} ${showProgramStudy ? 'xl:min-w-[1500px]' : ''} gap-3 border-b border-[#D9E2EC] px-4 py-3 font-mono text-[9px] tracking-[0.09em] text-[#52657A] xl:grid`}
         >
-          {selectable && <span aria-hidden="true" />}
+          {selectable && (
+            <input
+              type="checkbox"
+              checked={semuaTerpilih}
+              onChange={() => onToggleAll?.(!semuaTerpilih)}
+              disabled={baris.length === 0}
+              aria-label="Pilih seluruh laporan yang dapat diekspor"
+              className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
+            />
+          )}
           <span>ID LAPORAN</span>
           <span>KATEGORI</span>
           <span>FAKULTAS</span>
@@ -277,7 +296,7 @@ export function WorkflowTable({
                     type="checkbox"
                     checked={selectedIds.includes(report.id)}
                     onChange={() => onToggle?.(report.id)}
-                    disabled={report.status !== 'Diverifikasi'}
+                    disabled={!dapatDipilih(report)}
                     aria-label={`Pilih laporan ${report.id}`}
                     className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                   />
@@ -285,7 +304,7 @@ export function WorkflowTable({
                 <p className="font-mono text-xs font-semibold text-[#005BAC]">{report.id}</p>
                 <p className="text-sm">{report.category}</p>
                 <p className="text-sm">{report.studentFaculty ?? '—'}</p>
-                {showProgramStudy && <p className="text-sm">{reportGroup(report).programStudy}</p>}
+                {showProgramStudy && <p className="text-sm">{reportProgramStudy(report)}</p>}
                 <p className="text-sm font-medium">{report.course}</p>
                 <p className="text-sm">{report.className}</p>
                 <p className="text-sm">{report.tutor}</p>
@@ -293,8 +312,8 @@ export function WorkflowTable({
                 <span
                   className={`inline-flex w-fit border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                 >
-                  {context === 'queue' && report.status === 'Diproses'
-                    ? 'Sedang Diproses'
+                  {context === 'queue' && report.status === 'Ditindaklanjuti'
+                    ? 'Ditindaklanjuti'
                     : report.status}
                 </span>
                 <WorkflowDetailLink
@@ -302,7 +321,7 @@ export function WorkflowTable({
                   context={context}
                   className="border-b border-[#005BAC] pb-1 text-left text-xs font-semibold text-[#005BAC] hover:border-[#12355B] hover:text-[#12355B]"
                 >
-                  {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
+                  {report.status === 'Menunggu Pemeriksaan' ? 'Verifikasi' : 'Lihat Detail'}
                 </WorkflowDetailLink>
               </article>
               <article key={`${report.id}-mobile`} className="hidden px-4 py-5 max-xl:block">
@@ -313,7 +332,7 @@ export function WorkflowTable({
                         type="checkbox"
                         checked={selectedIds.includes(report.id)}
                         onChange={() => onToggle?.(report.id)}
-                        disabled={report.status !== 'Diverifikasi'}
+                        disabled={!dapatDipilih(report)}
                         aria-label={`Pilih laporan ${report.id}`}
                         className="h-4 w-4 accent-[#005BAC] disabled:cursor-not-allowed disabled:opacity-40"
                       />
@@ -323,8 +342,8 @@ export function WorkflowTable({
                   <span
                     className={`inline-flex shrink-0 border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.05em] ${workflowStatusClass(report.status)}`}
                   >
-                    {context === 'queue' && report.status === 'Diproses'
-                      ? 'Sedang Diproses'
+                    {context === 'queue' && report.status === 'Ditindaklanjuti'
+                      ? 'Ditindaklanjuti'
                       : report.status}
                   </span>
                 </div>
@@ -349,7 +368,7 @@ export function WorkflowTable({
                       <dt className="font-mono text-[10px] tracking-[0.1em] text-[#52657A]">
                         PROGRAM STUDI
                       </dt>
-                      <dd className="mt-1 text-sm">{reportGroup(report).programStudy}</dd>
+                      <dd className="mt-1 text-sm">{reportProgramStudy(report)}</dd>
                     </div>
                   )}
                   <div>
@@ -380,7 +399,7 @@ export function WorkflowTable({
                   context={context}
                   className="mt-5 inline-flex min-w-[148px] justify-center border border-[#005BAC] px-4 py-2.5 text-sm font-semibold text-[#005BAC] hover:bg-[#005BAC] hover:text-white"
                 >
-                  {report.status === 'Diterima' ? 'Verifikasi' : 'Lihat Detail'}
+                  {report.status === 'Menunggu Pemeriksaan' ? 'Verifikasi' : 'Lihat Detail'}
                 </WorkflowDetailLink>
               </article>
             </div>

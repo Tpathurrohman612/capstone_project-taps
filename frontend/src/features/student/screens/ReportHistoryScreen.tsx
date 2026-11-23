@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { getStudentHistoryReports } from '../lib/history-reports'
+import { useStudentReports } from '../lib/use-student-reports'
 import { statusBadge } from '../lib/status-badge'
 
 export function ReportHistoryScreen() {
+  const { riwayat, memuat: memuatLaporan, galat } = useStudentReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
-  const visibleReports = getStudentHistoryReports().filter(
+  const visibleReports = riwayat.filter(
     (report) =>
       (status === 'Semua' || report.status === status) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
@@ -33,12 +34,12 @@ export function ReportHistoryScreen() {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
+            className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm text-[#1F2937] outline-none transition focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15"
           >
             <option>Semua</option>
-            <option>Diterima</option>
-            <option>Diverifikasi</option>
-            <option>Sedang Diproses</option>
+            <option>Menunggu Pemeriksaan</option>
+            <option>Lolos Pemeriksaan</option>
+            <option>Ditindaklanjuti</option>
             <option>Selesai</option>
           </select>
         </label>
@@ -96,7 +97,7 @@ export function ReportHistoryScreen() {
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.12em] text-[#52657A]">TUTOR</p>
                   <p className="mt-1 text-sm font-medium text-[#1F2937]">{report.tutor}</p>
-                  <p className="mt-1 text-xs text-[#52657A]">Diterima {report.submitted}</p>
+                  <p className="mt-1 text-xs text-[#52657A]">Dikirim {report.submitted}</p>
                 </div>
                 <Link
                   to={`/riwayat-laporan/detail-laporan?report=${report.id}`}
@@ -110,9 +111,24 @@ export function ReportHistoryScreen() {
         </div>
         {visibleReports.length === 0 && (
           <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
-            <p className="font-slab text-xl text-[#12355B]">Laporan tidak ditemukan</p>
+            {/* Selama laporan masih diambil dari basis data, menampilkan
+                "tidak ditemukan" akan menyesatkan: datanya belum tiba, bukan
+                tidak ada. */}
+            {/* Kegagalan membaca basis data dibedakan dari daftar yang memang
+                kosong. Menyamakan keduanya membuat galat jaringan atau aturan
+                keamanan terlihat seperti "belum pernah membuat laporan", dan
+                itu menyesatkan saat mencari penyebabnya. */}
+            <p className="font-slab text-xl text-[#12355B]">
+              {memuatLaporan
+                ? 'Memuat laporan…'
+                : galat
+                  ? 'Gagal memuat laporan'
+                  : 'Laporan tidak ditemukan'}
+            </p>
             <p className="mt-2 text-sm text-[#52657A]">
-              Coba ubah kata kunci atau status laporan Anda.
+              {memuatLaporan
+                ? 'Mengambil laporan Anda dari basis data.'
+                : (galat ?? 'Coba ubah kata kunci atau status laporan Anda.')}
             </p>
           </div>
         )}

@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { getWorkflowReports } from '../../../shared/lib/workflow-storage'
+import { useAdminReports } from '../lib/use-admin-reports'
 import { AdminWorkflowShell, WorkflowTable } from '../components/workflow-ui'
+import { isTerminal } from '../../../shared/domain/report-status'
 
 export function AdminWorkflowHistoryScreen() {
+  const { reports: semuaLaporan, memuat: memuatLaporan, galat } = useAdminReports()
   const [status, setStatus] = useState('Semua')
   const [query, setQuery] = useState('')
-  const reports = getWorkflowReports().filter(
+  const reports = semuaLaporan.filter(
     (report) =>
-      report.status === 'Selesai' &&
+      isTerminal(report.status) &&
       (status === 'Semua' || report.status === status) &&
       `${report.id} ${report.title}`.toLowerCase().includes(query.toLowerCase()),
   )
@@ -33,7 +35,7 @@ export function AdminWorkflowHistoryScreen() {
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm"
+              className="mt-2 block w-full border border-[#B9C8D7] bg-white px-3 pr-8 py-3 text-sm"
             >
               <option>Semua</option>
               <option>Selesai</option>
@@ -63,7 +65,25 @@ export function AdminWorkflowHistoryScreen() {
               {String(reports.length).padStart(2, '0')} LAPORAN
             </span>
           </div>
-          <WorkflowTable reports={reports} context="history" />
+          {/* Selama laporan masih diambil, tabel kosong akan terbaca sebagai
+              "belum ada laporan selesai" padahal datanya belum tiba. */}
+          {memuatLaporan ? (
+            <p className="px-6 py-8 text-center text-sm text-[#52657A]">
+              Memuat laporan dari basis data…
+            </p>
+          ) : galat ? (
+            /* Penolakan aturan keamanan dibedakan dari daftar kosong. Tanpa
+               ini, akun yang belum terdaftar sebagai Administrator hanya
+               melihat antrean kosong tanpa tahu sebabnya. */
+            <p
+              role="alert"
+              className="m-6 border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+            >
+              {galat}
+            </p>
+          ) : (
+            <WorkflowTable reports={reports} context="history" />
+          )}
           {reports.length === 0 && (
             <div className="border border-[#D9E2EC] bg-white px-5 py-10 text-center">
               <p className="font-slab text-xl text-[#12355B]">Belum ada laporan selesai.</p>

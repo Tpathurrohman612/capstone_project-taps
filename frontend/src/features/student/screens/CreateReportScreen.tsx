@@ -1,10 +1,20 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { AttachmentPicker } from '../../../shared/components/AttachmentPicker'
+import { useRef, useState, type FormEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import type { WorkflowReport } from '../../../shared/types/workflow'
-import { getWorkflowReports, saveWorkflowReports } from '../../../shared/lib/workflow-storage'
-import { formatIndonesianDate, formatIndonesianDateTime } from '../../../shared/lib/date-time'
-import { getActiveStudentFaculty } from '../../auth/lib/google-account'
+import { submitReport } from '../../../shared/data/report-store'
+import { jelaskanGalatFirestore } from '../../../shared/lib/firestore-error'
+import {
+  formatFileSize,
+  MAX_FILE_COUNT,
+  MAX_FILE_SIZE_LABEL,
+} from '../../../shared/domain/attachment-rules'
+import {
+  compressImage,
+  fileKeDataUrl,
+  isCompressibleImage,
+} from '../../../shared/domain/image-compression'
+import { useStudentIdentity } from '../lib/student-identity'
 
 function Field({
   label,
@@ -46,15 +56,37 @@ const control =
   'mt-2 block w-full border border-[#B9C8D7] bg-white px-3 py-3 text-sm text-[#1F2937] outline-none transition placeholder:text-[#7D8B99] focus:border-[#005BAC] focus:ring-2 focus:ring-[#005BAC]/15'
 
 export function CreateReportScreen() {
+  const identity = useStudentIdentity()
   const [duration, setDuration] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [guideOpen, setGuideOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitError, setSubmitError] = useState('')
+  const [fileError, setFileError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionComplete, setSubmissionComplete] = useState(false)
   const [submittedReportId, setSubmittedReportId] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
   const submissionPending = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  /**
+   * Mengosongkan seluruh isian setelah laporan terkirim.
+   *
+   * Menutup pemberitahuan berhasil membuka kembali tombol kirim, sehingga
+   * isian yang tertinggal dapat terkirim untuk kedua kalinya sebagai laporan
+   * baru. Sebagian besar isiannya tidak terkendali React, sehingga formulirnya
+   * dikosongkan melalui DOM, dan sisanya melalui state.
+   */
+  const kosongkanFormulir = () => {
+    formRef.current?.reset()
+    setDuration('')
+    setFiles([])
+    setErrors({})
+    setSubmitError('')
+    setFileError('')
+    setSubmittedReportId('')
+    setSubmissionComplete(false)
+  }
   const navigate = useNavigate()
   const inputClass = (field: string) =>
     errors[field]
@@ -67,14 +99,7 @@ export function CreateReportScreen() {
       delete next[field]
       return next
     })
-  const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
-    const incoming = Array.from(event.target.files ?? []).filter(
-      (file) => file.size <= 10 * 1024 * 1024,
-    )
-    setFiles((current) => [...current, ...incoming].slice(0, 5))
-    event.target.value = ''
-  }
-  const submitReport = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (isSubmitting || submissionComplete || submissionPending.current) return
 
@@ -110,53 +135,79 @@ export function CreateReportScreen() {
     }
 
     setErrors({})
-    const workflowReports = getWorkflowReports()
-    const nextReportNumber =
-      Math.max(
-        0,
-        ...workflowReports.map((report) => {
-          const match = report.id.match(/^LT-2026-(\d{4})$/)
-          return match ? Number(match[1]) : 0
-        }),
-      ) + 1
-    const reportId = `LT-2026-${String(nextReportNumber).padStart(4, '0')}`
-    const createdAt = new Date()
-    const attachmentDetails = files.map((file) => {
-      const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
-      return {
-        name: file.name,
-        type: extension,
-        size: `${Math.max(1, Math.ceil(file.size / 1024))} KB`,
-      }
-    })
-    const studentFaculty = getActiveStudentFaculty()
-    const newReport: WorkflowReport = {
-      id: reportId,
-      title: String(data.get('title')),
-      category: String(data.get('category')),
-      course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
-      className: String(data.get('className')),
-      tutor: String(data.get('tutor')),
-      submitted: formatIndonesianDate(createdAt),
-      status: 'Diterima',
-      courseType: String(data.get('courseType')),
-      ...(studentFaculty ? { studentFaculty } : {}),
-      duration: String(data.get('duration')),
-      description: String(data.get('description')),
-      attachments: attachmentDetails,
-      updates: [
-        {
-          time: formatIndonesianDateTime(createdAt),
-          title: 'Laporan diterima',
-          text: 'Laporan berhasil diterima oleh sistem Lapor Tuton.',
-        },
-      ],
-    }
-    try {
-      saveWorkflowReports([...workflowReports, newReport])
-    } catch {
+    setSubmitError('')
+
+    // Laporan tanpa pemilik tidak dapat disaring kembali kepada pembuatnya,
+    // sehingga identitas wajib lengkap sebelum laporan disimpan. Selama
+    // identitas masih dimuat, pengiriman ditahan dan bukan dialihkan, karena
+    // mengalihkan saat data belum tiba akan melempar mahasiswa yang
+    // identitasnya sudah lengkap ke halaman lengkapi identitas.
+    if (identity.memuat) return
+
+    if (!identity.lengkap || identity.ownerKey === undefined) {
+      navigate('/lengkapi-identitas')
       return
     }
+
+    // Gambar dimampatkan lebih dulu agar muat sebagai data base64 di dalam
+    // dokumen Firestore, karena Cloud Storage memerlukan paket berbayar.
+    // Berkas lain disimpan apa adanya; ukurannya sudah dibatasi saat dipilih.
+    const attachmentDetails: { name: string; type: string; size: string; data?: string }[] = []
+
+    for (const file of files) {
+      const extension = file.name.split('.').pop()?.toUpperCase() ?? 'FILE'
+
+      let data: string | undefined
+      try {
+        if (isCompressibleImage(file.type)) {
+          const hasil = await compressImage(file)
+          if (!hasil.berhasil) {
+            setSubmitError(`${file.name}: ${hasil.alasan}`)
+            return
+          }
+          data = hasil.dataUrl
+        } else {
+          data = await fileKeDataUrl(file)
+        }
+      } catch {
+        setSubmitError(`Berkas ${file.name} gagal diproses. Coba unggah ulang.`)
+        return
+      }
+
+      attachmentDetails.push({
+        name: file.name,
+        type: extension,
+        size: formatFileSize(file.size),
+        ...(data ? { data } : {}),
+      })
+    }
+
+    // Penyimpanan melalui report-store, bukan langsung ke sessionStorage.
+    // Dengan begitu laporan masuk ke Cloud Firestore ketika Firebase
+    // terkonfigurasi, dan tetap tersimpan di peramban ketika belum.
+    let reportId: string
+    try {
+      reportId = await submitReport({
+        ownerKey: identity.ownerKey,
+        input: {
+          judul: String(data.get('title')),
+          kategori: String(data.get('category')),
+          course: `${String(data.get('courseCode'))} · ${String(data.get('courseName'))}`,
+          kelas: String(data.get('className')),
+          tutor: String(data.get('tutor')),
+          jenisMataKuliah: String(data.get('courseType')),
+          durasi: String(data.get('duration')),
+          deskripsi: String(data.get('description')),
+          ...(identity.fakultas ? { fakultas: identity.fakultas } : {}),
+          ...(identity.programStudi ? { prodi: identity.programStudi } : {}),
+          attachments: attachmentDetails,
+        },
+      })
+    } catch (penyebab) {
+      setSubmitError(jelaskanGalatFirestore(penyebab, 'simpan-laporan'))
+      return
+    }
+
     setSubmittedReportId(reportId)
     submissionPending.current = true
     setIsSubmitting(true)
@@ -187,7 +238,12 @@ export function CreateReportScreen() {
           Panduan Pengisian
         </button>
       </header>
-      <form className="mt-8 space-y-8" noValidate onSubmit={submitReport}>
+      <form
+        ref={formRef}
+        className="mt-8 space-y-8"
+        noValidate
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <section className="border border-[#D9E2EC] bg-white" aria-labelledby="info-laporan">
           <div className="border-b border-[#D9E2EC] bg-[#EEF5FB] px-6 py-4 max-[620px]:px-5">
             <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#52657A]">
@@ -205,7 +261,7 @@ export function CreateReportScreen() {
                 defaultValue=""
                 onChange={() => clearError('category')}
                 aria-invalid={Boolean(errors.category)}
-                className={inputClass('category')}
+                className={`${inputClass('category')} pr-8`}
               >
                 <option value="" disabled>
                   Pilih kategori permasalahan
@@ -222,7 +278,7 @@ export function CreateReportScreen() {
                 defaultValue=""
                 onChange={() => clearError('courseType')}
                 aria-invalid={Boolean(errors.courseType)}
-                className={inputClass('courseType')}
+                className={`${inputClass('courseType')} pr-8`}
               >
                 <option value="" disabled>
                   Pilih jenis mata kuliah
@@ -352,57 +408,22 @@ export function CreateReportScreen() {
             </h2>
           </div>
           <div className="p-6 max-[620px]:p-5">
-            <input
-              ref={fileInput}
-              type="file"
-              className="hidden"
-              accept=".jpg,.jpeg,.png,.pdf"
-              multiple
-              onChange={addFiles}
+            <AttachmentPicker
+              files={files}
+              setFiles={setFiles}
+              error={fileError}
+              setError={setFileError}
             />
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              className="flex w-full flex-col items-center justify-center border border-dashed border-[#8CAEC9] bg-[#F7F9FC] px-5 py-8 text-center transition hover:border-[#005BAC] hover:bg-[#EEF5FB]"
-            >
-              <span className="flex h-10 w-10 items-center justify-center border border-[#005BAC] text-xl text-[#005BAC]">
-                ↑
-              </span>
-              <span className="mt-3 text-sm font-semibold text-[#12355B]">
-                Unggah bukti pendukung
-              </span>
-              <span className="mt-1 hidden text-xs text-[#52657A] sm:block">
-                Maksimal 5 file · Maksimal 10 MB per file · .jpg, .jpeg, .png, .pdf
-              </span>
-              <span className="mt-2 flex flex-col gap-1 text-xs text-[#52657A] sm:hidden">
-                <span>Maksimal 5 file</span>
-                <span>Maksimal 10 MB per file</span>
-                <span>Format: JPG, JPEG, PNG, PDF</span>
-              </span>
-            </button>
-            {files.length > 0 && (
-              <ul className="mt-5 divide-y divide-[#D9E2EC] border-y border-[#D9E2EC]">
-                {files.map((file, index) => (
-                  <li
-                    key={`${file.name}-${index}`}
-                    className="flex items-center justify-between gap-4 px-3 py-3"
-                  >
-                    <span className="min-w-0 truncate text-sm text-[#1F2937]">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))
-                      }
-                      className="shrink-0 border-b border-[#005BAC] pb-0.5 text-xs font-semibold text-[#005BAC]"
-                    >
-                      Hapus
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </section>
+        {submitError && (
+          <p
+            role="alert"
+            className="border border-[#E3AFAB] bg-[#FDF0EF] px-4 py-3 text-sm leading-6 text-[#B42318]"
+          >
+            {submitError}
+          </p>
+        )}
         <div className="flex justify-end gap-3 border-t border-[#D9E2EC] pt-6 max-[500px]:flex-col-reverse">
           <button
             type="button"
@@ -451,7 +472,7 @@ export function CreateReportScreen() {
             <div className="mt-7 flex justify-end gap-3 max-[500px]:flex-col-reverse">
               <button
                 type="button"
-                onClick={() => setSubmissionComplete(false)}
+                onClick={kosongkanFormulir}
                 className="border border-[#12355B] px-4 py-2.5 text-sm font-semibold text-[#12355B]"
               >
                 Tutup
@@ -613,10 +634,10 @@ export function CreateReportScreen() {
                   </p>
                   <ul className="mt-3 grid gap-2 border border-[#D9E2EC] bg-[#F7F9FC] p-4 text-sm leading-6 sm:grid-cols-3">
                     <li>
-                      <strong>Maksimal:</strong> 5 file
+                      <strong>Maksimal:</strong> {MAX_FILE_COUNT} file
                     </li>
                     <li>
-                      <strong>Ukuran:</strong> 10 MB per file
+                      <strong>Ukuran:</strong> {MAX_FILE_SIZE_LABEL} per file
                     </li>
                     <li>
                       <strong>Format:</strong> JPG, JPEG, PNG, dan PDF

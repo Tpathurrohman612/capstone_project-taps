@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { workflowSeed } from '../data/workflow-seed'
-import { getWorkflowReports, saveWorkflowReports, WorkflowStorageError } from './workflow-storage'
+import {
+  getWorkflowReports,
+  saveWorkflowReports,
+  WorkflowStorageError,
+  WORKFLOW_STORAGE_VERSION,
+} from './workflow-storage'
 
 const REPORTS_KEY = 'lapor-tuton-admin-workflow'
 const VERSION_KEY = 'lapor-tuton-admin-workflow-version'
@@ -72,17 +77,17 @@ describe('workflow-storage', () => {
 
   it('migrates version 6 without overwriting saved report statuses', () => {
     const existingReports = structuredClone(workflowSeed)
-    existingReports.find((report) => report.id === 'LT-2026-0005')!.status = 'Diverifikasi'
-    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Diproses'
+    existingReports.find((report) => report.id === 'LT-2026-0005')!.status = 'Lolos Pemeriksaan'
+    existingReports.find((report) => report.id === 'LT-2026-0007')!.status = 'Ditindaklanjuti'
 
     browser.values.set(REPORTS_KEY, JSON.stringify(existingReports))
     browser.values.set(VERSION_KEY, '6')
 
     const result = getWorkflowReports()
 
-    expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Diverifikasi')
-    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Diproses')
-    expect(browser.values.get(VERSION_KEY)).toBe('7')
+    expect(result.find((report) => report.id === 'LT-2026-0005')?.status).toBe('Lolos Pemeriksaan')
+    expect(result.find((report) => report.id === 'LT-2026-0007')?.status).toBe('Ditindaklanjuti')
+    expect(browser.values.get(VERSION_KEY)).toBe(WORKFLOW_STORAGE_VERSION)
   })
 
   it('preserves malformed JSON and creates a backup instead of overwriting it', () => {
@@ -108,6 +113,22 @@ describe('workflow-storage', () => {
     expect(browser.values.get(REPORTS_KEY)).toBe(invalidRaw)
     expect(browser.values.get(BACKUP_KEY)).toBe(invalidRaw)
     expect(browser.values.get(WARNING_KEY)).toContain('struktur data tidak sesuai')
+  })
+
+  it('backfills an empty owner on reports stored before studentNim existed', () => {
+    const legacyReports = structuredClone(workflowSeed).map(
+      ({ studentNim: _studentNim, ...report }) => report,
+    )
+
+    browser.values.set(REPORTS_KEY, JSON.stringify(legacyReports))
+    browser.values.set(VERSION_KEY, '7')
+
+    const result = getWorkflowReports()
+
+    expect(result.length).toBe(workflowSeed.length)
+    expect(result.every((report) => report.studentNim === '')).toBe(true)
+    expect(browser.values.get(BACKUP_KEY)).toBeUndefined()
+    expect(browser.values.get(WARNING_KEY)).toBeUndefined()
   })
 
   it('refuses to save over an existing malformed workflow value', () => {

@@ -55,3 +55,52 @@ Recommended verification:
 Inspect existing implementation before editing. Keep changes scoped and preserve established UI behavior.
 
 Never commit or push unless explicitly authorized.
+
+## Firebase
+
+The project is `lapor-tutor` (`.firebaserc`). Copy `frontend/.env.example` to
+`frontend/.env.local` and fill it from Firebase Console; without it the app
+runs in simulation mode and Firebase-backed features are inert.
+
+Security rules live in `firestore.rules` and are the authorization layer.
+Client-side checks only decide what to render.
+
+Rules tests require the Firestore emulator, which needs JDK 21 or newer:
+
+```
+JAVA_HOME=$(brew --prefix openjdk@21) \
+  corepack pnpm@10.34.3 --dir frontend run test:rules:emulator
+```
+
+Without the emulator those tests skip rather than fail, so `pnpm test` works
+without Java.
+
+Status values come from `frontend/src/shared/domain/report-status.ts`, a direct
+translation of Tabel 4.1 and Tabel 4.2 in the proposal. Change the tables first,
+then the module — never only the code.
+
+## Security posture
+
+Authorization lives in `firestore.rules`, not in the client. Three invariants
+the rules enforce and the emulator tests cover:
+
+- A student can only read their own reports; queries that cannot prove this
+  are rejected rather than silently returning other people's data.
+- An Administrator cannot act on a report they filed themselves. A student
+  promoted to Administrator keeps their old reports, so without this they
+  could verify and close their own complaint.
+- Text fields have length caps and documents have a field-count cap, so a
+  signed-in user cannot exhaust the database quota with oversized writes.
+
+App Check is wired but inert until `VITE_FIREBASE_APPCHECK_SITE_KEY` is set.
+Leave it empty locally; set it for any deployment reachable from the internet,
+otherwise the web config in the bundle lets anyone call Firestore directly.
+
+The default provider is reCAPTCHA Enterprise, which the Firebase console now
+calls Fraud Defense; reCAPTCHA Classic is deprecated there. Enterprise works
+on the Spark plan, only with fewer selectable score thresholds. Set
+`VITE_FIREBASE_APPCHECK_PROVIDER=v3` only to keep an existing Classic key
+working during a migration.
+
+Not covered: per-user write rate limiting, which needs Cloud Functions and
+therefore the Blaze plan.
