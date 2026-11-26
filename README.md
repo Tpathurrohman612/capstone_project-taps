@@ -8,53 +8,67 @@
   </p>
 </p>
 <p align="center">
-  <a href="https://react.dev/">
-    <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=20232A" alt="React 19">
-  </a>
-  <a href="https://www.typescriptlang.org/">
-    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5">
-  </a>
-  <a href="https://vite.dev/">
-    <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8">
-  </a>
-  <a href="https://tailwindcss.com/">
-    <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
-  </a>
-  <a href="https://reactrouter.com/">
-    <img src="https://img.shields.io/badge/React_Router-7-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white" alt="React Router 7">
-  </a>
-  <a href="https://firebase.google.com/">
-    <img src="https://img.shields.io/badge/Firebase_SDK-13-DD2C00?style=for-the-badge&logo=firebase&logoColor=white" alt="Firebase SDK 13">
-  </a>
-  <a href="https://pnpm.io/">
-    <img src="https://img.shields.io/badge/pnpm-10.34.3-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm 10.34.3">
-  </a>
-  <a href="https://nodejs.org/">
-    <img src="https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js 22">
-  </a>
-  <a href="https://vitest.dev/">
-    <img src="https://img.shields.io/badge/Vitest-5-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 5">
-  </a>
-  <a href="https://github.com/Tpathurrohman612/capstone_project-taps/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/Tpathurrohman612/capstone_project-taps/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white&style=for-the-badge" alt="GitHub Actions CI">
-  </a>
+
+   <a href="https://react.dev/">
+     <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=20232A" alt="React 19">
+   </a>
+
+   <a href="https://www.typescriptlang.org/">
+     <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5">
+   </a>
+
+   <a href="https://vite.dev/">
+     <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8">
+   </a>
+
+   <a href="https://tailwindcss.com/">
+     <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
+   </a>
+
+   <a href="https://reactrouter.com/">
+     <img src="https://img.shields.io/badge/React_Router-7-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white" alt="React Router 7">
+   </a>
+
+   <a href="https://firebase.google.com/">
+     <img src="https://img.shields.io/badge/Firebase_SDK-13-DD2C00?style=for-the-badge&logo=firebase&logoColor=white" alt="Firebase SDK 13">
+   </a>
+
+   <a href="https://pnpm.io/">
+     <img src="https://img.shields.io/badge/pnpm-10.34.3-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm 10.34.3">
+   </a>
+
+   <a href="https://nodejs.org/">
+     <img src="https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js 22">
+   </a>
+
+   <a href="https://vitest.dev/">
+     <img src="https://img.shields.io/badge/Vitest-5-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 5">
+   </a>
+
+   <a href="https://github.com/Tpathurrohman612/capstone_project-taps/actions/workflows/ci.yml">
+     <img src="https://img.shields.io/github/actions/workflow/status/Tpathurrohman612/capstone_project-taps/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white&style=for-the-badge" alt="GitHub Actions CI">
+   </a>
+
 </p>
 
 <p align="center">
-  <a href="#tentang">📌 <strong>Tentang</strong></a> &nbsp;·&nbsp;
-  <a href="#tim">👥 <strong>Tim</strong></a> &nbsp;·&nbsp;
-  <a href="#gambaran-umum-proyek">📝 <strong>Gambaran Umum</strong></a> &nbsp;·&nbsp;
-  <a href="#cakupan-dan-fitur">✨ <strong>Cakupan &amp; Fitur</strong></a> &nbsp;·&nbsp;
-  <a href="#alur-pelaporan">🔄 <strong>Alur</strong></a> &nbsp;·&nbsp;
-  <a href="#arsitektur-proyek">🏗️ <strong>Arsitektur</strong></a> &nbsp;·&nbsp;
-  <a href="#tech-stack">🛠️ <strong>Tech Stack</strong></a> &nbsp;·&nbsp;
-  <a href="#memulai">🚀 <strong>Memulai</strong></a> &nbsp;·&nbsp;
-  <a href="#pengujian">🧪 <strong>Pengujian</strong></a>
+
+   <a href="#tentang">📌 <strong>Tentang</strong></a> &nbsp;·&nbsp;
+   <a href="#tim">👥 <strong>Tim</strong></a> &nbsp;·&nbsp;
+   <a href="#gambaran-umum-proyek">📝 <strong>Gambaran Umum</strong></a> &nbsp;·&nbsp;
+   <a href="#cakupan-dan-fitur">✨ <strong>Cakupan &amp; Fitur</strong></a> &nbsp;·&nbsp;
+   <a href="#alur-pelaporan">🔄 <strong>Alur</strong></a> &nbsp;·&nbsp;
+   <a href="#arsitektur-proyek">🏗️ <strong>Arsitektur</strong></a> &nbsp;·&nbsp;
+   <a href="#tech-stack">🛠️ <strong>Tech Stack</strong></a> &nbsp;·&nbsp;
+   <a href="#memulai">🚀 <strong>Memulai</strong></a> &nbsp;·&nbsp;
+   <a href="#pengujian">🧪 <strong>Pengujian</strong></a>
+
 </p>
 
 ---
 
 <a id="tentang"></a>
+
 ## 📌 Tentang
 
 **Lapor Tuton** adalah aplikasi berbasis web untuk membantu mahasiswa Universitas Terbuka menyampaikan dan memantau laporan permasalahan terkait aktivitas dan layanan tutor pada saat melaksanakan pembelajaran Tutorial Online (Tuton).
@@ -64,6 +78,7 @@ Proyek ini dikembangkan sebagai bagian dari mata kuliah **STSI4401 - Capstone Pr
 > **Catatan ruang lingkup:** Lapor Tuton merupakan implementasi proyek Capstone sesuai kebutuhan yang ditetapkan. Repository ini bukan pernyataan bahwa aplikasi telah siap untuk operasional publik berskala besar.
 
 <a id="tim"></a>
+
 ## 👥 Tim
 
 | Nomor | Nama Lengkap | NIM | UT Daerah |
@@ -77,13 +92,14 @@ Proyek ini dikembangkan sebagai bagian dari mata kuliah **STSI4401 - Capstone Pr
 ---
 
 <a id="gambaran-umum-proyek"></a>
+
 ## 📝 Gambaran Umum Proyek
 
 ### Latar Belakang
 
 Pelaksanaan Tutorial Online (Tuton) di Universitas Terbuka merupakan salah satu bentuk layanan pembelajaran bagi mahasiswa. Dalam pelaksanaannya, mahasiswa dapat mengalami berbagai permasalahan terkait aktivitas dan layanan tutor, seperti tutor kurang aktif, keterlambatan respons diskusi, keterlambatan penilaian, serta kurangnya umpan balik.
 
-Berdasarkan survei kelompok terhadap **167 mahasiswa Universitas Terbuka**, sebanyak **122 responden (73,05%)** menyatakan pernah mengalami permasalahan terkait aktivitas dan layanan tutor. Dari 64 responden yang pernah melaporkan permasalahannya, **31 responden (48,44%)** menyatakan tindak lanjut laporan belum tuntas atau belum memperoleh kejelasan. Selain itu, **131 responden (78,44%)** menyatakan membutuhkan sarana pelaporan yang mudah dan transparan.
+Berdasarkan survei kelompok terhadap **167 mahasiswa Universitas Terbuka**, sebanyak **122 responden (73,05%)** menyatakan pernah mengalami permasalahan terkait aktivitas dan layanan tutor. Dari 64 responden yang pernah melaporkan permasalahannya, **31 responden (48,44%)** menyatakan tindak lanjut laporan belum tuntas atau belum memperoleh kejelasan. Selain itu, **131 dari 167 responden (78,44%)** menyatakan membutuhkan atau sangat membutuhkan layanan yang memudahkan pelaporan permasalahan terkait aktivitas dan layanan tutor selama Tuton.
 
 Temuan tersebut menjadi dasar pengembangan sarana pelaporan yang membantu mahasiswa menyampaikan permasalahan secara terstruktur dan memantau perkembangan penanganannya. Hasil survei merupakan gambaran dari responden yang berpartisipasi dan tidak dimaksudkan untuk digeneralisasi ke seluruh populasi mahasiswa Universitas Terbuka.
 
@@ -116,6 +132,7 @@ Terdapat tiga pihak yang terlibat dalam proses pengelolaan laporan:
 Dalam implementasinya, hanya Mahasiswa dan Administrator yang memiliki akses langsung ke aplikasi Lapor Tuton. Fakultas/Unit terkait tidak memiliki akun maupun akses langsung ke sistem.
 
 <a id="cakupan-dan-fitur"></a>
+
 ## ✨ Cakupan dan Fitur
 
 ### Cakupan Implementasi
@@ -137,7 +154,7 @@ Dalam implementasinya, hanya Mahasiswa dan Administrator yang memiliki akses lan
 - Melihat daftar, detail, status, dan riwayat laporan.
 - Melengkapi laporan ketika Administrator meminta kelengkapan.
 - Menerima pemberitahuan atas pembaruan laporan dan menandai pemberitahuan sebagai telah dibaca.
-- Melihat dan memperbarui informasi profil.
+- Melihat informasi profil, termasuk nama, NIM, fakultas, program studi, dan UT Daerah.
 
 ### Fitur Administrator
 
@@ -151,6 +168,7 @@ Dalam implementasinya, hanya Mahasiswa dan Administrator yang memiliki akses lan
 - Mengekspor data laporan ke berkas Excel serta mengemas keluaran ekspor dan bukti pendukung dalam arsip ZIP.
 
 <a id="alur-pelaporan"></a>
+
 ## 🔄 Alur Pelaporan dan Status Laporan
 
 Sistem menggunakan tujuh status laporan untuk menggambarkan perkembangan penanganan laporan dari awal hingga akhir.
@@ -170,9 +188,10 @@ Hasil validasi dicatat sebagai informasi tersendiri, bukan sebagai status tambah
 Alur utama laporan dimulai dari pengajuan oleh Mahasiswa, pemeriksaan oleh Administrator, penerusan kepada Fakultas/Unit terkait melalui kanal eksternal, kemudian pencatatan hasil validasi dan tindak lanjut oleh Administrator. Laporan berakhir pada status **Ditolak** atau **Selesai**.
 
 <a id="arsitektur-proyek"></a>
+
 ## 🏗️ Arsitektur Proyek
 
-Repository ini menggunakan frontend React dengan Firebase sebagai layanan backend terkelola (*Backend as a Service* atau BaaS). Repository tidak memiliki custom REST API atau folder backend tersendiri.
+Repository ini menggunakan frontend React dengan Firebase sebagai layanan backend terkelola (**Backend as a Service** atau BaaS). Repository tidak memiliki custom REST API atau folder backend tersendiri.
 
 Komponen utama sistem meliputi:
 
@@ -194,6 +213,7 @@ Aplikasi menyediakan dua mode operasi:
 Pada implementasi saat ini, isi lampiran disimpan sebagai data Base64 pada dokumen Cloud Firestore. Firebase Storage belum digunakan sebagai tempat penyimpanan berkas; aturan pada `storage.rules` saat ini menolak seluruh operasi baca dan tulis.
 
 <a id="tech-stack"></a>
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -223,6 +243,7 @@ Pada implementasi saat ini, isi lampiran disimpan sebagai data Base64 pada dokum
 - `jszip` — pengemasan berkas ekspor dan bukti pendukung.
 
 <a id="struktur-repository"></a>
+
 ## 🗂️ Struktur Repository
 
 ```text
@@ -267,6 +288,7 @@ capstone_project-taps/
 ```
 
 <a id="memulai"></a>
+
 ## 🚀 Memulai
 
 ### Prasyarat
@@ -322,6 +344,7 @@ corepack pnpm@10.34.3 --dir frontend run dev
 Buka alamat lokal yang ditampilkan oleh Vite pada terminal.
 
 <a id="konfigurasi-firebase"></a>
+
 ## 🔧 Konfigurasi Firebase
 
 Project Firebase default yang tercantum pada `.firebaserc` adalah `lapor-tutor`. Aplikasi web yang ditampilkan pada materi proyek dapat diakses melalui [https://lapor-tuton.web.app](https://lapor-tuton.web.app).
@@ -355,6 +378,7 @@ corepack pnpm@10.34.3 --dir frontend run emulators
 Untuk mengarahkan aplikasi ke emulator, isi `VITE_FIREBASE_USE_EMULATOR=true` pada `frontend/.env.local` dan gunakan konfigurasi Firebase yang sesuai untuk project emulator lokal.
 
 <a id="pengujian"></a>
+
 ## 🧪 Pengujian
 
 Jalankan perintah berikut dari root repository.
@@ -406,6 +430,7 @@ Workflow `.github/workflows/ci.yml` menjalankan pemeriksaan TypeScript dan test 
 > **Catatan hasil pengujian proyek:** Angka 36/36 PASS yang disampaikan dalam presentasi merupakan hasil pengujian fungsional *Black-box Testing* terhadap 36 kasus uji. Angka tersebut berbeda dari hasil Unit Test/Vitest dan pengujian Firestore Security Rules yang dijalankan melalui perintah pengujian pada repository.
 
 <a id="catatan-implementasi-dan-batasan"></a>
+
 ## ⚠️ Catatan Implementasi dan Batasan
 
 - Proyek menggunakan Firebase sebagai layanan backend terkelola; custom backend/API terpisah belum tersedia.
@@ -416,9 +441,12 @@ Workflow `.github/workflows/ci.yml` menjalankan pemeriksaan TypeScript dan test 
 - Fakultas/Unit terkait berperan sebagai pihak eksternal dan tidak memiliki akun langsung pada aplikasi.
 - Firebase App Check telah disiapkan dalam kode, tetapi hanya aktif jika kunci situs dikonfigurasikan dan aplikasi tidak berjalan menggunakan emulator.
 - Aturan akses data tersedia pada `firestore.rules` dan `storage.rules`. Aturan tersebut, terutama akses terhadap koleksi pendukung laporan, tetap perlu ditinjau dan diuji sesuai kebutuhan sebelum aplikasi digunakan di luar ruang lingkup implementasi proyek.
+- Evaluasi terhadap delapan kebutuhan nonfungsional belum dilaksanakan secara terukur.
+- Pengujian fungsional dilakukan oleh anggota tim dan belum melibatkan mahasiswa di luar tim sebagai pengguna akhir. Oleh karena itu, hasil 36 dari 36 kasus uji yang berhasil menunjukkan kesesuaian fungsi pada skenario yang diuji, bukan bukti penerimaan pengguna atau pemenuhan seluruh kebutuhan nonfungsional.
 - Perluasan penggunaan, kebutuhan operasional, pembatasan penyalahgunaan, dan kesiapan keamanan untuk skala yang lebih luas berada di luar klaim ruang lingkup proyek ini.
 
 <a id="kontribusi"></a>
+
 ## 🤝 Kontribusi
 
 Perubahan kode dan dokumentasi sebaiknya dilakukan melalui branch terpisah dan Pull Request agar dapat ditinjau sebelum digabungkan ke `main`.
@@ -434,6 +462,7 @@ corepack pnpm@10.34.3 --dir frontend run build
 Jangan menyertakan file environment lokal, kredensial rahasia, private key, token, atau data pribadi pengguna dalam commit.
 
 <a id="lisensi"></a>
+
 ## 📄 Lisensi
 
 Repository ini belum mencantumkan file lisensi. Hak penggunaan, distribusi, dan modifikasi di luar kebutuhan proyek perlu dikonfirmasi kepada pemilik proyek/kontributor terkait sebelum dilakukan.
