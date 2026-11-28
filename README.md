@@ -4,7 +4,7 @@
   <h1 align="center">Lapor Tuton</h1>
   <p align="center">
     <strong>STSI4401 - Capstone Project · Tugas Akhir Program Sarjana (TAPS)</strong><br>
-    <em>"Rancang Bangun Sistem Pelaporan Permasalahan Aktivitas dan Layanan Tutor untuk Tutorial Online"</em>
+    <em>"Rancang Bangun Sistem Pelaporan Permasalahan Aktivitas dan Layanan Tutor Berbasis Web untuk Tutorial Online"</em>
   </p>
 </p>
 <p align="center">
